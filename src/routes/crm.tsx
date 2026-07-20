@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Contact, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -59,6 +59,7 @@ export const Route = createFileRoute("/crm")({
 
 function CrmPage() {
   const role = useCurrentRole();
+  const navigate = useNavigate();
   const canView = can(role, "crm:view");
   const canCreate = can(role, "crm:create");
   const canMove = can(role, "crm:move");
@@ -74,7 +75,6 @@ function CrmPage() {
   const [search, setSearch] = useState("");
   const [origemFilter, setOrigemFilter] = useState<OpportunityOrigem | "todas">("todas");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<Opportunity | null>(null);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -93,12 +93,10 @@ function CrmPage() {
   const kpis = useMemo(() => computeOpportunityKpis(filtered), [filtered]);
 
   function openCreate() {
-    setEditing(null);
     setDrawerOpen(true);
   }
-  function openEdit(opp: Opportunity) {
-    setEditing(opp);
-    setDrawerOpen(true);
+  function openDetail(opp: Opportunity) {
+    navigate({ to: "/crm/$id", params: { id: opp.id } });
   }
 
   async function handleChangeStatus(opp: Opportunity, status: OpportunityStatus) {
@@ -191,7 +189,7 @@ function CrmPage() {
       ) : (
         <OpportunitiesKanban
           opportunities={filtered}
-          onSelect={openEdit}
+          onSelect={openDetail}
           canMove={canMove}
           onChangeStatus={handleChangeStatus}
         />
@@ -200,7 +198,7 @@ function CrmPage() {
       <OpportunityFormDrawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
-        opportunity={editing}
+        opportunity={null}
       />
     </div>
   );
