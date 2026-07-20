@@ -49,7 +49,16 @@ export const MODULES = [
 export type ModuleKey = (typeof MODULES)[number];
 
 /** Ações padrão suportadas por qualquer módulo. */
-export type Action = "view" | "create" | "update" | "delete" | "archive" | "approve" | "export";
+export type Action =
+  | "view"
+  | "create"
+  | "update"
+  | "delete"
+  | "archive"
+  | "approve"
+  | "export"
+  | "move"
+  | "convert";
 
 export type Permission = `${ModuleKey}:${Action}`;
 
@@ -108,7 +117,21 @@ export function canAccessModule(role: Role, module: ModuleKey): boolean {
  * exceto quando explicitamente restrito abaixo.
  */
 const ROLE_ACTION_OVERRIDES: Partial<Record<Role, Partial<Record<ModuleKey, Action[]>>>> = {
-  // Exemplo futuro: um papel poderia ser limitado a ["view"] em um módulo.
+  // Prospecção — ações sensíveis (move/convert/delete) exigem papel explícito.
+  administrador: {
+    prospeccao: ["view", "create", "update", "move", "convert", "delete", "archive", "export"],
+  },
+  gestor: {
+    prospeccao: ["view", "create", "update", "move", "convert", "delete", "archive", "export"],
+  },
+  comercial: {
+    prospeccao: ["view", "create", "update", "move", "convert"],
+  },
+  operacional: { prospeccao: ["view"] },
+  financeiro: { prospeccao: ["view"] },
+  marketing: { prospeccao: ["view"] },
+  desenvolvimento: { prospeccao: ["view"] },
+  suporte: { prospeccao: ["view"] },
 };
 
 export function can(role: Role, permission: Permission): boolean {

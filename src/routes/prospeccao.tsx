@@ -18,14 +18,14 @@ import {
 } from "@/components/ui/select";
 import { can } from "@/config/rbac";
 import { useCurrentRole } from "@/hooks/use-current-role";
-import { LeadFormDrawer } from "@/modules/prospeccao/components/lead-form-drawer";
-import { LeadsKanban } from "@/modules/prospeccao/components/leads-kanban";
-import { useLeads } from "@/modules/prospeccao/hooks/use-leads";
 import {
   LEAD_ORIGEM_LABEL,
+  LeadFormDrawer,
+  LeadsKanban,
+  useLeads,
   type Lead,
   type LeadOrigem,
-} from "@/modules/prospeccao/types/leads.types";
+} from "@/modules/prospeccao";
 
 export const Route = createFileRoute("/prospeccao")({
   head: () => ({
