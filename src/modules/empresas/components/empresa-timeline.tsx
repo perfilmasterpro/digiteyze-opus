@@ -6,12 +6,16 @@ import {
   Calendar,
   DollarSign,
   FileEdit,
+  Handshake,
   Headset,
   Kanban,
   MessageCircle,
   RefreshCcw,
   Sparkles,
+  Trophy,
+  XCircle,
 } from "lucide-react";
+
 
 import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
