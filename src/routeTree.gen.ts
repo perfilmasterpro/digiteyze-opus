@@ -22,6 +22,8 @@ import { Route as ConteudoRouteImport } from './routes/conteudo'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmpresasIdRouteImport } from './routes/empresas.$id'
+import { Route as EmpresasIdIndexRouteImport } from './routes/empresas.$id.index'
 
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
@@ -88,6 +90,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmpresasIdRoute = EmpresasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => EmpresasRoute,
+} as any)
+const EmpresasIdIndexRoute = EmpresasIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EmpresasIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,7 +107,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
   '/crm': typeof CrmRoute
-  '/empresas': typeof EmpresasRoute
+  '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
   '/growth': typeof GrowthRoute
   '/ia': typeof IaRoute
@@ -103,6 +115,8 @@ export interface FileRoutesByFullPath {
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRoute
   '/suporte': typeof SuporteRoute
+  '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/empresas/$id/': typeof EmpresasIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,7 +124,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
   '/crm': typeof CrmRoute
-  '/empresas': typeof EmpresasRoute
+  '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
   '/growth': typeof GrowthRoute
   '/ia': typeof IaRoute
@@ -118,6 +132,7 @@ export interface FileRoutesByTo {
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRoute
   '/suporte': typeof SuporteRoute
+  '/empresas/$id': typeof EmpresasIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,7 +141,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
   '/crm': typeof CrmRoute
-  '/empresas': typeof EmpresasRoute
+  '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
   '/growth': typeof GrowthRoute
   '/ia': typeof IaRoute
@@ -134,6 +149,8 @@ export interface FileRoutesById {
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRoute
   '/suporte': typeof SuporteRoute
+  '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/empresas/$id/': typeof EmpresasIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +168,8 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/suporte'
+    | '/empresas/$id'
+    | '/empresas/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +185,7 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/suporte'
+    | '/empresas/$id'
   id:
     | '__root__'
     | '/'
@@ -181,6 +201,8 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/suporte'
+    | '/empresas/$id'
+    | '/empresas/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -189,7 +211,7 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ConteudoRoute: typeof ConteudoRoute
   CrmRoute: typeof CrmRoute
-  EmpresasRoute: typeof EmpresasRoute
+  EmpresasRoute: typeof EmpresasRouteWithChildren
   FinanceiroRoute: typeof FinanceiroRoute
   GrowthRoute: typeof GrowthRoute
   IaRoute: typeof IaRoute
@@ -292,8 +314,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/empresas/$id': {
+      id: '/empresas/$id'
+      path: '/$id'
+      fullPath: '/empresas/$id'
+      preLoaderRoute: typeof EmpresasIdRouteImport
+      parentRoute: typeof EmpresasRoute
+    }
+    '/empresas/$id/': {
+      id: '/empresas/$id/'
+      path: '/'
+      fullPath: '/empresas/$id/'
+      preLoaderRoute: typeof EmpresasIdIndexRouteImport
+      parentRoute: typeof EmpresasIdRoute
+    }
   }
 }
+
+interface EmpresasIdRouteChildren {
+  EmpresasIdIndexRoute: typeof EmpresasIdIndexRoute
+}
+
+const EmpresasIdRouteChildren: EmpresasIdRouteChildren = {
+  EmpresasIdIndexRoute: EmpresasIdIndexRoute,
+}
+
+const EmpresasIdRouteWithChildren = EmpresasIdRoute._addFileChildren(
+  EmpresasIdRouteChildren,
+)
+
+interface EmpresasRouteChildren {
+  EmpresasIdRoute: typeof EmpresasIdRouteWithChildren
+}
+
+const EmpresasRouteChildren: EmpresasRouteChildren = {
+  EmpresasIdRoute: EmpresasIdRouteWithChildren,
+}
+
+const EmpresasRouteWithChildren = EmpresasRoute._addFileChildren(
+  EmpresasRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -301,7 +361,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   ConteudoRoute: ConteudoRoute,
   CrmRoute: CrmRoute,
-  EmpresasRoute: EmpresasRoute,
+  EmpresasRoute: EmpresasRouteWithChildren,
   FinanceiroRoute: FinanceiroRoute,
   GrowthRoute: GrowthRoute,
   IaRoute: IaRoute,
