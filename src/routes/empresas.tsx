@@ -196,13 +196,23 @@ function EmpresasPage() {
               Editar
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={!canArchive || r.status === "arquivado"}
-              onSelect={() => setArchiveTarget(r)}
-            >
-              <Archive className="mr-2 h-4 w-4" />
-              Arquivar
-            </DropdownMenuItem>
+            {r.status === "arquivado" ? (
+              <DropdownMenuItem
+                disabled={!canArchive}
+                onSelect={() => setReactivateTarget(r)}
+              >
+                <ArchiveRestore className="mr-2 h-4 w-4" />
+                Reativar
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                disabled={!canArchive}
+                onSelect={() => setArchiveTarget(r)}
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                Arquivar
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
