@@ -247,6 +247,15 @@ export function DataTable<T>({
                       <TableHead
                         key={c.key}
                         style={c.width ? { width: c.width } : undefined}
+                        aria-sort={
+                          sortable
+                            ? active
+                              ? sort!.direction === "asc"
+                                ? "ascending"
+                                : "descending"
+                              : "none"
+                            : undefined
+                        }
                         className={cn(
                           c.align === "right" && "text-right",
                           c.align === "center" && "text-center",
