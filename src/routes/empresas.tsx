@@ -379,6 +379,19 @@ function EmpresasPage() {
         confirmLabel="Arquivar"
         onConfirm={handleArchive}
       />
+
+      <ConfirmDialog
+        open={Boolean(reactivateTarget)}
+        onOpenChange={(o) => !o && setReactivateTarget(null)}
+        title="Reativar empresa?"
+        description={
+          reactivateTarget
+            ? `A empresa "${reactivateTarget.nome}" voltará ao status "Ativo" e às listagens padrão.`
+            : undefined
+        }
+        confirmLabel="Reativar"
+        onConfirm={handleReactivate}
+      />
     </div>
   );
 }
