@@ -65,6 +65,12 @@ function fmtDate(iso?: string) {
 export function EmpresaComercial({ empresa }: { empresa: Empresa }) {
   const leadId = empresa.lead_origem_id;
   const { data: lead } = useLead(leadId ?? "");
+  const { data: events } = useEmpresaEvents(empresa.id);
+  const prospeccaoEvents = (events ?? [])
+    .filter((e) => e.modulo === "prospeccao")
+    .slice(0, 8);
+
+
 
   return (
     <div className="space-y-6">
