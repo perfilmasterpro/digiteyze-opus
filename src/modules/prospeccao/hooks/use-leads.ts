@@ -2,6 +2,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/r
 
 import { useCurrentWorkspaceId } from "@/lib/workspace";
 
+import { recordLeadEvent } from "../services/lead-events.service";
 import {
   createLead,
   getLead,
@@ -56,7 +57,10 @@ function useInvalidateLeads() {
   const workspaceId = useCurrentWorkspaceId();
   return (id?: string) => {
     qc.invalidateQueries({ queryKey: leadsKeys.all(workspaceId) });
-    if (id) qc.invalidateQueries({ queryKey: leadsKeys.detail(workspaceId, id) });
+    if (id) {
+      qc.invalidateQueries({ queryKey: leadsKeys.detail(workspaceId, id) });
+      qc.invalidateQueries({ queryKey: ["lead-events", workspaceId, id] });
+    }
   };
 }
 
@@ -65,7 +69,16 @@ export function useCreateLead() {
   const invalidate = useInvalidateLeads();
   return useMutation({
     mutationFn: (input: LeadInput) => createLead(workspaceId, input),
-    onSuccess: (created) => invalidate(created.id),
+    onSuccess: async (created) => {
+      await recordLeadEvent({
+        workspaceId,
+        leadId: created.id,
+        tipo: "created",
+        status_novo: created.status,
+        descricao: `Lead "${created.nome_empresa}" criado`,
+      });
+      invalidate(created.id);
+    },
   });
 }
 
@@ -75,7 +88,15 @@ export function useUpdateLead() {
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: LeadInput }) =>
       updateLead(workspaceId, id, input),
-    onSuccess: (updated) => invalidate(updated.id),
+    onSuccess: async (updated) => {
+      await recordLeadEvent({
+        workspaceId,
+        leadId: updated.id,
+        tipo: "updated",
+        descricao: "Dados do lead atualizados",
+      });
+      invalidate(updated.id);
+    },
   });
 }
 
@@ -83,8 +104,20 @@ export function useUpdateLeadStatus() {
   const workspaceId = useCurrentWorkspaceId();
   const invalidate = useInvalidateLeads();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: LeadStatus }) =>
-      updateLeadStatus(workspaceId, id, status),
-    onSuccess: (updated) => invalidate(updated.id),
+    mutationFn: async ({ id, status }: { id: string; status: LeadStatus }) => {
+      const before = await getLead(workspaceId, id);
+      const updated = await updateLeadStatus(workspaceId, id, status);
+      return { updated, before };
+    },
+    onSuccess: async ({ updated, before }) => {
+      await recordLeadEvent({
+        workspaceId,
+        leadId: updated.id,
+        tipo: "status_changed",
+        status_anterior: before?.status,
+        status_novo: updated.status,
+      });
+      invalidate(updated.id);
+    },
   });
 }
