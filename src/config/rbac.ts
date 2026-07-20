@@ -49,7 +49,7 @@ export const MODULES = [
 export type ModuleKey = (typeof MODULES)[number];
 
 /** Ações padrão suportadas por qualquer módulo. */
-export type Action = "view" | "create" | "update" | "delete" | "approve" | "export";
+export type Action = "view" | "create" | "update" | "delete" | "archive" | "approve" | "export";
 
 export type Permission = `${ModuleKey}:${Action}`;
 
