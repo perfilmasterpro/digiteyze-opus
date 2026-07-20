@@ -338,14 +338,7 @@ function EmpresasPage() {
           selectable
           selected={selected}
           onSelectionChange={setSelected}
-          onRowClick={
-            canUpdate
-              ? (r) => {
-                  setEditing(r);
-                  setDrawerOpen(true);
-                }
-              : undefined
-          }
+          onRowClick={(r) => navigate({ to: "/empresas/$id", params: { id: r.id } })}
           emptyTitle={
             (data?.length ?? 0) === 0 ? "Nenhuma empresa cadastrada" : "Nenhum resultado"
           }
