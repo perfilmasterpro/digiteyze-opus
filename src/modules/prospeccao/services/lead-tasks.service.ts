@@ -18,7 +18,7 @@ function readAll(): LeadTask[] {
     const parsed = JSON.parse(raw) as LeadTask[];
     if (!Array.isArray(parsed)) return [];
     // Compat: registros antigos podem não ter `prioridade`.
-    return parsed.map((t) => ({ prioridade: "media", ...t }));
+    return parsed.map((t) => (t.prioridade ? t : { ...t, prioridade: "media" as const }));
   } catch {
     return [];
   }
