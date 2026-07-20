@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Archive, ArchiveRestore, Building2, Edit, MoreHorizontal, Plus } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Archive, ArchiveRestore, Building2, Edit, ExternalLink, MoreHorizontal, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -59,6 +59,7 @@ const STATUS_TONE: Record<EmpresaStatus, StatusTone> = {
 };
 
 function EmpresasPage() {
+  const navigate = useNavigate();
   const role = useCurrentRole();
   const canView = can(role, "empresas:view");
   const canCreate = can(role, "empresas:create");
@@ -185,6 +186,12 @@ function EmpresasPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem
+              onSelect={() => navigate({ to: "/empresas/$id", params: { id: r.id } })}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Abrir
+            </DropdownMenuItem>
             <DropdownMenuItem
               disabled={!canUpdate}
               onSelect={() => {
@@ -331,14 +338,7 @@ function EmpresasPage() {
           selectable
           selected={selected}
           onSelectionChange={setSelected}
-          onRowClick={
-            canUpdate
-              ? (r) => {
-                  setEditing(r);
-                  setDrawerOpen(true);
-                }
-              : undefined
-          }
+          onRowClick={(r) => navigate({ to: "/empresas/$id", params: { id: r.id } })}
           emptyTitle={
             (data?.length ?? 0) === 0 ? "Nenhuma empresa cadastrada" : "Nenhum resultado"
           }
