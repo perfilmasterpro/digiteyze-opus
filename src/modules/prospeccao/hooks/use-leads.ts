@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { empresaEventsKeys, publishEmpresaEvent } from "@/modules/empresas";
 import { getCurrentUserName, useCurrentUserId, useCurrentWorkspaceId } from "@/lib/workspace";
 
 import { recordLeadEvent } from "../services/lead-events.service";
@@ -10,7 +11,11 @@ import {
   updateLead,
   updateLeadStatus,
 } from "../services/leads.service";
-import type { LeadInput, LeadStatus } from "../types/leads.types";
+import {
+  LEAD_STATUS_LABEL,
+  type LeadInput,
+  type LeadStatus,
+} from "../types/leads.types";
 
 export const leadsKeys = {
   all: (workspaceId: string) => ["leads", workspaceId] as const,
