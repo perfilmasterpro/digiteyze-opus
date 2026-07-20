@@ -64,6 +64,11 @@ type DataTableProps<T> = {
   pageSizeOptions?: number[];
   /** Habilita controles de densidade e visibilidade de colunas. */
   showToolbar?: boolean;
+  /**
+   * Chave estável cuja mudança reseta a paginação para a primeira página.
+   * Use uma string derivada dos filtros/busca externos (ex.: `${search}|${tipo}|${status}`).
+   */
+  resetPageKey?: string;
 };
 
 type SortState = { key: string; direction: "asc" | "desc" } | null;
