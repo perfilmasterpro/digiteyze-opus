@@ -119,7 +119,7 @@ export function OpportunityFormDrawer({
       status: values.status,
       origem: values.origem,
       valor_estimado: values.valor_estimado,
-      probabilidade: values.probabilidade,
+      probabilidade: values.probabilidade as OpportunityInput["probabilidade"],
       responsavel_id: values.responsavel_id || undefined,
       responsavel_nome: values.responsavel_nome?.trim() || undefined,
       data_fechamento_prevista: values.data_fechamento_prevista || undefined,
