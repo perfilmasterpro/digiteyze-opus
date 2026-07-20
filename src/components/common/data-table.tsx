@@ -103,6 +103,13 @@ export function DataTable<T>({
     return initial;
   });
 
+  // Reseta paginação quando busca/filtros externos mudam.
+  useEffect(() => {
+    setPage(0);
+  }, [resetPageKey]);
+
+
+
   const visibleColumns = useMemo(
     () => columns.filter((c) => !hidden[c.key]),
     [columns, hidden],
