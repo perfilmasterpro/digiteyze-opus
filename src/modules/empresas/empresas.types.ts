@@ -32,6 +32,9 @@ export interface Empresa {
   cidade?: string;
   estado?: string;
   observacoes?: string;
+  // Rastreabilidade comercial (Sprint 3.3) — vínculo com origem no funil.
+  lead_origem_id?: string;
+  data_conversao?: string; // ISO datetime
   // Metadados
   created_at: string;
   updated_at: string;

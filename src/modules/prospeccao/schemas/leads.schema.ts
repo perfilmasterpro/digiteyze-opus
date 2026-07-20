@@ -1,8 +1,11 @@
 import { z } from "zod";
 
 import {
+  LEAD_CANAIS,
+  LEAD_MOTIVOS_PERDA,
   LEAD_ORIGENS,
   LEAD_PORTES,
+  LEAD_PROBABILIDADES,
   LEAD_STATUS,
   LEAD_TEMPERATURAS,
   UFS,
@@ -37,13 +40,28 @@ export const leadSchema = z.object({
   whatsapp: optionalString(32),
   observacoes: optionalString(2000),
   proxima_acao: optionalString(200),
-  // Data ISO yyyy-MM-dd emitida pelo input type="date"
   data_proxima_acao: z
     .string()
     .trim()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
     .optional()
     .or(z.literal("")),
+  // Sprint 3.3
+  canal_aquisicao: z.enum(LEAD_CANAIS).optional().or(z.literal("")),
+  probabilidade_fechamento: z
+    .union([
+      z.literal(10),
+      z.literal(25),
+      z.literal(50),
+      z.literal(75),
+      z.literal(90),
+      z.literal(""),
+      z.nan(),
+    ])
+    .optional(),
+  motivo_perda: z.enum(LEAD_MOTIVOS_PERDA).optional().or(z.literal("")),
 });
 
 export type LeadFormValues = z.infer<typeof leadSchema>;
+
+export { LEAD_PROBABILIDADES };

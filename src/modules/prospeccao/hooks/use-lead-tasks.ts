@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useCurrentWorkspaceId } from "@/lib/workspace";
+import { getCurrentUserName, useCurrentUserId, useCurrentWorkspaceId } from "@/lib/workspace";
 
 import { recordLeadEvent } from "../services/lead-events.service";
 import {
@@ -37,15 +37,19 @@ export function useLeadTasks(leadId: string) {
 
 export function useCreateLeadTask(leadId: string) {
   const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: LeadTaskInput) => createLeadTask(workspaceId, leadId, input),
+    mutationFn: (input: LeadTaskInput) =>
+      createLeadTask(workspaceId, leadId, { responsavel_id: userId, ...input }),
     onSuccess: async (task) => {
       await recordLeadEvent({
         workspaceId,
         leadId,
         tipo: "task_added",
         descricao: task.titulo,
+        created_by: userId,
+        created_by_name: getCurrentUserName(),
       });
       qc.invalidateQueries({ queryKey: leadTasksKeys.all(workspaceId, leadId) });
       qc.invalidateQueries({ queryKey: leadEventsKeys.all(workspaceId, leadId) });
@@ -55,6 +59,7 @@ export function useCreateLeadTask(leadId: string) {
 
 export function useUpdateLeadTaskStatus(leadId: string) {
   const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: LeadTaskStatus }) =>
@@ -66,6 +71,8 @@ export function useUpdateLeadTaskStatus(leadId: string) {
           leadId,
           tipo: "task_completed",
           descricao: task.titulo,
+          created_by: userId,
+          created_by_name: getCurrentUserName(),
         });
       }
       qc.invalidateQueries({ queryKey: leadTasksKeys.all(workspaceId, leadId) });

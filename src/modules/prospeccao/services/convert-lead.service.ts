@@ -10,16 +10,12 @@ export type ConvertLeadResult = {
 };
 
 /**
- * Converte um Lead em Empresa.
+ * Converte um Lead em Empresa criando rastreabilidade bidirecional:
+ *  - Empresa recebe `lead_origem_id` e `data_conversao`.
+ *  - Lead recebe `empresa_id`, `data_conversao` e status = "cliente".
+ *  - Evento `converted` é registrado no histórico do lead.
  *
- * Fluxo:
- *  1. Carrega o lead do workspace atual.
- *  2. Cria Empresa via API pública do módulo Empresas (nunca importa internals).
- *  3. Atualiza o lead: status = "cliente" + empresa_id = empresa criada.
- *  4. Registra evento `converted` no histórico.
- *
- * Idempotência: se o lead já possui `empresa_id`, lança erro para evitar duplicação.
- * A assinatura é estável para futura migração ao Supabase (transação SQL).
+ * A assinatura permanece estável para migração ao Supabase (transação SQL).
  */
 export async function convertLeadToEmpresa(
   workspaceId: string,
@@ -28,6 +24,8 @@ export async function convertLeadToEmpresa(
   const lead = await getLead(workspaceId, leadId);
   if (!lead) throw new Error("Lead não encontrado");
   if (lead.empresa_id) throw new Error("Lead já foi convertido em empresa");
+
+  const nowIso = new Date().toISOString();
 
   const empresaInput: EmpresaInput = {
     nome: lead.nome_empresa,
@@ -43,6 +41,8 @@ export async function convertLeadToEmpresa(
     cidade: lead.cidade,
     estado: lead.estado,
     observacoes: lead.observacoes,
+    lead_origem_id: lead.id,
+    data_conversao: nowIso,
   };
 
   const empresa = await createEmpresa(empresaInput);
@@ -51,6 +51,7 @@ export async function convertLeadToEmpresa(
     ...toLeadInput(lead),
     status: "cliente",
     empresa_id: empresa.id,
+    data_conversao: nowIso,
   });
 
   await recordLeadEvent({
@@ -81,7 +82,6 @@ function toLeadInput(l: Lead) {
 }
 
 function mapOrigem(o: Lead["origem"]) {
-  // Origens de Lead não têm 1:1 com origens de Empresa; mapa conservador.
   const map: Record<Lead["origem"], EmpresaInput["origem"]> = {
     indicacao: "indicacao",
     inbound: "inbound",
