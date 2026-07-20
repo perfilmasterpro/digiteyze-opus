@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Archive, Building2, Download, Edit, MoreHorizontal, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, Building2, Edit, MoreHorizontal, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrentRole } from "@/hooks/use-current-role";
-import { canAccessModule } from "@/config/rbac";
+import { can } from "@/config/rbac";
 import { EmpresaFormDrawer } from "@/modules/empresas/empresa-form-drawer";
 import {
   EMPRESA_ORIGEM_LABEL,
@@ -36,7 +36,11 @@ import {
   type EmpresaStatus,
   type EmpresaTipo,
 } from "@/modules/empresas/empresas.types";
-import { useArchiveEmpresa, useEmpresas } from "@/modules/empresas/use-empresas";
+import {
+  useArchiveEmpresa,
+  useEmpresas,
+  useReactivateEmpresa,
+} from "@/modules/empresas/use-empresas";
 
 export const Route = createFileRoute("/empresas")({
   head: () => ({
@@ -56,14 +60,14 @@ const STATUS_TONE: Record<EmpresaStatus, StatusTone> = {
 
 function EmpresasPage() {
   const role = useCurrentRole();
-  const canView = canAccessModule(role, "empresas");
-  // Permissões (Sprint 1): view, create, update, archive — todas liberadas para papéis com acesso ao módulo.
-  const canCreate = canView;
-  const canUpdate = canView;
-  const canArchive = canView;
+  const canView = can(role, "empresas:view");
+  const canCreate = can(role, "empresas:create");
+  const canUpdate = can(role, "empresas:update");
+  const canArchive = can(role, "empresas:archive");
 
   const { data, isLoading, isError, refetch } = useEmpresas();
   const archive = useArchiveEmpresa();
+  const reactivate = useReactivateEmpresa();
 
   const [search, setSearch] = useState("");
   const [tipoFilter, setTipoFilter] = useState<EmpresaTipo | "todos">("todos");
@@ -73,6 +77,7 @@ function EmpresasPage() {
   const [editing, setEditing] = useState<Empresa | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [archiveTarget, setArchiveTarget] = useState<Empresa | null>(null);
+  const [reactivateTarget, setReactivateTarget] = useState<Empresa | null>(null);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
