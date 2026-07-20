@@ -224,6 +224,18 @@ function EmpresasPage() {
     setDrawerOpen(true);
   }
 
+  async function handleReactivate() {
+    if (!reactivateTarget) return;
+    try {
+      await reactivate.mutateAsync(reactivateTarget.id);
+      toast.success("Empresa reativada");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível reativar");
+    } finally {
+      setReactivateTarget(null);
+    }
+  }
+
   async function handleArchive() {
     if (!archiveTarget) return;
     try {
@@ -254,24 +266,12 @@ function EmpresasPage() {
         description="Cadastro central de clientes, parceiros, fornecedores e prospects."
         icon={<Building2 className="h-5 w-5" />}
         actions={
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              disabled
-              title="Exportação disponível em breve"
-            >
-              <Download className="h-4 w-4" />
-              Exportar
+          canCreate ? (
+            <Button size="sm" className="gap-2" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Nova empresa
             </Button>
-            {canCreate ? (
-              <Button size="sm" className="gap-2" onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                Nova empresa
-              </Button>
-            ) : null}
-          </>
+          ) : null
         }
       />
 
