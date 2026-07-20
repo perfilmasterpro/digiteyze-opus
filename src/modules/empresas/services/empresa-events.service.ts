@@ -39,6 +39,11 @@ export const EMPRESA_EVENT_TYPES = [
   "lead.interaction_created",
   "lead.task_created",
   "lead.converted",
+  "opportunity.created",
+  "opportunity.updated",
+  "opportunity.stage_changed",
+  "opportunity.won",
+  "opportunity.lost",
 ] as const;
 export type EmpresaEventType = (typeof EMPRESA_EVENT_TYPES)[number];
 
@@ -51,7 +56,13 @@ export const EMPRESA_EVENT_TYPE_LABEL: Record<EmpresaEventType, string> = {
   "lead.interaction_created": "Interação registrada",
   "lead.task_created": "Tarefa criada",
   "lead.converted": "Lead convertido em empresa",
+  "opportunity.created": "Oportunidade criada",
+  "opportunity.updated": "Oportunidade atualizada",
+  "opportunity.stage_changed": "Estágio da oportunidade alterado",
+  "opportunity.won": "Oportunidade ganha",
+  "opportunity.lost": "Oportunidade perdida",
 };
+
 
 export interface EmpresaEvent {
   id: string;

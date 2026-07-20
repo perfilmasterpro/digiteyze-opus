@@ -77,10 +77,11 @@ export const DEFAULT_ROLE_MODULES: Record<Role, ModuleKey[] | "all"> = {
     "suporte",
     "base-conhecimento",
   ],
-  financeiro: ["central", "empresas", "financeiro", "base-conhecimento"],
+  financeiro: ["central", "empresas", "crm", "financeiro", "base-conhecimento"],
   marketing: [
     "central",
     "empresas",
+    "crm",
     "marketing",
     "conteudo",
     "ia",
@@ -96,12 +97,14 @@ export const DEFAULT_ROLE_MODULES: Record<Role, ModuleKey[] | "all"> = {
   ],
   desenvolvimento: [
     "central",
+    "crm",
     "projetos",
     "ia",
     "base-conhecimento",
   ],
-  suporte: ["central", "empresas", "suporte", "base-conhecimento"],
+  suporte: ["central", "empresas", "crm", "suporte", "base-conhecimento"],
 };
+
 
 export function canAccessModule(role: Role, module: ModuleKey): boolean {
   const allowed = DEFAULT_ROLE_MODULES[role];
@@ -118,21 +121,27 @@ export function canAccessModule(role: Role, module: ModuleKey): boolean {
  */
 const ROLE_ACTION_OVERRIDES: Partial<Record<Role, Partial<Record<ModuleKey, Action[]>>>> = {
   // Prospecção — ações sensíveis (move/convert/delete) exigem papel explícito.
+  // CRM — administrador/gestor: tudo; comercial: view/create/update/move;
+  // demais papéis: somente view.
   administrador: {
     prospeccao: ["view", "create", "update", "move", "convert", "delete", "archive", "export"],
+    crm: ["view", "create", "update", "move", "delete", "archive", "export"],
   },
   gestor: {
     prospeccao: ["view", "create", "update", "move", "convert", "delete", "archive", "export"],
+    crm: ["view", "create", "update", "move", "delete", "archive", "export"],
   },
   comercial: {
     prospeccao: ["view", "create", "update", "move", "convert"],
+    crm: ["view", "create", "update", "move"],
   },
-  operacional: { prospeccao: ["view"] },
-  financeiro: { prospeccao: ["view"] },
-  marketing: { prospeccao: ["view"] },
-  desenvolvimento: { prospeccao: ["view"] },
-  suporte: { prospeccao: ["view"] },
+  operacional: { prospeccao: ["view"], crm: ["view"] },
+  financeiro: { prospeccao: ["view"], crm: ["view"] },
+  marketing: { prospeccao: ["view"], crm: ["view"] },
+  desenvolvimento: { prospeccao: ["view"], crm: ["view"] },
+  suporte: { prospeccao: ["view"], crm: ["view"] },
 };
+
 
 export function can(role: Role, permission: Permission): boolean {
   const [moduleKey, action] = permission.split(":") as [ModuleKey, Action];

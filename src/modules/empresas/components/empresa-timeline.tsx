@@ -6,12 +6,16 @@ import {
   Calendar,
   DollarSign,
   FileEdit,
+  Handshake,
   Headset,
   Kanban,
   MessageCircle,
   RefreshCcw,
   Sparkles,
+  Trophy,
+  XCircle,
 } from "lucide-react";
+
 
 import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +54,13 @@ const TYPE_ICON: Record<EmpresaEventType, React.ComponentType<{ className?: stri
   "lead.interaction_created": MessageCircle,
   "lead.task_created": Calendar,
   "lead.converted": ArrowRightLeft,
+  "opportunity.created": Handshake,
+  "opportunity.updated": FileEdit,
+  "opportunity.stage_changed": RefreshCcw,
+  "opportunity.won": Trophy,
+  "opportunity.lost": XCircle,
 };
+
 
 function fmtGroupKey(iso: string) {
   const d = new Date(iso);
