@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Rows3 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -64,6 +64,11 @@ type DataTableProps<T> = {
   pageSizeOptions?: number[];
   /** Habilita controles de densidade e visibilidade de colunas. */
   showToolbar?: boolean;
+  /**
+   * Chave estável cuja mudança reseta a paginação para a primeira página.
+   * Use uma string derivada dos filtros/busca externos (ex.: `${search}|${tipo}|${status}`).
+   */
+  resetPageKey?: string;
 };
 
 type SortState = { key: string; direction: "asc" | "desc" } | null;
@@ -84,6 +89,7 @@ export function DataTable<T>({
   pageSize: initialPageSize = 10,
   pageSizeOptions = [10, 25, 50],
   showToolbar = true,
+  resetPageKey,
 }: DataTableProps<T>) {
   const [sort, setSort] = useState<SortState>(null);
   const [page, setPage] = useState(0);
@@ -96,6 +102,13 @@ export function DataTable<T>({
     });
     return initial;
   });
+
+  // Reseta paginação quando busca/filtros externos mudam.
+  useEffect(() => {
+    setPage(0);
+  }, [resetPageKey]);
+
+
 
   const visibleColumns = useMemo(
     () => columns.filter((c) => !hidden[c.key]),
@@ -234,6 +247,15 @@ export function DataTable<T>({
                       <TableHead
                         key={c.key}
                         style={c.width ? { width: c.width } : undefined}
+                        aria-sort={
+                          sortable
+                            ? active
+                              ? sort!.direction === "asc"
+                                ? "ascending"
+                                : "descending"
+                              : "none"
+                            : undefined
+                        }
                         className={cn(
                           c.align === "right" && "text-right",
                           c.align === "center" && "text-center",

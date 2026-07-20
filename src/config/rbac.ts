@@ -49,7 +49,7 @@ export const MODULES = [
 export type ModuleKey = (typeof MODULES)[number];
 
 /** Ações padrão suportadas por qualquer módulo. */
-export type Action = "view" | "create" | "update" | "delete" | "approve" | "export";
+export type Action = "view" | "create" | "update" | "delete" | "archive" | "approve" | "export";
 
 export type Permission = `${ModuleKey}:${Action}`;
 
@@ -98,4 +98,23 @@ export function canAccessModule(role: Role, module: ModuleKey): boolean {
   const allowed = DEFAULT_ROLE_MODULES[role];
   if (allowed === "all") return true;
   return allowed.includes(module);
+}
+
+/**
+ * Matriz de permissões por papel + ação.
+ *
+ * Estrutura preparada para futura migração a banco/RLS. Hoje deriva do acesso
+ * ao módulo (papéis com acesso ao módulo podem executar todas as ações padrão),
+ * exceto quando explicitamente restrito abaixo.
+ */
+const ROLE_ACTION_OVERRIDES: Partial<Record<Role, Partial<Record<ModuleKey, Action[]>>>> = {
+  // Exemplo futuro: um papel poderia ser limitado a ["view"] em um módulo.
+};
+
+export function can(role: Role, permission: Permission): boolean {
+  const [moduleKey, action] = permission.split(":") as [ModuleKey, Action];
+  if (!canAccessModule(role, moduleKey)) return false;
+  const override = ROLE_ACTION_OVERRIDES[role]?.[moduleKey];
+  if (override) return override.includes(action);
+  return true;
 }

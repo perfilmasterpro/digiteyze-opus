@@ -1,3 +1,5 @@
+import { getCurrentWorkspaceId } from "@/lib/workspace";
+
 import type { Empresa, EmpresaInput } from "./empresas.types";
 
 /**
@@ -9,7 +11,6 @@ import type { Empresa, EmpresaInput } from "./empresas.types";
  */
 
 const STORAGE_KEY = "growth-os:empresas";
-const CURRENT_WORKSPACE_ID = "default";
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -40,7 +41,14 @@ function generateId() {
 }
 
 export async function listEmpresas(): Promise<Empresa[]> {
-  return readAll().filter((e) => e.workspace_id === CURRENT_WORKSPACE_ID);
+  const workspaceId = getCurrentWorkspaceId();
+  return readAll().filter((e) => e.workspace_id === workspaceId);
+}
+
+export async function getEmpresa(id: string): Promise<Empresa | null> {
+  const workspaceId = getCurrentWorkspaceId();
+  const found = readAll().find((e) => e.id === id && e.workspace_id === workspaceId);
+  return found ?? null;
 }
 
 export async function createEmpresa(input: EmpresaInput): Promise<Empresa> {
@@ -48,7 +56,7 @@ export async function createEmpresa(input: EmpresaInput): Promise<Empresa> {
   const empresa: Empresa = {
     ...input,
     id: generateId(),
-    workspace_id: CURRENT_WORKSPACE_ID,
+    workspace_id: getCurrentWorkspaceId(),
     created_at: now,
     updated_at: now,
   };
@@ -73,12 +81,20 @@ export async function updateEmpresa(id: string, input: EmpresaInput): Promise<Em
 }
 
 export async function archiveEmpresa(id: string): Promise<Empresa> {
+  return setEmpresaStatus(id, "arquivado");
+}
+
+export async function reactivateEmpresa(id: string): Promise<Empresa> {
+  return setEmpresaStatus(id, "ativo");
+}
+
+async function setEmpresaStatus(id: string, status: Empresa["status"]): Promise<Empresa> {
   const list = readAll();
   const idx = list.findIndex((e) => e.id === id);
   if (idx === -1) throw new Error("Empresa não encontrada");
   const updated: Empresa = {
     ...list[idx],
-    status: "arquivado",
+    status,
     updated_at: new Date().toISOString(),
   };
   list[idx] = updated;

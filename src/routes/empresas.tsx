@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Archive, Building2, Download, Edit, MoreHorizontal, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, Building2, Edit, MoreHorizontal, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrentRole } from "@/hooks/use-current-role";
-import { canAccessModule } from "@/config/rbac";
+import { can } from "@/config/rbac";
 import { EmpresaFormDrawer } from "@/modules/empresas/empresa-form-drawer";
 import {
   EMPRESA_ORIGEM_LABEL,
@@ -36,7 +36,11 @@ import {
   type EmpresaStatus,
   type EmpresaTipo,
 } from "@/modules/empresas/empresas.types";
-import { useArchiveEmpresa, useEmpresas } from "@/modules/empresas/use-empresas";
+import {
+  useArchiveEmpresa,
+  useEmpresas,
+  useReactivateEmpresa,
+} from "@/modules/empresas/use-empresas";
 
 export const Route = createFileRoute("/empresas")({
   head: () => ({
@@ -56,14 +60,14 @@ const STATUS_TONE: Record<EmpresaStatus, StatusTone> = {
 
 function EmpresasPage() {
   const role = useCurrentRole();
-  const canView = canAccessModule(role, "empresas");
-  // Permissões (Sprint 1): view, create, update, archive — todas liberadas para papéis com acesso ao módulo.
-  const canCreate = canView;
-  const canUpdate = canView;
-  const canArchive = canView;
+  const canView = can(role, "empresas:view");
+  const canCreate = can(role, "empresas:create");
+  const canUpdate = can(role, "empresas:update");
+  const canArchive = can(role, "empresas:archive");
 
   const { data, isLoading, isError, refetch } = useEmpresas();
   const archive = useArchiveEmpresa();
+  const reactivate = useReactivateEmpresa();
 
   const [search, setSearch] = useState("");
   const [tipoFilter, setTipoFilter] = useState<EmpresaTipo | "todos">("todos");
@@ -73,6 +77,7 @@ function EmpresasPage() {
   const [editing, setEditing] = useState<Empresa | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [archiveTarget, setArchiveTarget] = useState<Empresa | null>(null);
+  const [reactivateTarget, setReactivateTarget] = useState<Empresa | null>(null);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -191,13 +196,23 @@ function EmpresasPage() {
               Editar
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={!canArchive || r.status === "arquivado"}
-              onSelect={() => setArchiveTarget(r)}
-            >
-              <Archive className="mr-2 h-4 w-4" />
-              Arquivar
-            </DropdownMenuItem>
+            {r.status === "arquivado" ? (
+              <DropdownMenuItem
+                disabled={!canArchive}
+                onSelect={() => setReactivateTarget(r)}
+              >
+                <ArchiveRestore className="mr-2 h-4 w-4" />
+                Reativar
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                disabled={!canArchive}
+                onSelect={() => setArchiveTarget(r)}
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                Arquivar
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -207,6 +222,18 @@ function EmpresasPage() {
   function openCreate() {
     setEditing(null);
     setDrawerOpen(true);
+  }
+
+  async function handleReactivate() {
+    if (!reactivateTarget) return;
+    try {
+      await reactivate.mutateAsync(reactivateTarget.id);
+      toast.success("Empresa reativada");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível reativar");
+    } finally {
+      setReactivateTarget(null);
+    }
   }
 
   async function handleArchive() {
@@ -239,24 +266,12 @@ function EmpresasPage() {
         description="Cadastro central de clientes, parceiros, fornecedores e prospects."
         icon={<Building2 className="h-5 w-5" />}
         actions={
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              disabled
-              title="Exportação disponível em breve"
-            >
-              <Download className="h-4 w-4" />
-              Exportar
+          canCreate ? (
+            <Button size="sm" className="gap-2" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Nova empresa
             </Button>
-            {canCreate ? (
-              <Button size="sm" className="gap-2" onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                Nova empresa
-              </Button>
-            ) : null}
-          </>
+          ) : null
         }
       />
 
@@ -312,6 +327,7 @@ function EmpresasPage() {
           data={filtered}
           rowKey={(r) => r.id}
           loading={isLoading}
+          resetPageKey={`${search}|${tipoFilter}|${statusFilter}`}
           selectable
           selected={selected}
           onSelectionChange={setSelected}
@@ -362,6 +378,19 @@ function EmpresasPage() {
         }
         confirmLabel="Arquivar"
         onConfirm={handleArchive}
+      />
+
+      <ConfirmDialog
+        open={Boolean(reactivateTarget)}
+        onOpenChange={(o) => !o && setReactivateTarget(null)}
+        title="Reativar empresa?"
+        description={
+          reactivateTarget
+            ? `A empresa "${reactivateTarget.nome}" voltará ao status "Ativo" e às listagens padrão.`
+            : undefined
+        }
+        confirmLabel="Reativar"
+        onConfirm={handleReactivate}
       />
     </div>
   );
