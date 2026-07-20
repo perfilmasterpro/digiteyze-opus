@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity } from "lucide-react";
 
-import { ModulePlaceholder } from "@/components/common/module-placeholder";
+import { ErrorState } from "@/components/common/error-state";
+import { LoadingState } from "@/components/common/loading-state";
+import { EmpresaTimeline, useEmpresaEvents } from "@/modules/empresas";
 
 export const Route = createFileRoute("/empresas/$id/timeline")({
-  component: () => (
-    <ModulePlaceholder
-      title="Timeline"
-      icon={Activity}
-      summary="Linha do tempo unificada com eventos de todos os módulos."
-    />
-  ),
+  component: EmpresaTimelineRoute,
 });
+
+function EmpresaTimelineRoute() {
+  const { id } = Route.useParams();
+  const { data, isLoading, isError, refetch } = useEmpresaEvents(id);
+
+  if (isLoading) return <LoadingState label="Carregando timeline…" />;
+  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  return <EmpresaTimeline events={data ?? []} />;
+}

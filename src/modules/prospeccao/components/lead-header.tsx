@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRightLeft, ChevronLeft, Edit, Flame, Target, UserRoundCog, DollarSign } from "lucide-react";
+import { ArrowRightLeft, Building2, ChevronLeft, Edit, Flame, Target, UserRoundCog, DollarSign } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { StatusBadge, type StatusTone } from "@/components/common/status-badge";
@@ -109,6 +109,14 @@ export function LeadHeader({
               <Button size="sm" className="gap-2" onClick={onConvert}>
                 <ArrowRightLeft className="h-4 w-4" />
                 Converter em empresa
+              </Button>
+            ) : null}
+            {isConverted && lead.empresa_id ? (
+              <Button asChild variant="outline" size="sm" className="gap-2">
+                <Link to="/empresas/$id" params={{ id: lead.empresa_id }}>
+                  <Building2 className="h-4 w-4" />
+                  Ver empresa criada
+                </Link>
               </Button>
             ) : null}
           </>

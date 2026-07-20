@@ -1,4 +1,9 @@
-import { createEmpresa, type Empresa, type EmpresaInput } from "@/modules/empresas";
+import {
+  createEmpresa,
+  publishEmpresaEvent,
+  type Empresa,
+  type EmpresaInput,
+} from "@/modules/empresas";
 
 import { recordLeadEvent } from "./lead-events.service";
 import { getLead, updateLead } from "./leads.service";
@@ -61,6 +66,30 @@ export async function convertLeadToEmpresa(
     status_anterior: lead.status,
     status_novo: "cliente",
     descricao: `Convertido em empresa "${empresa.nome}"`,
+  });
+
+  // Publica eventos na timeline unificada da empresa:
+  //  - empresa.created: primeiro marco na 360°.
+  //  - lead.converted: registro cross-módulo (Prospecção → Empresa).
+  await publishEmpresaEvent({
+    workspaceId,
+    empresaId: empresa.id,
+    modulo: "empresas",
+    tipo: "empresa.created",
+    titulo: `Empresa "${empresa.nome}" criada`,
+    descricao: "Criada a partir de conversão do funil de prospecção.",
+    occurredAt: nowIso,
+    payload: { source: "lead_conversion", lead_id: lead.id },
+  });
+  await publishEmpresaEvent({
+    workspaceId,
+    empresaId: empresa.id,
+    modulo: "prospeccao",
+    tipo: "lead.converted",
+    titulo: "Lead convertido em cliente",
+    descricao: `Lead "${lead.nome_empresa}" convertido em empresa.`,
+    occurredAt: nowIso,
+    payload: { lead_id: lead.id, status_anterior: lead.status },
   });
 
   return { lead: updatedLead, empresa };
