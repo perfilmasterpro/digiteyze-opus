@@ -56,11 +56,14 @@ export function useLead(id: string) {
 function useInvalidateLeads() {
   const qc = useQueryClient();
   const workspaceId = useCurrentWorkspaceId();
-  return (id?: string) => {
+  return (id?: string, empresaId?: string) => {
     qc.invalidateQueries({ queryKey: leadsKeys.all(workspaceId) });
     if (id) {
       qc.invalidateQueries({ queryKey: leadsKeys.detail(workspaceId, id) });
       qc.invalidateQueries({ queryKey: ["lead-events", workspaceId, id] });
+    }
+    if (empresaId) {
+      qc.invalidateQueries({ queryKey: empresaEventsKeys.all(workspaceId, empresaId) });
     }
   };
 }
@@ -81,7 +84,19 @@ export function useCreateLead() {
         created_by: userId,
         created_by_name: getCurrentUserName(),
       });
-      invalidate(created.id);
+      if (created.empresa_id) {
+        await publishEmpresaEvent({
+          workspaceId,
+          empresaId: created.empresa_id,
+          modulo: "prospeccao",
+          tipo: "lead.created",
+          titulo: `Lead "${created.nome_empresa}" criado`,
+          createdBy: userId,
+          createdByName: getCurrentUserName(),
+          payload: { lead_id: created.id },
+        });
+      }
+      invalidate(created.id, created.empresa_id);
     },
   });
 }
@@ -102,7 +117,19 @@ export function useUpdateLead() {
         created_by: userId,
         created_by_name: getCurrentUserName(),
       });
-      invalidate(updated.id);
+      if (updated.empresa_id) {
+        await publishEmpresaEvent({
+          workspaceId,
+          empresaId: updated.empresa_id,
+          modulo: "prospeccao",
+          tipo: "lead.updated",
+          titulo: `Lead "${updated.nome_empresa}" atualizado`,
+          createdBy: userId,
+          createdByName: getCurrentUserName(),
+          payload: { lead_id: updated.id },
+        });
+      }
+      invalidate(updated.id, updated.empresa_id);
     },
   });
 }
@@ -127,7 +154,25 @@ export function useUpdateLeadStatus() {
         created_by: userId,
         created_by_name: getCurrentUserName(),
       });
-      invalidate(updated.id);
+      if (updated.empresa_id) {
+        const fromLabel = before?.status ? LEAD_STATUS_LABEL[before.status] : "—";
+        const toLabel = LEAD_STATUS_LABEL[updated.status];
+        await publishEmpresaEvent({
+          workspaceId,
+          empresaId: updated.empresa_id,
+          modulo: "prospeccao",
+          tipo: "lead.stage_changed",
+          titulo: `Estágio alterado: ${fromLabel} → ${toLabel}`,
+          createdBy: userId,
+          createdByName: getCurrentUserName(),
+          payload: {
+            lead_id: updated.id,
+            status_anterior: before?.status,
+            status_novo: updated.status,
+          },
+        });
+      }
+      invalidate(updated.id, updated.empresa_id);
     },
   });
 }
