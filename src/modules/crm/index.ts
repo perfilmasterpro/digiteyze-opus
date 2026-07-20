@@ -29,3 +29,5 @@ export {
 
 export { OpportunityFormDrawer } from "./components/opportunity-form-drawer";
 export { OpportunitiesKanban } from "./components/opportunities-kanban";
+export { EmpresaCrmSection } from "./components/empresa-crm-section";
+
