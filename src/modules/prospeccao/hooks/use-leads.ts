@@ -2,8 +2,14 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/r
 
 import { useCurrentWorkspaceId } from "@/lib/workspace";
 
-import { createLead, getLead, listLeads, updateLead } from "../services/leads.service";
-import type { LeadInput } from "../types/leads.types";
+import {
+  createLead,
+  getLead,
+  listLeads,
+  updateLead,
+  updateLeadStatus,
+} from "../services/leads.service";
+import type { LeadInput, LeadStatus } from "../types/leads.types";
 
 /**
  * Query keys escopadas por workspace — padrão multi-tenant.
@@ -14,17 +20,21 @@ export const leadsKeys = {
   detail: (workspaceId: string, id: string) => ["lead", workspaceId, id] as const,
 };
 
+const DEFAULT_STALE_TIME = 30_000;
+
 export function leadsQueryOptions(workspaceId: string) {
   return queryOptions({
     queryKey: leadsKeys.all(workspaceId),
-    queryFn: listLeads,
+    queryFn: () => listLeads(workspaceId),
+    staleTime: DEFAULT_STALE_TIME,
   });
 }
 
 export function leadQueryOptions(workspaceId: string, id: string) {
   return queryOptions({
     queryKey: leadsKeys.detail(workspaceId, id),
-    queryFn: () => getLead(id),
+    queryFn: () => getLead(workspaceId, id),
+    staleTime: DEFAULT_STALE_TIME,
   });
 }
 
@@ -51,17 +61,30 @@ function useInvalidateLeads() {
 }
 
 export function useCreateLead() {
+  const workspaceId = useCurrentWorkspaceId();
   const invalidate = useInvalidateLeads();
   return useMutation({
-    mutationFn: (input: LeadInput) => createLead(input),
+    mutationFn: (input: LeadInput) => createLead(workspaceId, input),
     onSuccess: (created) => invalidate(created.id),
   });
 }
 
 export function useUpdateLead() {
+  const workspaceId = useCurrentWorkspaceId();
   const invalidate = useInvalidateLeads();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: LeadInput }) => updateLead(id, input),
+    mutationFn: ({ id, input }: { id: string; input: LeadInput }) =>
+      updateLead(workspaceId, id, input),
+    onSuccess: (updated) => invalidate(updated.id),
+  });
+}
+
+export function useUpdateLeadStatus() {
+  const workspaceId = useCurrentWorkspaceId();
+  const invalidate = useInvalidateLeads();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: LeadStatus }) =>
+      updateLeadStatus(workspaceId, id, status),
     onSuccess: (updated) => invalidate(updated.id),
   });
 }

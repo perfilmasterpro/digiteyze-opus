@@ -42,10 +42,18 @@ import { leadSchema, type LeadFormValues } from "../schemas/leads.schema";
 import {
   LEAD_ORIGENS,
   LEAD_ORIGEM_LABEL,
+  LEAD_PORTES,
+  LEAD_PORTE_LABEL,
   LEAD_STATUS,
   LEAD_STATUS_LABEL,
+  LEAD_TEMPERATURAS,
+  LEAD_TEMPERATURA_LABEL,
+  UFS,
   type Lead,
   type LeadInput,
+  type LeadPorte,
+  type LeadTemperatura,
+  type UF,
 } from "../types/leads.types";
 
 type Props = {
@@ -59,11 +67,19 @@ const EMPTY: LeadFormValues = {
   status: "novo_lead",
   origem: "inbound",
   responsavel: "",
+  contato_nome: "",
+  contato_cargo: "",
+  contato_email: "",
+  telefone: "",
+  cnpj: "",
+  segmento: "",
+  porte: "",
+  temperatura: "",
+  valor_potencial: undefined,
   cidade: "",
   estado: "",
   site: "",
   instagram: "",
-  telefone: "",
   whatsapp: "",
   observacoes: "",
   proxima_acao: "",
@@ -118,7 +134,7 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
   return (
     <>
       <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
           <SheetHeader className="border-b p-6">
             <SheetTitle>{isEdit ? "Editar lead" : "Novo lead"}</SheetTitle>
             <SheetDescription>
@@ -134,13 +150,14 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
               className="flex flex-1 flex-col overflow-hidden"
             >
               <div className="flex-1 space-y-6 overflow-y-auto p-6">
+                {/* Etapa 1 — Essenciais */}
                 <section className="space-y-4">
                   <div>
                     <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Etapa 1 — Essenciais
                     </h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Campos obrigatórios para cadastro rápido.
+                      Empresa, contato principal e classificação inicial.
                     </p>
                   </div>
 
@@ -223,8 +240,67 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="contato_nome"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contato principal</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nome do contato" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="contato_cargo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cargo</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex.: Diretor Comercial" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="contato_email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-mail</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="contato@empresa.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="telefone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(00) 00000-0000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </section>
 
+                {/* Etapa 2 — Complementares */}
                 <Collapsible open={openOpcionais} onOpenChange={setOpenOpcionais}>
                   <CollapsibleTrigger asChild>
                     <button
@@ -246,6 +322,120 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <FormField
                         control={form.control}
+                        name="cnpj"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CNPJ</FormLabel>
+                            <FormControl>
+                              <Input placeholder="00.000.000/0000-00" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmento"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Segmento</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex.: Varejo, SaaS…" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <FormField
+                        control={form.control}
+                        name="porte"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Porte</FormLabel>
+                            <Select
+                              value={field.value ?? ""}
+                              onValueChange={(v) => field.onChange(v as LeadPorte)}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {LEAD_PORTES.map((p) => (
+                                  <SelectItem key={p} value={p}>
+                                    {LEAD_PORTE_LABEL[p]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="temperatura"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Temperatura</FormLabel>
+                            <Select
+                              value={field.value ?? ""}
+                              onValueChange={(v) => field.onChange(v as LeadTemperatura)}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {LEAD_TEMPERATURAS.map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {LEAD_TEMPERATURA_LABEL[t]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="valor_potencial"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Valor potencial (R$)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                inputMode="decimal"
+                                placeholder="0,00"
+                                value={
+                                  field.value === undefined || Number.isNaN(field.value as number)
+                                    ? ""
+                                    : String(field.value)
+                                }
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  field.onChange(v === "" ? undefined : Number(v));
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <FormField
+                        control={form.control}
                         name="cidade"
                         render={({ field }) => (
                           <FormItem>
@@ -262,15 +452,30 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                         name="estado"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Estado</FormLabel>
-                            <FormControl>
-                              <Input placeholder="UF" {...field} />
-                            </FormControl>
+                            <FormLabel>UF</FormLabel>
+                            <Select
+                              value={field.value ?? ""}
+                              onValueChange={(v) => field.onChange(v as UF)}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="max-h-64">
+                                {UFS.map((uf) => (
+                                  <SelectItem key={uf} value={uf}>
+                                    {uf}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
+
                     <div className="grid gap-4 sm:grid-cols-2">
                       <FormField
                         control={form.control}
@@ -299,34 +504,21 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                         )}
                       />
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name="telefone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Telefone</FormLabel>
-                            <FormControl>
-                              <Input placeholder="(00) 00000-0000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="whatsapp"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>WhatsApp</FormLabel>
-                            <FormControl>
-                              <Input placeholder="(00) 00000-0000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="whatsapp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>WhatsApp</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(00) 00000-0000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <div className="grid gap-4 sm:grid-cols-2">
                       <FormField
                         control={form.control}
@@ -355,6 +547,7 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                         )}
                       />
                     </div>
+
                     <FormField
                       control={form.control}
                       name="observacoes"
@@ -414,11 +607,19 @@ function toFormValues(l: Lead): LeadFormValues {
     status: l.status,
     origem: l.origem,
     responsavel: l.responsavel,
+    contato_nome: l.contato_nome ?? "",
+    contato_cargo: l.contato_cargo ?? "",
+    contato_email: l.contato_email ?? "",
+    telefone: l.telefone ?? "",
+    cnpj: l.cnpj ?? "",
+    segmento: l.segmento ?? "",
+    porte: l.porte ?? "",
+    temperatura: l.temperatura ?? "",
+    valor_potencial: l.valor_potencial,
     cidade: l.cidade ?? "",
     estado: l.estado ?? "",
     site: l.site ?? "",
     instagram: l.instagram ?? "",
-    telefone: l.telefone ?? "",
     whatsapp: l.whatsapp ?? "",
     observacoes: l.observacoes ?? "",
     proxima_acao: l.proxima_acao ?? "",
@@ -433,11 +634,22 @@ function toInput(v: LeadFormValues): LeadInput {
     status: v.status,
     origem: v.origem,
     responsavel: v.responsavel.trim(),
+    contato_nome: clean(v.contato_nome),
+    contato_cargo: clean(v.contato_cargo),
+    contato_email: clean(v.contato_email),
+    telefone: clean(v.telefone),
+    cnpj: clean(v.cnpj),
+    segmento: clean(v.segmento),
+    porte: (v.porte || undefined) as LeadPorte | undefined,
+    temperatura: (v.temperatura || undefined) as LeadTemperatura | undefined,
+    valor_potencial:
+      typeof v.valor_potencial === "number" && !Number.isNaN(v.valor_potencial)
+        ? v.valor_potencial
+        : undefined,
     cidade: clean(v.cidade),
-    estado: clean(v.estado),
+    estado: (v.estado || undefined) as UF | undefined,
     site: clean(v.site),
     instagram: clean(v.instagram),
-    telefone: clean(v.telefone),
     whatsapp: clean(v.whatsapp),
     observacoes: clean(v.observacoes),
     proxima_acao: clean(v.proxima_acao),

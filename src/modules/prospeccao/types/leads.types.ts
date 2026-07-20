@@ -46,6 +46,32 @@ export const LEAD_ORIGEM_LABEL: Record<LeadOrigem, string> = {
   outro: "Outro",
 };
 
+export const LEAD_TEMPERATURAS = ["frio", "morno", "quente"] as const;
+export type LeadTemperatura = (typeof LEAD_TEMPERATURAS)[number];
+
+export const LEAD_TEMPERATURA_LABEL: Record<LeadTemperatura, string> = {
+  frio: "Frio",
+  morno: "Morno",
+  quente: "Quente",
+};
+
+export const LEAD_PORTES = ["mei", "micro", "pequeno", "medio", "grande"] as const;
+export type LeadPorte = (typeof LEAD_PORTES)[number];
+
+export const LEAD_PORTE_LABEL: Record<LeadPorte, string> = {
+  mei: "MEI",
+  micro: "Microempresa",
+  pequeno: "Pequeno porte",
+  medio: "Médio porte",
+  grande: "Grande porte",
+};
+
+export const UFS = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA",
+  "PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+] as const;
+export type UF = (typeof UFS)[number];
+
 export interface Lead {
   id: string;
   workspace_id: string;
@@ -54,16 +80,27 @@ export interface Lead {
   status: LeadStatus;
   origem: LeadOrigem;
   responsavel: string;
-  // Etapa 2 — opcionais
+  // Contato principal (Etapa 1 estendida)
+  contato_nome?: string;
+  contato_cargo?: string;
+  contato_email?: string;
+  telefone?: string;
+  // Etapa 2 — opcionais / B2B
+  cnpj?: string;
+  segmento?: string;
+  porte?: LeadPorte;
+  temperatura?: LeadTemperatura;
+  valor_potencial?: number;
   cidade?: string;
-  estado?: string;
+  estado?: UF;
   site?: string;
   instagram?: string;
-  telefone?: string;
   whatsapp?: string;
   observacoes?: string;
   proxima_acao?: string;
-  data_proxima_acao?: string;
+  data_proxima_acao?: string; // ISO date (yyyy-MM-dd)
+  // Rastreabilidade de conversão para CRM
+  empresa_id?: string;
   // Metadados
   created_at: string;
   updated_at: string;

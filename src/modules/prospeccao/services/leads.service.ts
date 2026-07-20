@@ -1,12 +1,12 @@
-import { getCurrentWorkspaceId } from "@/lib/workspace";
-
-import type { Lead, LeadInput } from "../types/leads.types";
+import type { Lead, LeadInput, LeadStatus } from "../types/leads.types";
 
 /**
  * Service do domínio Prospecção (Leads).
  *
- * Implementação temporária baseada em localStorage. Assinatura pública
- * pronta para migração ao Lovable Cloud + RLS multi-tenant.
+ * Implementação temporária baseada em localStorage. As funções recebem
+ * `workspaceId` explicitamente para paridade com o filtro RLS
+ * (`.eq("workspace_id", …)`) do Supabase e para manter consistência com a
+ * queryKey do React Query definida pelo hook consumidor.
  */
 
 const STORAGE_KEY = "growth-os:leads";
@@ -39,23 +39,21 @@ function generateId() {
   return `lead_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
 }
 
-export async function listLeads(): Promise<Lead[]> {
-  const workspaceId = getCurrentWorkspaceId();
+export async function listLeads(workspaceId: string): Promise<Lead[]> {
   return readAll().filter((l) => l.workspace_id === workspaceId);
 }
 
-export async function getLead(id: string): Promise<Lead | null> {
-  const workspaceId = getCurrentWorkspaceId();
+export async function getLead(workspaceId: string, id: string): Promise<Lead | null> {
   const found = readAll().find((l) => l.id === id && l.workspace_id === workspaceId);
   return found ?? null;
 }
 
-export async function createLead(input: LeadInput): Promise<Lead> {
+export async function createLead(workspaceId: string, input: LeadInput): Promise<Lead> {
   const now = new Date().toISOString();
   const lead: Lead = {
     ...input,
     id: generateId(),
-    workspace_id: getCurrentWorkspaceId(),
+    workspace_id: workspaceId,
     created_at: now,
     updated_at: now,
   };
@@ -65,13 +63,35 @@ export async function createLead(input: LeadInput): Promise<Lead> {
   return lead;
 }
 
-export async function updateLead(id: string, input: LeadInput): Promise<Lead> {
+export async function updateLead(
+  workspaceId: string,
+  id: string,
+  input: LeadInput,
+): Promise<Lead> {
   const list = readAll();
-  const idx = list.findIndex((l) => l.id === id);
+  const idx = list.findIndex((l) => l.id === id && l.workspace_id === workspaceId);
   if (idx === -1) throw new Error("Lead não encontrado");
   const updated: Lead = {
     ...list[idx],
     ...input,
+    updated_at: new Date().toISOString(),
+  };
+  list[idx] = updated;
+  writeAll(list);
+  return updated;
+}
+
+export async function updateLeadStatus(
+  workspaceId: string,
+  id: string,
+  status: LeadStatus,
+): Promise<Lead> {
+  const list = readAll();
+  const idx = list.findIndex((l) => l.id === id && l.workspace_id === workspaceId);
+  if (idx === -1) throw new Error("Lead não encontrado");
+  const updated: Lead = {
+    ...list[idx],
+    status,
     updated_at: new Date().toISOString(),
   };
   list[idx] = updated;
