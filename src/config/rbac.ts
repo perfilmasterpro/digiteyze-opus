@@ -60,7 +60,22 @@ export type Action =
   | "move"
   | "convert";
 
-export type Permission = `${ModuleKey}:${Action}`;
+export type Permission =
+  | `${ModuleKey}:${Action}`
+  | `crm:proposal:${"view" | "create" | "update" | "approve"}`;
+
+/** Sub-ações do domínio CRM > Propostas. */
+type ProposalAction = "view" | "create" | "update" | "approve";
+const PROPOSAL_MATRIX: Record<Role, readonly ProposalAction[]> = {
+  administrador: ["view", "create", "update", "approve"],
+  gestor: ["view", "create", "update", "approve"],
+  comercial: ["view", "create", "update"],
+  operacional: ["view"],
+  financeiro: ["view"],
+  marketing: ["view"],
+  desenvolvimento: ["view"],
+  suporte: ["view"],
+};
 
 /**
  * Mapa padrão de módulos que cada papel enxerga.
@@ -144,6 +159,12 @@ const ROLE_ACTION_OVERRIDES: Partial<Record<Role, Partial<Record<ModuleKey, Acti
 
 
 export function can(role: Role, permission: Permission): boolean {
+  // Sub-namespace: crm:proposal:<action>
+  if (permission.startsWith("crm:proposal:")) {
+    if (!canAccessModule(role, "crm")) return false;
+    const action = permission.slice("crm:proposal:".length) as ProposalAction;
+    return PROPOSAL_MATRIX[role]?.includes(action) ?? false;
+  }
   const [moduleKey, action] = permission.split(":") as [ModuleKey, Action];
   if (!canAccessModule(role, moduleKey)) return false;
   const override = ROLE_ACTION_OVERRIDES[role]?.[moduleKey];
