@@ -1,10 +1,10 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 
 type TabDef = {
   label: string;
-  to: string;
+  to: "/empresas/$id" | "/empresas/$id/contatos" | "/empresas/$id/timeline" | "/empresas/$id/comercial" | "/empresas/$id/projetos" | "/empresas/$id/financeiro" | "/empresas/$id/suporte";
   exact?: boolean;
 };
 
@@ -16,28 +16,31 @@ type TabDef = {
  * demais renderizam `ModulePlaceholder`.
  */
 export function EmpresaTabs({ empresaId }: { empresaId: string }) {
-  const pathname = useLocation({ select: (s) => s.pathname });
-  const base = `/empresas/${empresaId}`;
+  const matchRoute = useMatchRoute();
 
   const tabs: TabDef[] = [
-    { label: "Visão Geral", to: base, exact: true },
-    { label: "Contatos", to: `${base}/contatos` },
-    { label: "Timeline", to: `${base}/timeline` },
-    { label: "Comercial", to: `${base}/comercial` },
-    { label: "Projetos", to: `${base}/projetos` },
-    { label: "Financeiro", to: `${base}/financeiro` },
-    { label: "Suporte", to: `${base}/suporte` },
+    { label: "Visão Geral", to: "/empresas/$id", exact: true },
+    { label: "Contatos", to: "/empresas/$id/contatos" },
+    { label: "Timeline", to: "/empresas/$id/timeline" },
+    { label: "Comercial", to: "/empresas/$id/comercial" },
+    { label: "Projetos", to: "/empresas/$id/projetos" },
+    { label: "Financeiro", to: "/empresas/$id/financeiro" },
+    { label: "Suporte", to: "/empresas/$id/suporte" },
   ];
 
   return (
     <div className="border-b" role="tablist" aria-label="Seções da empresa">
       <nav className="-mb-px flex gap-1 overflow-x-auto">
         {tabs.map((t) => {
-          const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
+          const params = { id: empresaId };
+          const matched = matchRoute({ to: t.to, params });
+          const active = t.exact ? matched : !!matched;
+
           return (
             <Link
               key={t.to}
               to={t.to}
+              params={params}
               role="tab"
               aria-selected={active}
               className={cn(
