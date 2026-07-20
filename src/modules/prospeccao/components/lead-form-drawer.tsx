@@ -40,18 +40,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCreateLead, useUpdateLead } from "../hooks/use-leads";
 import { leadSchema, type LeadFormValues } from "../schemas/leads.schema";
 import {
+  LEAD_CANAIS,
+  LEAD_CANAL_LABEL,
+  LEAD_MOTIVOS_PERDA,
+  LEAD_MOTIVO_PERDA_LABEL,
   LEAD_ORIGENS,
   LEAD_ORIGEM_LABEL,
   LEAD_PORTES,
   LEAD_PORTE_LABEL,
+  LEAD_PROBABILIDADES,
   LEAD_STATUS,
   LEAD_STATUS_LABEL,
   LEAD_TEMPERATURAS,
   LEAD_TEMPERATURA_LABEL,
   UFS,
   type Lead,
+  type LeadCanal,
   type LeadInput,
+  type LeadMotivoPerda,
   type LeadPorte,
+  type LeadProbabilidade,
   type LeadTemperatura,
   type UF,
 } from "../types/leads.types";
@@ -84,6 +92,9 @@ const EMPTY: LeadFormValues = {
   observacoes: "",
   proxima_acao: "",
   data_proxima_acao: "",
+  canal_aquisicao: "",
+  probabilidade_fechamento: undefined,
+  motivo_perda: "",
 };
 
 export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
@@ -106,6 +117,8 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
   }, [open, lead, form]);
 
   const submitting = create.isPending || update.isPending;
+  const status = form.watch("status");
+  const isLost = status === "perdido";
 
   async function onSubmit(values: LeadFormValues) {
     const input = toInput(values);
@@ -200,7 +213,6 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="origem"
@@ -309,9 +321,7 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                     >
                       <span>
                         Etapa 2 — Dados complementares{" "}
-                        <span className="text-xs font-normal text-muted-foreground">
-                          (opcional)
-                        </span>
+                        <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
                       </span>
                       <ChevronDown
                         className={`h-4 w-4 transition-transform ${openOpcionais ? "rotate-180" : ""}`}
@@ -432,6 +442,98 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                         )}
                       />
                     </div>
+
+                    {/* Sprint 3.3: campos comerciais */}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="canal_aquisicao"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Canal de aquisição</FormLabel>
+                            <Select
+                              value={field.value ?? ""}
+                              onValueChange={(v) => field.onChange(v as LeadCanal)}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {LEAD_CANAIS.map((c) => (
+                                  <SelectItem key={c} value={c}>
+                                    {LEAD_CANAL_LABEL[c]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="probabilidade_fechamento"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Probabilidade de fechamento</FormLabel>
+                            <Select
+                              value={
+                                typeof field.value === "number" ? String(field.value) : ""
+                              }
+                              onValueChange={(v) =>
+                                field.onChange(v === "" ? undefined : (Number(v) as LeadProbabilidade))
+                              }
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {LEAD_PROBABILIDADES.map((p) => (
+                                  <SelectItem key={p} value={String(p)}>
+                                    {p}%
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {isLost ? (
+                      <FormField
+                        control={form.control}
+                        name="motivo_perda"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Motivo de perda</FormLabel>
+                            <Select
+                              value={field.value ?? ""}
+                              onValueChange={(v) => field.onChange(v as LeadMotivoPerda)}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {LEAD_MOTIVOS_PERDA.map((m) => (
+                                  <SelectItem key={m} value={m}>
+                                    {LEAD_MOTIVO_PERDA_LABEL[m]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ) : null}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <FormField
@@ -624,6 +726,9 @@ function toFormValues(l: Lead): LeadFormValues {
     observacoes: l.observacoes ?? "",
     proxima_acao: l.proxima_acao ?? "",
     data_proxima_acao: l.data_proxima_acao ?? "",
+    canal_aquisicao: l.canal_aquisicao ?? "",
+    probabilidade_fechamento: l.probabilidade_fechamento,
+    motivo_perda: l.motivo_perda ?? "",
   };
 }
 
@@ -654,5 +759,14 @@ function toInput(v: LeadFormValues): LeadInput {
     observacoes: clean(v.observacoes),
     proxima_acao: clean(v.proxima_acao),
     data_proxima_acao: clean(v.data_proxima_acao),
+    canal_aquisicao: (v.canal_aquisicao || undefined) as LeadCanal | undefined,
+    probabilidade_fechamento:
+      typeof v.probabilidade_fechamento === "number" && !Number.isNaN(v.probabilidade_fechamento)
+        ? (v.probabilidade_fechamento as LeadProbabilidade)
+        : undefined,
+    motivo_perda:
+      v.status === "perdido"
+        ? ((v.motivo_perda || undefined) as LeadMotivoPerda | undefined)
+        : undefined,
   };
 }
