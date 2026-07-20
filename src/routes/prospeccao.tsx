@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Target } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";
@@ -23,8 +24,10 @@ import {
   LeadFormDrawer,
   LeadsKanban,
   useLeads,
+  useUpdateLeadStatus,
   type Lead,
   type LeadOrigem,
+  type LeadStatus,
 } from "@/modules/prospeccao";
 
 export const Route = createFileRoute("/prospeccao")({
@@ -41,14 +44,15 @@ function ProspeccaoPage() {
   const role = useCurrentRole();
   const canView = can(role, "prospeccao:view");
   const canCreate = can(role, "prospeccao:create");
-  const canUpdate = can(role, "prospeccao:update");
+  const canMove = can(role, "prospeccao:move");
+  const navigate = useNavigate();
 
   const { data, isLoading, isError, refetch } = useLeads();
+  const updateStatus = useUpdateLeadStatus();
 
   const [search, setSearch] = useState("");
   const [origemFilter, setOrigemFilter] = useState<LeadOrigem | "todos">("todos");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<Lead | null>(null);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -65,14 +69,20 @@ function ProspeccaoPage() {
   }, [data, search, origemFilter]);
 
   function openCreate() {
-    setEditing(null);
     setDrawerOpen(true);
   }
 
-  function openEdit(lead: Lead) {
-    if (!canUpdate) return;
-    setEditing(lead);
-    setDrawerOpen(true);
+  function openLead(lead: Lead) {
+    navigate({ to: "/prospeccao/$id", params: { id: lead.id } });
+  }
+
+  async function handleChangeStatus(lead: Lead, status: LeadStatus) {
+    try {
+      await updateStatus.mutateAsync({ id: lead.id, status });
+      toast.success("Estágio atualizado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível mover.");
+    }
   }
 
   if (!canView) {
@@ -146,16 +156,18 @@ function ProspeccaoPage() {
           }
         />
       ) : (
-        <LeadsKanban leads={filtered} onSelect={openEdit} />
+        <LeadsKanban
+          leads={filtered}
+          onSelect={openLead}
+          canMove={canMove}
+          onChangeStatus={handleChangeStatus}
+        />
       )}
 
       <LeadFormDrawer
         open={drawerOpen}
-        onOpenChange={(o) => {
-          setDrawerOpen(o);
-          if (!o) setEditing(null);
-        }}
-        lead={editing}
+        onOpenChange={setDrawerOpen}
+        lead={null}
       />
     </div>
   );
