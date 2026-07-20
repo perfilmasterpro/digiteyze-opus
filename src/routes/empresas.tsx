@@ -327,6 +327,7 @@ function EmpresasPage() {
           data={filtered}
           rowKey={(r) => r.id}
           loading={isLoading}
+          resetPageKey={`${search}|${tipoFilter}|${statusFilter}`}
           selectable
           selected={selected}
           onSelectionChange={setSelected}
