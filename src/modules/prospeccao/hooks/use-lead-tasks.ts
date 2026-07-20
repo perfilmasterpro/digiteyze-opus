@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { empresaEventsKeys, publishEmpresaEvent } from "@/modules/empresas";
 import { getCurrentUserName, useCurrentUserId, useCurrentWorkspaceId } from "@/lib/workspace";
 
 import { recordLeadEvent } from "../services/lead-events.service";
@@ -8,6 +9,7 @@ import {
   listLeadTasks,
   updateLeadTaskStatus,
 } from "../services/lead-tasks.service";
+import { getLead } from "../services/leads.service";
 import type {
   LeadTaskInput,
   LeadTaskStatus,
@@ -51,6 +53,21 @@ export function useCreateLeadTask(leadId: string) {
         created_by: userId,
         created_by_name: getCurrentUserName(),
       });
+      const lead = await getLead(workspaceId, leadId);
+      if (lead?.empresa_id) {
+        await publishEmpresaEvent({
+          workspaceId,
+          empresaId: lead.empresa_id,
+          modulo: "prospeccao",
+          tipo: "lead.task_created",
+          titulo: `Tarefa criada: ${task.titulo}`,
+          descricao: task.data ? `Prazo: ${task.data}` : undefined,
+          createdBy: userId,
+          createdByName: getCurrentUserName(),
+          payload: { lead_id: leadId, task_id: task.id, prioridade: task.prioridade },
+        });
+        qc.invalidateQueries({ queryKey: empresaEventsKeys.all(workspaceId, lead.empresa_id) });
+      }
       qc.invalidateQueries({ queryKey: leadTasksKeys.all(workspaceId, leadId) });
       qc.invalidateQueries({ queryKey: leadEventsKeys.all(workspaceId, leadId) });
     },
