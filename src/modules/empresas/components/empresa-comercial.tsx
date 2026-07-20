@@ -4,6 +4,7 @@ import {
   BarChart3,
   CalendarClock,
   Handshake,
+  History,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -19,6 +20,11 @@ import {
   type LeadStatus,
 } from "@/modules/prospeccao";
 
+import { useEmpresaEvents } from "../use-empresa-events";
+import {
+  EMPRESA_EVENT_TYPE_LABEL,
+  type EmpresaEvent,
+} from "../services/empresa-events.service";
 import type { Empresa } from "../empresas.types";
 
 const currency = new Intl.NumberFormat("pt-BR", {
