@@ -9,8 +9,80 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as ProspeccaoRouteImport } from './routes/prospeccao'
+import { Route as ProjetosRouteImport } from './routes/projetos'
+import { Route as MarketingRouteImport } from './routes/marketing'
+import { Route as IaRouteImport } from './routes/ia'
+import { Route as GrowthRouteImport } from './routes/growth'
+import { Route as FinanceiroRouteImport } from './routes/financeiro'
+import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as CrmRouteImport } from './routes/crm'
+import { Route as ConteudoRouteImport } from './routes/conteudo'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SuporteRoute = SuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProspeccaoRoute = ProspeccaoRouteImport.update({
+  id: '/prospeccao',
+  path: '/prospeccao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosRoute = ProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingRoute = MarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IaRoute = IaRouteImport.update({
+  id: '/ia',
+  path: '/ia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GrowthRoute = GrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceiroRoute = FinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresasRoute = EmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmRoute = CrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConteudoRoute = ConteudoRouteImport.update({
+  id: '/conteudo',
+  path: '/conteudo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BaseConhecimentoRoute = BaseConhecimentoRouteImport.update({
+  id: '/base-conhecimento',
+  path: '/base-conhecimento',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +91,200 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/base-conhecimento': typeof BaseConhecimentoRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/conteudo': typeof ConteudoRoute
+  '/crm': typeof CrmRoute
+  '/empresas': typeof EmpresasRoute
+  '/financeiro': typeof FinanceiroRoute
+  '/growth': typeof GrowthRoute
+  '/ia': typeof IaRoute
+  '/marketing': typeof MarketingRoute
+  '/projetos': typeof ProjetosRoute
+  '/prospeccao': typeof ProspeccaoRoute
+  '/suporte': typeof SuporteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/base-conhecimento': typeof BaseConhecimentoRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/conteudo': typeof ConteudoRoute
+  '/crm': typeof CrmRoute
+  '/empresas': typeof EmpresasRoute
+  '/financeiro': typeof FinanceiroRoute
+  '/growth': typeof GrowthRoute
+  '/ia': typeof IaRoute
+  '/marketing': typeof MarketingRoute
+  '/projetos': typeof ProjetosRoute
+  '/prospeccao': typeof ProspeccaoRoute
+  '/suporte': typeof SuporteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/base-conhecimento': typeof BaseConhecimentoRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/conteudo': typeof ConteudoRoute
+  '/crm': typeof CrmRoute
+  '/empresas': typeof EmpresasRoute
+  '/financeiro': typeof FinanceiroRoute
+  '/growth': typeof GrowthRoute
+  '/ia': typeof IaRoute
+  '/marketing': typeof MarketingRoute
+  '/projetos': typeof ProjetosRoute
+  '/prospeccao': typeof ProspeccaoRoute
+  '/suporte': typeof SuporteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/base-conhecimento'
+    | '/configuracoes'
+    | '/conteudo'
+    | '/crm'
+    | '/empresas'
+    | '/financeiro'
+    | '/growth'
+    | '/ia'
+    | '/marketing'
+    | '/projetos'
+    | '/prospeccao'
+    | '/suporte'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/base-conhecimento'
+    | '/configuracoes'
+    | '/conteudo'
+    | '/crm'
+    | '/empresas'
+    | '/financeiro'
+    | '/growth'
+    | '/ia'
+    | '/marketing'
+    | '/projetos'
+    | '/prospeccao'
+    | '/suporte'
+  id:
+    | '__root__'
+    | '/'
+    | '/base-conhecimento'
+    | '/configuracoes'
+    | '/conteudo'
+    | '/crm'
+    | '/empresas'
+    | '/financeiro'
+    | '/growth'
+    | '/ia'
+    | '/marketing'
+    | '/projetos'
+    | '/prospeccao'
+    | '/suporte'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BaseConhecimentoRoute: typeof BaseConhecimentoRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ConteudoRoute: typeof ConteudoRoute
+  CrmRoute: typeof CrmRoute
+  EmpresasRoute: typeof EmpresasRoute
+  FinanceiroRoute: typeof FinanceiroRoute
+  GrowthRoute: typeof GrowthRoute
+  IaRoute: typeof IaRoute
+  MarketingRoute: typeof MarketingRoute
+  ProjetosRoute: typeof ProjetosRoute
+  ProspeccaoRoute: typeof ProspeccaoRoute
+  SuporteRoute: typeof SuporteRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/suporte': {
+      id: '/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prospeccao': {
+      id: '/prospeccao'
+      path: '/prospeccao'
+      fullPath: '/prospeccao'
+      preLoaderRoute: typeof ProspeccaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos': {
+      id: '/projetos'
+      path: '/projetos'
+      fullPath: '/projetos'
+      preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketing': {
+      id: '/marketing'
+      path: '/marketing'
+      fullPath: '/marketing'
+      preLoaderRoute: typeof MarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ia': {
+      id: '/ia'
+      path: '/ia'
+      fullPath: '/ia'
+      preLoaderRoute: typeof IaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/growth': {
+      id: '/growth'
+      path: '/growth'
+      fullPath: '/growth'
+      preLoaderRoute: typeof GrowthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/financeiro': {
+      id: '/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof FinanceiroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresas': {
+      id: '/empresas'
+      path: '/empresas'
+      fullPath: '/empresas'
+      preLoaderRoute: typeof EmpresasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm': {
+      id: '/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof CrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conteudo': {
+      id: '/conteudo'
+      path: '/conteudo'
+      fullPath: '/conteudo'
+      preLoaderRoute: typeof ConteudoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/base-conhecimento': {
+      id: '/base-conhecimento'
+      path: '/base-conhecimento'
+      fullPath: '/base-conhecimento'
+      preLoaderRoute: typeof BaseConhecimentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +297,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BaseConhecimentoRoute: BaseConhecimentoRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
+  ConteudoRoute: ConteudoRoute,
+  CrmRoute: CrmRoute,
+  EmpresasRoute: EmpresasRoute,
+  FinanceiroRoute: FinanceiroRoute,
+  GrowthRoute: GrowthRoute,
+  IaRoute: IaRoute,
+  MarketingRoute: MarketingRoute,
+  ProjetosRoute: ProjetosRoute,
+  ProspeccaoRoute: ProspeccaoRoute,
+  SuporteRoute: SuporteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -10,7 +10,8 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-import type { LucideIcon, ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
