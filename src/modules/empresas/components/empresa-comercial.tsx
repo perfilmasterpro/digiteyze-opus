@@ -183,6 +183,42 @@ export function EmpresaComercial({ empresa }: { empresa: Empresa }) {
           />
         </div>
       </section>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <History className="h-4 w-4" />
+            Histórico comercial (Prospecção)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {prospeccaoEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum evento de prospecção registrado para esta empresa ainda.
+            </p>
+          ) : (
+            <ol className="space-y-3">
+              {prospeccaoEvents.map((e: EmpresaEvent) => (
+                <li key={e.id} className="flex items-start justify-between gap-3 border-b pb-2 last:border-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{e.titulo}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {EMPRESA_EVENT_TYPE_LABEL[e.tipo]}
+                      {e.created_by_name ? ` · ${e.created_by_name}` : ""}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {new Date(e.occurred_at).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
