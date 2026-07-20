@@ -3,6 +3,8 @@ import { Building2, CalendarClock, Mail, MapPin, Phone, User } from "lucide-reac
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
+  LEAD_CANAL_LABEL,
+  LEAD_MOTIVO_PERDA_LABEL,
   LEAD_ORIGEM_LABEL,
   LEAD_PORTE_LABEL,
   LEAD_TEMPERATURA_LABEL,
@@ -123,6 +125,14 @@ export function LeadOverview({ lead }: { lead: Lead }) {
                 ? currency.format(lead.valor_potencial)
                 : "—"}
             </Field>
+            <Field label="Canal de aquisição">
+              {lead.canal_aquisicao ? LEAD_CANAL_LABEL[lead.canal_aquisicao] : "—"}
+            </Field>
+            <Field label="Probabilidade">
+              {typeof lead.probabilidade_fechamento === "number"
+                ? `${lead.probabilidade_fechamento}%`
+                : "—"}
+            </Field>
             <Field label="Próxima ação">{lead.proxima_acao || "—"}</Field>
             <Field label="Data prevista">
               <span className="inline-flex items-center gap-1">
@@ -130,6 +140,11 @@ export function LeadOverview({ lead }: { lead: Lead }) {
                 {fmtDate(lead.data_proxima_acao)}
               </span>
             </Field>
+            {lead.status === "perdido" ? (
+              <Field label="Motivo de perda">
+                {lead.motivo_perda ? LEAD_MOTIVO_PERDA_LABEL[lead.motivo_perda] : "—"}
+              </Field>
+            ) : null}
           </dl>
         </CardContent>
       </Card>

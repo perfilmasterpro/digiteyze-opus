@@ -1,6 +1,6 @@
 import type { LeadStatus } from "./leads.types";
 
-/* ─────────── Lead Events (histórico de estágio / auditoria) ─────────── */
+/* ─────────── Lead Events (histórico / auditoria) ─────────── */
 
 export const LEAD_EVENT_TYPES = [
   "created",
@@ -23,15 +23,23 @@ export const LEAD_EVENT_TYPE_LABEL: Record<LeadEventType, string> = {
   task_completed: "Tarefa concluída",
 };
 
+/** Módulo de origem — preparado para agregar em `empresa_events` futuramente. */
+export type LeadEventModule = "prospeccao";
+export const LEAD_EVENT_MODULE_LABEL: Record<LeadEventModule, string> = {
+  prospeccao: "Prospecção",
+};
+
 export interface LeadEvent {
   id: string;
   workspace_id: string;
   lead_id: string;
   tipo: LeadEventType;
+  modulo: LeadEventModule;
   status_anterior?: LeadStatus;
   status_novo?: LeadStatus;
   descricao?: string;
   created_by?: string;
+  created_by_name?: string;
   created_at: string;
 }
 
@@ -81,6 +89,22 @@ export const LEAD_TASK_STATUS_LABEL: Record<LeadTaskStatus, string> = {
   cancelada: "Cancelada",
 };
 
+/** Status derivado exibido na UI — "atrasada" é calculado (pendente + data passada). */
+export type LeadTaskDerivedStatus = LeadTaskStatus | "atrasada";
+export const LEAD_TASK_DERIVED_LABEL: Record<LeadTaskDerivedStatus, string> = {
+  ...LEAD_TASK_STATUS_LABEL,
+  atrasada: "Atrasada",
+};
+
+export const LEAD_TASK_PRIORIDADES = ["baixa", "media", "alta"] as const;
+export type LeadTaskPrioridade = (typeof LEAD_TASK_PRIORIDADES)[number];
+
+export const LEAD_TASK_PRIORIDADE_LABEL: Record<LeadTaskPrioridade, string> = {
+  baixa: "Baixa",
+  media: "Média",
+  alta: "Alta",
+};
+
 export interface LeadTask {
   id: string;
   workspace_id: string;
@@ -88,6 +112,7 @@ export interface LeadTask {
   titulo: string;
   data?: string; // yyyy-MM-dd
   status: LeadTaskStatus;
+  prioridade: LeadTaskPrioridade;
   responsavel_id?: string;
   created_at: string;
   updated_at: string;
@@ -96,5 +121,20 @@ export interface LeadTask {
 export type LeadTaskInput = {
   titulo: string;
   data?: string;
+  prioridade?: LeadTaskPrioridade;
   responsavel_id?: string;
 };
+
+/**
+ * Deriva o status exibido considerando "atrasada".
+ * Uma tarefa pendente com `data` anterior a hoje é considerada atrasada.
+ */
+export function deriveTaskStatus(task: LeadTask, today = new Date()): LeadTaskDerivedStatus {
+  if (task.status === "pendente" && task.data) {
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, "0");
+    const d = String(today.getDate()).padStart(2, "0");
+    if (task.data < `${y}-${m}-${d}`) return "atrasada";
+  }
+  return task.status;
+}

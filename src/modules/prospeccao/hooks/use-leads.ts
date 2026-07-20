@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useCurrentWorkspaceId } from "@/lib/workspace";
+import { getCurrentUserName, useCurrentUserId, useCurrentWorkspaceId } from "@/lib/workspace";
 
 import { recordLeadEvent } from "../services/lead-events.service";
 import {
@@ -12,10 +12,6 @@ import {
 } from "../services/leads.service";
 import type { LeadInput, LeadStatus } from "../types/leads.types";
 
-/**
- * Query keys escopadas por workspace — padrão multi-tenant.
- * Formato: ["leads", workspaceId] e ["lead", workspaceId, id].
- */
 export const leadsKeys = {
   all: (workspaceId: string) => ["leads", workspaceId] as const,
   detail: (workspaceId: string, id: string) => ["lead", workspaceId, id] as const,
@@ -66,6 +62,7 @@ function useInvalidateLeads() {
 
 export function useCreateLead() {
   const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
   const invalidate = useInvalidateLeads();
   return useMutation({
     mutationFn: (input: LeadInput) => createLead(workspaceId, input),
@@ -76,6 +73,8 @@ export function useCreateLead() {
         tipo: "created",
         status_novo: created.status,
         descricao: `Lead "${created.nome_empresa}" criado`,
+        created_by: userId,
+        created_by_name: getCurrentUserName(),
       });
       invalidate(created.id);
     },
@@ -84,6 +83,7 @@ export function useCreateLead() {
 
 export function useUpdateLead() {
   const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
   const invalidate = useInvalidateLeads();
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: LeadInput }) =>
@@ -94,6 +94,8 @@ export function useUpdateLead() {
         leadId: updated.id,
         tipo: "updated",
         descricao: "Dados do lead atualizados",
+        created_by: userId,
+        created_by_name: getCurrentUserName(),
       });
       invalidate(updated.id);
     },
@@ -102,6 +104,7 @@ export function useUpdateLead() {
 
 export function useUpdateLeadStatus() {
   const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
   const invalidate = useInvalidateLeads();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: LeadStatus }) => {
@@ -116,6 +119,8 @@ export function useUpdateLeadStatus() {
         tipo: "status_changed",
         status_anterior: before?.status,
         status_novo: updated.status,
+        created_by: userId,
+        created_by_name: getCurrentUserName(),
       });
       invalidate(updated.id);
     },

@@ -1,4 +1,4 @@
-import type { LeadEvent, LeadEventType } from "../types/entities.types";
+import type { LeadEvent, LeadEventModule, LeadEventType } from "../types/entities.types";
 import type { LeadStatus } from "../types/leads.types";
 
 const STORAGE_KEY = "growth-os:lead-events";
@@ -44,10 +44,12 @@ export type RecordLeadEventInput = {
   workspaceId: string;
   leadId: string;
   tipo: LeadEventType;
+  modulo?: LeadEventModule;
   status_anterior?: LeadStatus;
   status_novo?: LeadStatus;
   descricao?: string;
   created_by?: string;
+  created_by_name?: string;
 };
 
 export async function recordLeadEvent(input: RecordLeadEventInput): Promise<LeadEvent> {
@@ -56,10 +58,12 @@ export async function recordLeadEvent(input: RecordLeadEventInput): Promise<Lead
     workspace_id: input.workspaceId,
     lead_id: input.leadId,
     tipo: input.tipo,
+    modulo: input.modulo ?? "prospeccao",
     status_anterior: input.status_anterior,
     status_novo: input.status_novo,
     descricao: input.descricao,
     created_by: input.created_by,
+    created_by_name: input.created_by_name,
     created_at: new Date().toISOString(),
   };
   const list = readAll();

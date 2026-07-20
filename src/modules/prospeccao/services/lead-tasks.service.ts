@@ -16,7 +16,9 @@ function readAll(): LeadTask[] {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as LeadTask[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Compat: registros antigos podem não ter `prioridade`.
+    return parsed.map((t) => (t.prioridade ? t : { ...t, prioridade: "media" as const }));
   } catch {
     return [];
   }
@@ -41,7 +43,6 @@ export async function listLeadTasks(
   return readAll()
     .filter((t) => t.workspace_id === workspaceId && t.lead_id === leadId)
     .sort((a, b) => {
-      // pendentes primeiro; depois por data crescente
       if (a.status !== b.status) {
         if (a.status === "pendente") return -1;
         if (b.status === "pendente") return 1;
@@ -65,6 +66,7 @@ export async function createLeadTask(
     titulo: input.titulo,
     data: input.data,
     status: "pendente",
+    prioridade: input.prioridade ?? "media",
     responsavel_id: input.responsavel_id,
     created_at: now,
     updated_at: now,

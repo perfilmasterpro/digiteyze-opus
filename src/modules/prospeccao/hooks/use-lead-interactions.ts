@@ -1,15 +1,13 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useCurrentWorkspaceId } from "@/lib/workspace";
+import { getCurrentUserName, useCurrentUserId, useCurrentWorkspaceId } from "@/lib/workspace";
 
 import { recordLeadEvent } from "../services/lead-events.service";
 import {
   createLeadInteraction,
   listLeadInteractions,
 } from "../services/lead-interactions.service";
-import type {
-  LeadInteractionInput,
-} from "../types/entities.types";
+import type { LeadInteractionInput } from "../types/entities.types";
 import { leadEventsKeys } from "./use-lead-events";
 
 export const leadInteractionsKeys = {
@@ -35,16 +33,19 @@ export function useLeadInteractions(leadId: string) {
 
 export function useCreateLeadInteraction(leadId: string) {
   const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: LeadInteractionInput) =>
-      createLeadInteraction(workspaceId, leadId, input),
+      createLeadInteraction(workspaceId, leadId, { responsavel_id: userId, ...input }),
     onSuccess: async (created) => {
       await recordLeadEvent({
         workspaceId,
         leadId,
         tipo: "interaction_added",
         descricao: `${created.tipo}: ${created.descricao.slice(0, 80)}`,
+        created_by: userId,
+        created_by_name: getCurrentUserName(),
       });
       qc.invalidateQueries({ queryKey: leadInteractionsKeys.all(workspaceId, leadId) });
       qc.invalidateQueries({ queryKey: leadEventsKeys.all(workspaceId, leadId) });

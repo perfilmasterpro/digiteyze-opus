@@ -1,9 +1,10 @@
-import { Calendar, CheckCircle2, FileEdit, Mail, MessageCircle, PhoneCall, RefreshCcw, Sparkles, StickyNote } from "lucide-react";
+import { Calendar, CheckCircle2, FileEdit, MessageCircle, RefreshCcw, Sparkles, StickyNote } from "lucide-react";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 
 import {
+  LEAD_EVENT_MODULE_LABEL,
   LEAD_EVENT_TYPE_LABEL,
   type LeadEvent,
   type LeadEventType,
@@ -53,6 +54,7 @@ export function LeadEventsTimeline({ events }: { events: LeadEvent[] }) {
         <ol className="divide-y">
           {events.map((e) => {
             const Icon = EVENT_ICON[e.tipo] ?? StickyNote;
+            const modulo = LEAD_EVENT_MODULE_LABEL[e.modulo ?? "prospeccao"];
             return (
               <li key={e.id} className="flex gap-3 p-4">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -67,7 +69,17 @@ export function LeadEventsTimeline({ events }: { events: LeadEvent[] }) {
                       {fmtDateTime(e.created_at)}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{eventDetail(e)}</p>
+                  {eventDetail(e) ? (
+                    <p className="mt-0.5 text-sm text-muted-foreground">{eventDetail(e)}</p>
+                  ) : null}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="rounded-full bg-muted px-2 py-0.5 ring-1 ring-inset ring-border">
+                      {modulo}
+                    </span>
+                    {e.created_by_name ? (
+                      <span className="ml-2">por {e.created_by_name}</span>
+                    ) : null}
+                  </p>
                 </div>
               </li>
             );
@@ -77,7 +89,3 @@ export function LeadEventsTimeline({ events }: { events: LeadEvent[] }) {
     </Card>
   );
 }
-
-// Not currently used; kept to signal the icon set is intentional
-void PhoneCall;
-void Mail;

@@ -16,6 +16,9 @@ export const empresaSchema = z.object({
   cidade: z.string().trim().max(80).optional().or(z.literal("")),
   estado: z.string().trim().max(40).optional().or(z.literal("")),
   observacoes: z.string().trim().max(2000).optional().or(z.literal("")),
+  // Rastreabilidade — não editáveis pelo formulário, definidos pela conversão de leads.
+  lead_origem_id: z.string().optional(),
+  data_conversao: z.string().optional(),
 });
 
 export type EmpresaFormValues = z.infer<typeof empresaSchema>;

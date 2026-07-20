@@ -1,4 +1,4 @@
-import { CalendarClock, DollarSign, Flame, MapPin, MoreVertical, User } from "lucide-react";
+import { CalendarClock, DollarSign, MapPin, MoreVertical, User } from "lucide-react";
 
 import { KanbanBoard, type KanbanColumn } from "@/components/common/kanban-board";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 import {
   LEAD_ORIGEM_LABEL,
   LEAD_STATUS,
   LEAD_STATUS_LABEL,
+  LEAD_TEMPERATURA_DOT,
   LEAD_TEMPERATURA_LABEL,
   type Lead,
   type LeadStatus,
@@ -46,17 +48,38 @@ type Props = {
 };
 
 export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props) {
-  const columns: KanbanColumn<Lead>[] = LEAD_STATUS.map((status) => ({
-    id: status,
-    title: LEAD_STATUS_LABEL[status],
-    accent: STATUS_ACCENT[status],
-    items: leads.filter((l) => l.status === status),
-  }));
+  const columns: KanbanColumn<Lead>[] = LEAD_STATUS.map((status) => {
+    const items = leads.filter((l) => l.status === status);
+    const total = items.reduce((sum, l) => sum + (l.valor_potencial ?? 0), 0);
+    return {
+      id: status,
+      title: LEAD_STATUS_LABEL[status],
+      accent: STATUS_ACCENT[status],
+      items,
+      subtitle: (
+        <span className="inline-flex items-center gap-2">
+          <span className="font-medium text-foreground">{currency.format(total)}</span>
+          <span aria-hidden>·</span>
+          <span>
+            {items.length} {items.length === 1 ? "lead" : "leads"}
+          </span>
+        </span>
+      ),
+    };
+  });
+
+  const handleDrop = (leadId: string, targetStatus: string) => {
+    const lead = leads.find((l) => l.id === leadId);
+    if (!lead || !onChangeStatus) return;
+    if (lead.status === targetStatus) return;
+    onChangeStatus(lead, targetStatus as LeadStatus);
+  };
 
   return (
     <KanbanBoard
       columns={columns}
       itemKey={(l) => l.id}
+      onDropItem={canMove ? handleDrop : undefined}
       renderCard={(lead) => {
         const idx = LEAD_STATUS.indexOf(lead.status);
         const prev = idx > 0 ? LEAD_STATUS[idx - 1] : undefined;
@@ -64,13 +87,25 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
         return (
           <div className="flex flex-col gap-2">
             <div className="flex items-start justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => onSelect?.(lead)}
-                className="min-w-0 flex-1 text-left text-sm font-medium leading-tight text-foreground hover:underline"
-              >
-                {lead.nome_empresa}
-              </button>
+              <div className="flex min-w-0 flex-1 items-start gap-2">
+                {lead.temperatura ? (
+                  <span
+                    className={cn(
+                      "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+                      LEAD_TEMPERATURA_DOT[lead.temperatura],
+                    )}
+                    aria-label={`Temperatura ${LEAD_TEMPERATURA_LABEL[lead.temperatura]}`}
+                    title={LEAD_TEMPERATURA_LABEL[lead.temperatura]}
+                  />
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => onSelect?.(lead)}
+                  className="min-w-0 flex-1 text-left text-sm font-medium leading-tight text-foreground hover:underline"
+                >
+                  {lead.nome_empresa}
+                </button>
+              </div>
               {canMove && onChangeStatus ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -125,12 +160,6 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
                   {[lead.cidade, lead.estado].filter(Boolean).join(" / ")}
-                </span>
-              ) : null}
-              {lead.temperatura ? (
-                <span className="inline-flex items-center gap-1">
-                  <Flame className="h-3 w-3" />
-                  {LEAD_TEMPERATURA_LABEL[lead.temperatura]}
                 </span>
               ) : null}
               {typeof lead.valor_potencial === "number" ? (
