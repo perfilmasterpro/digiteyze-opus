@@ -24,6 +24,12 @@ import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmpresasIdRouteImport } from './routes/empresas.$id'
 import { Route as EmpresasIdIndexRouteImport } from './routes/empresas.$id.index'
+import { Route as EmpresasIdTimelineRouteImport } from './routes/empresas.$id.timeline'
+import { Route as EmpresasIdSuporteRouteImport } from './routes/empresas.$id.suporte'
+import { Route as EmpresasIdProjetosRouteImport } from './routes/empresas.$id.projetos'
+import { Route as EmpresasIdFinanceiroRouteImport } from './routes/empresas.$id.financeiro'
+import { Route as EmpresasIdContatosRouteImport } from './routes/empresas.$id.contatos'
+import { Route as EmpresasIdComercialRouteImport } from './routes/empresas.$id.comercial'
 
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
@@ -100,6 +106,36 @@ const EmpresasIdIndexRoute = EmpresasIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => EmpresasIdRoute,
 } as any)
+const EmpresasIdTimelineRoute = EmpresasIdTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => EmpresasIdRoute,
+} as any)
+const EmpresasIdSuporteRoute = EmpresasIdSuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => EmpresasIdRoute,
+} as any)
+const EmpresasIdProjetosRoute = EmpresasIdProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => EmpresasIdRoute,
+} as any)
+const EmpresasIdFinanceiroRoute = EmpresasIdFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => EmpresasIdRoute,
+} as any)
+const EmpresasIdContatosRoute = EmpresasIdContatosRouteImport.update({
+  id: '/contatos',
+  path: '/contatos',
+  getParentRoute: () => EmpresasIdRoute,
+} as any)
+const EmpresasIdComercialRoute = EmpresasIdComercialRouteImport.update({
+  id: '/comercial',
+  path: '/comercial',
+  getParentRoute: () => EmpresasIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,6 +152,12 @@ export interface FileRoutesByFullPath {
   '/prospeccao': typeof ProspeccaoRoute
   '/suporte': typeof SuporteRoute
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/empresas/$id/comercial': typeof EmpresasIdComercialRoute
+  '/empresas/$id/contatos': typeof EmpresasIdContatosRoute
+  '/empresas/$id/financeiro': typeof EmpresasIdFinanceiroRoute
+  '/empresas/$id/projetos': typeof EmpresasIdProjetosRoute
+  '/empresas/$id/suporte': typeof EmpresasIdSuporteRoute
+  '/empresas/$id/timeline': typeof EmpresasIdTimelineRoute
   '/empresas/$id/': typeof EmpresasIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -132,6 +174,12 @@ export interface FileRoutesByTo {
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRoute
   '/suporte': typeof SuporteRoute
+  '/empresas/$id/comercial': typeof EmpresasIdComercialRoute
+  '/empresas/$id/contatos': typeof EmpresasIdContatosRoute
+  '/empresas/$id/financeiro': typeof EmpresasIdFinanceiroRoute
+  '/empresas/$id/projetos': typeof EmpresasIdProjetosRoute
+  '/empresas/$id/suporte': typeof EmpresasIdSuporteRoute
+  '/empresas/$id/timeline': typeof EmpresasIdTimelineRoute
   '/empresas/$id': typeof EmpresasIdIndexRoute
 }
 export interface FileRoutesById {
@@ -150,6 +198,12 @@ export interface FileRoutesById {
   '/prospeccao': typeof ProspeccaoRoute
   '/suporte': typeof SuporteRoute
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/empresas/$id/comercial': typeof EmpresasIdComercialRoute
+  '/empresas/$id/contatos': typeof EmpresasIdContatosRoute
+  '/empresas/$id/financeiro': typeof EmpresasIdFinanceiroRoute
+  '/empresas/$id/projetos': typeof EmpresasIdProjetosRoute
+  '/empresas/$id/suporte': typeof EmpresasIdSuporteRoute
+  '/empresas/$id/timeline': typeof EmpresasIdTimelineRoute
   '/empresas/$id/': typeof EmpresasIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -169,6 +223,12 @@ export interface FileRouteTypes {
     | '/prospeccao'
     | '/suporte'
     | '/empresas/$id'
+    | '/empresas/$id/comercial'
+    | '/empresas/$id/contatos'
+    | '/empresas/$id/financeiro'
+    | '/empresas/$id/projetos'
+    | '/empresas/$id/suporte'
+    | '/empresas/$id/timeline'
     | '/empresas/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -185,6 +245,12 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/suporte'
+    | '/empresas/$id/comercial'
+    | '/empresas/$id/contatos'
+    | '/empresas/$id/financeiro'
+    | '/empresas/$id/projetos'
+    | '/empresas/$id/suporte'
+    | '/empresas/$id/timeline'
     | '/empresas/$id'
   id:
     | '__root__'
@@ -202,6 +268,12 @@ export interface FileRouteTypes {
     | '/prospeccao'
     | '/suporte'
     | '/empresas/$id'
+    | '/empresas/$id/comercial'
+    | '/empresas/$id/contatos'
+    | '/empresas/$id/financeiro'
+    | '/empresas/$id/projetos'
+    | '/empresas/$id/suporte'
+    | '/empresas/$id/timeline'
     | '/empresas/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -328,14 +400,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmpresasIdIndexRouteImport
       parentRoute: typeof EmpresasIdRoute
     }
+    '/empresas/$id/timeline': {
+      id: '/empresas/$id/timeline'
+      path: '/timeline'
+      fullPath: '/empresas/$id/timeline'
+      preLoaderRoute: typeof EmpresasIdTimelineRouteImport
+      parentRoute: typeof EmpresasIdRoute
+    }
+    '/empresas/$id/suporte': {
+      id: '/empresas/$id/suporte'
+      path: '/suporte'
+      fullPath: '/empresas/$id/suporte'
+      preLoaderRoute: typeof EmpresasIdSuporteRouteImport
+      parentRoute: typeof EmpresasIdRoute
+    }
+    '/empresas/$id/projetos': {
+      id: '/empresas/$id/projetos'
+      path: '/projetos'
+      fullPath: '/empresas/$id/projetos'
+      preLoaderRoute: typeof EmpresasIdProjetosRouteImport
+      parentRoute: typeof EmpresasIdRoute
+    }
+    '/empresas/$id/financeiro': {
+      id: '/empresas/$id/financeiro'
+      path: '/financeiro'
+      fullPath: '/empresas/$id/financeiro'
+      preLoaderRoute: typeof EmpresasIdFinanceiroRouteImport
+      parentRoute: typeof EmpresasIdRoute
+    }
+    '/empresas/$id/contatos': {
+      id: '/empresas/$id/contatos'
+      path: '/contatos'
+      fullPath: '/empresas/$id/contatos'
+      preLoaderRoute: typeof EmpresasIdContatosRouteImport
+      parentRoute: typeof EmpresasIdRoute
+    }
+    '/empresas/$id/comercial': {
+      id: '/empresas/$id/comercial'
+      path: '/comercial'
+      fullPath: '/empresas/$id/comercial'
+      preLoaderRoute: typeof EmpresasIdComercialRouteImport
+      parentRoute: typeof EmpresasIdRoute
+    }
   }
 }
 
 interface EmpresasIdRouteChildren {
+  EmpresasIdComercialRoute: typeof EmpresasIdComercialRoute
+  EmpresasIdContatosRoute: typeof EmpresasIdContatosRoute
+  EmpresasIdFinanceiroRoute: typeof EmpresasIdFinanceiroRoute
+  EmpresasIdProjetosRoute: typeof EmpresasIdProjetosRoute
+  EmpresasIdSuporteRoute: typeof EmpresasIdSuporteRoute
+  EmpresasIdTimelineRoute: typeof EmpresasIdTimelineRoute
   EmpresasIdIndexRoute: typeof EmpresasIdIndexRoute
 }
 
 const EmpresasIdRouteChildren: EmpresasIdRouteChildren = {
+  EmpresasIdComercialRoute: EmpresasIdComercialRoute,
+  EmpresasIdContatosRoute: EmpresasIdContatosRoute,
+  EmpresasIdFinanceiroRoute: EmpresasIdFinanceiroRoute,
+  EmpresasIdProjetosRoute: EmpresasIdProjetosRoute,
+  EmpresasIdSuporteRoute: EmpresasIdSuporteRoute,
+  EmpresasIdTimelineRoute: EmpresasIdTimelineRoute,
   EmpresasIdIndexRoute: EmpresasIdIndexRoute,
 }
 
