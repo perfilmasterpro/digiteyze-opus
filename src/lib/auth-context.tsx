@@ -126,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [workspace, setWorkspace] = useState<AuthWorkspace | null>(null);
   const [role, setRole] = useState<Role | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const hydrate = useCallback(async (nextSession: Session | null) => {
     setSession(nextSession);
