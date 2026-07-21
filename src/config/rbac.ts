@@ -106,6 +106,19 @@ const SIGNATURE_MATRIX: Record<Role, readonly SignatureAction[]> = {
   suporte: ["view"],
 };
 
+/** Sub-ações do domínio Growth > Prospecção. */
+type GrowthProspectionAction = "view" | "create" | "update" | "import" | "delete";
+const GROWTH_PROSPECTION_MATRIX: Record<Role, readonly GrowthProspectionAction[]> = {
+  administrador: ["view", "create", "update", "import", "delete"],
+  gestor: ["view", "create", "update", "import", "delete"],
+  comercial: ["view", "create", "update", "import"],
+  operacional: ["view"],
+  financeiro: ["view"],
+  marketing: ["view"],
+  desenvolvimento: ["view"],
+  suporte: ["view"],
+};
+
 /**
  * Mapa padrão de módulos que cada papel enxerga.
  * Serve de default sensato; papéis reais podem sobrescrever no futuro.
