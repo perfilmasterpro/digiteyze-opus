@@ -137,5 +137,4 @@ export function InteractionForm({
     </Card>
   );
 }
-  );
-}
+
