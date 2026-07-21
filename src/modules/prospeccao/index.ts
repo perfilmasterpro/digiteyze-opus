@@ -38,6 +38,8 @@ export {
 export { useConvertLead } from "./hooks/use-convert-lead";
 
 export { LeadFormDrawer } from "./components/lead-form-drawer";
+export { LeadImportDialog } from "./components/lead-import-dialog";
+export { LeadsTable } from "./components/leads-table";
 export { LeadsKanban } from "./components/leads-kanban";
 export { LeadHeader } from "./components/lead-header";
 export { LeadTabs } from "./components/lead-tabs";
