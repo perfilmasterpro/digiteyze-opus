@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRightLeft, Building2, ChevronLeft, Edit, Flame, Target, UserRoundCog, DollarSign } from "lucide-react";
+import { ArrowRightLeft, Building2, ChevronLeft, Pencil, Flame, Target, UserRoundCog, DollarSign } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { StatusBadge, type StatusTone } from "@/components/common/status-badge";
