@@ -325,7 +325,7 @@ export function useGenerateProposalPdf() {
       proposal: Proposal;
       mode?: ProposalPdfMode;
     }): Promise<GenerateProposalPdfResult> => {
-      const empresa = await getEmpresa(workspaceId, proposal.empresa_id);
+      const empresa = await getEmpresa(proposal.empresa_id);
       const blob = await generateProposalPdf({
         proposal,
         client: empresa ? empresaToClient(empresa) : undefined,
