@@ -300,7 +300,7 @@ export type AdminLog = {
   actor_id: string | null;
   workspace_id: string | null;
   message: string | null;
-  metadata: Record<string, unknown> | null;
+  metadata: unknown;
   created_at: string;
 };
 
