@@ -15,7 +15,25 @@ import type { CsvProfile } from "./types";
  *  - origem sempre = "google_maps".
  */
 
-const AD_MARKERS = ["patrocinado", "sponsored", "anuncio", "anúncio", "ad"];
+const AD_MARKERS = ["patrocinado", "sponsored", "anúncio", "anuncio"];
+
+const THIRD_PARTY_SITE_HOSTS = [
+  "booking.com",
+  "expedia.com",
+  "tripadvisor.com",
+  "tripadvisor.com.br",
+  "hoteis.com",
+  "hotels.com",
+  "airbnb.com",
+  "decolar.com",
+  "trivago.com",
+  "trivago.com.br",
+];
+
+function isThirdPartyListing(url: string): boolean {
+  const lower = url.toLowerCase();
+  return THIRD_PARTY_SITE_HOSTS.some((h) => lower.includes(h));
+}
 
 const HEADER_ALIASES: Record<string, keyof LeadInput | "extra_endereco" | "extra_google_maps_url" | "extra_avaliacao" | "extra_qtd_avaliacoes" | "extra_preco" | "extra_status"> = {
   title: "nome_empresa",
