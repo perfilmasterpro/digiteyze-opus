@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRightLeft, Building2, ChevronLeft, Edit, Flame, Target, UserRoundCog, DollarSign } from "lucide-react";
+import { ArrowRightLeft, Building2, ChevronLeft, Pencil, Flame, Target, UserRoundCog, DollarSign } from "lucide-react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { StatusBadge, type StatusTone } from "@/components/common/status-badge";
@@ -31,7 +31,6 @@ type Props = {
   canUpdate: boolean;
   canMove: boolean;
   canConvert: boolean;
-  onEdit: () => void;
   onChangeStatus: (status: LeadStatus) => void;
   onConvert: () => void;
 };
@@ -47,7 +46,6 @@ export function LeadHeader({
   canUpdate,
   canMove,
   canConvert,
-  onEdit,
   onChangeStatus,
   onConvert,
 }: Props) {
@@ -93,9 +91,11 @@ export function LeadHeader({
         actions={
           <>
             {canUpdate ? (
-              <Button variant="outline" size="sm" className="gap-2" onClick={onEdit}>
-                <Edit className="h-4 w-4" />
-                Editar
+              <Button asChild variant="outline" size="sm" className="gap-2">
+                <Link to="/prospeccao/$id/editar" params={{ id: lead.id }}>
+                  <Pencil className="h-4 w-4" />
+                  Editar lead
+                </Link>
               </Button>
             ) : null}
             {canMove ? (

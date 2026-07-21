@@ -10,7 +10,6 @@ import { useCurrentRole } from "@/hooks/use-current-role";
 import {
   LeadConvertDialog,
   LeadDetailSkeleton,
-  LeadFormDrawer,
   LeadHeader,
   LeadTabs,
   useConvertLead,
@@ -41,7 +40,6 @@ function LeadLayout() {
   const updateStatus = useUpdateLeadStatus();
   const convert = useConvertLead();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
 
   if (isLoading) return <LeadDetailSkeleton />;
@@ -87,14 +85,13 @@ function LeadLayout() {
         canUpdate={canUpdate}
         canMove={canMove}
         canConvert={canConvert}
-        onEdit={() => setDrawerOpen(true)}
         onChangeStatus={handleChangeStatus}
         onConvert={() => setConvertOpen(true)}
       />
       <LeadTabs leadId={lead.id} />
       <Outlet />
 
-      <LeadFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} lead={lead} />
+      
       <LeadConvertDialog
         lead={lead}
         open={convertOpen}

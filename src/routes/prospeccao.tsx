@@ -46,6 +46,7 @@ function ProspeccaoPage() {
   const canView = can(role, "prospeccao:view");
   const canCreate = can(role, "prospeccao:create");
   const canMove = can(role, "prospeccao:move");
+  const canUpdate = can(role, "prospeccao:update");
   const canImport = can(role, "growth:prospection:import");
   const navigate = useNavigate();
 
@@ -189,6 +190,7 @@ function ProspeccaoPage() {
           leads={filtered}
           onSelect={openLead}
           canMove={canMove}
+          canUpdate={canUpdate}
           onChangeStatus={handleChangeStatus}
         />
       )}

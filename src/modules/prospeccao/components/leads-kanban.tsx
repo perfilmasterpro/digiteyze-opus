@@ -1,4 +1,5 @@
-import { CalendarClock, Clock, Copy, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Phone, User } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { CalendarClock, Clock, Copy, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Pencil, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { KanbanBoard, type KanbanColumn } from "@/components/common/kanban-board";
@@ -47,9 +48,10 @@ type Props = {
   onSelect?: (lead: Lead) => void;
   onChangeStatus?: (lead: Lead, status: LeadStatus) => void;
   canMove?: boolean;
+  canUpdate?: boolean;
 };
 
-export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props) {
+export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdate }: Props) {
   const columns: KanbanColumn<Lead>[] = LEAD_STATUS.map((status) => {
     const items = leads.filter((l) => l.status === status);
     const total = items.reduce((sum, l) => sum + (l.valor_potencial ?? 0), 0);
@@ -114,7 +116,7 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
                 </button>
               </div>
 
-              {canMove && onChangeStatus ? (
+              {canMove || canUpdate ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -127,33 +129,52 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Mover estágio</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      disabled={!next}
-                      onSelect={() => next && onChangeStatus(lead, next)}
-                    >
-                      Avançar {next ? `→ ${LEAD_STATUS_LABEL[next]}` : ""}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled={!prev}
-                      onSelect={() => prev && onChangeStatus(lead, prev)}
-                    >
-                      Voltar {prev ? `→ ${LEAD_STATUS_LABEL[prev]}` : ""}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                      Escolher estágio
-                    </DropdownMenuLabel>
-                    {LEAD_STATUS.map((s) => (
-                      <DropdownMenuItem
-                        key={s}
-                        disabled={s === lead.status}
-                        onSelect={() => onChangeStatus(lead, s)}
-                        className={s === lead.status ? "font-medium" : ""}
-                      >
-                        {LEAD_STATUS_LABEL[s]}
-                      </DropdownMenuItem>
-                    ))}
+                    {canUpdate ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link
+                            to="/prospeccao/$id/editar"
+                            params={{ id: lead.id }}
+                            className="flex items-center gap-2"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Editar lead
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    ) : null}
+                    {canMove && onChangeStatus ? (
+                      <>
+                        <DropdownMenuLabel>Mover estágio</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          disabled={!next}
+                          onSelect={() => next && onChangeStatus(lead, next)}
+                        >
+                          Avançar {next ? `→ ${LEAD_STATUS_LABEL[next]}` : ""}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!prev}
+                          onSelect={() => prev && onChangeStatus(lead, prev)}
+                        >
+                          Voltar {prev ? `→ ${LEAD_STATUS_LABEL[prev]}` : ""}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                          Escolher estágio
+                        </DropdownMenuLabel>
+                        {LEAD_STATUS.map((s) => (
+                          <DropdownMenuItem
+                            key={s}
+                            disabled={s === lead.status}
+                            onSelect={() => onChangeStatus(lead, s)}
+                            className={s === lead.status ? "font-medium" : ""}
+                          >
+                            {LEAD_STATUS_LABEL[s]}
+                          </DropdownMenuItem>
+                        ))}
+                      </>
+                    ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : null}
