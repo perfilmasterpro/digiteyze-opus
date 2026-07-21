@@ -32,7 +32,20 @@ function nowLocal(): string {
   return new Date(d.getTime() - off * 60_000).toISOString().slice(0, 16);
 }
 
-export function InteractionForm({ leadId, disabled }: { leadId: string; disabled?: boolean }) {
+import type { Lead } from "../types/leads.types";
+
+export function InteractionForm({
+  leadId,
+  lead,
+  disabled,
+}: {
+  leadId: string;
+  lead?: Lead;
+  disabled?: boolean;
+}) {
+  const role = useCurrentRole();
+  const canUseTemplates = can(role, "mensagens:view");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [tipo, setTipo] = useState<LeadInteractionType>("nota");
   const [data, setData] = useState<string>(nowLocal());
   const [descricao, setDescricao] = useState("");
