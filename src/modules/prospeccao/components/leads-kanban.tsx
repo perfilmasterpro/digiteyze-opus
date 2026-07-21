@@ -1,4 +1,5 @@
-import { CalendarClock, Clock, Copy, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Phone, User } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { CalendarClock, Clock, Copy, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Pencil, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { KanbanBoard, type KanbanColumn } from "@/components/common/kanban-board";
