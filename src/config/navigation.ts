@@ -6,6 +6,7 @@ import {
   GraduationCap,
   Headphones,
   LayoutDashboard,
+  MessageSquareText,
   Megaphone,
   PenSquare,
   Rocket,
