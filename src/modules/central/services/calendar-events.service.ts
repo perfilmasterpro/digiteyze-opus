@@ -76,7 +76,7 @@ export async function updateCalendarEvent(
   id: string,
   patch: Partial<CalendarEventInput>,
 ): Promise<CalendarEvent> {
-  const payload: Record<string, unknown> = { ...patch };
+  const payload: TablesUpdate<"calendar_events"> = { ...patch } as TablesUpdate<"calendar_events">;
   if ("participantes" in patch) {
     payload.participantes = (patch.participantes ?? null) as unknown as Json;
   }
