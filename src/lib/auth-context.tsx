@@ -31,6 +31,7 @@ type AuthState = {
   profile: AuthProfile | null;
   workspace: AuthWorkspace | null;
   role: Role | null;
+  isSuperAdmin: boolean;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 };
