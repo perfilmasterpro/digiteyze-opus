@@ -1,4 +1,4 @@
-import { CalendarClock, Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, Edit, Eye, MoreHorizontal, PenLine, Send, Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -25,6 +26,13 @@ import {
 } from "../hooks/use-contracts";
 import { useProposalsByOpportunity } from "../hooks/use-proposals";
 import type { Contract } from "../types/contracts.types";
+import {
+  SignatureRequestDialog,
+  SignatureStatusBadge,
+  useSignaturesByContract,
+  useUpdateSignatureStatus,
+  type Signature,
+} from "../signatures";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -145,83 +153,14 @@ export function ContractList({
       ) : (
         <div className="space-y-3">
           {list.map((c) => (
-            <Card key={c.id}>
-              <CardContent className="flex flex-wrap items-start justify-between gap-3 p-4">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">
-                      {c.titulo}
-                    </span>
-                    <ContractStatusBadge status={c.status} />
-                    <span className="text-xs text-muted-foreground">{c.numero}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarClock className="h-3 w-3" />
-                      Emissão {fmt(c.data_emissao)}
-                    </span>
-                    <span>
-                      Vigência {fmt(c.data_inicio)} — {fmt(c.data_fim)}
-                    </span>
-                    {typeof c.valor === "number" ? (
-                      <span className="font-semibold text-foreground">
-                        {currency.format(c.valor)}
-                      </span>
-                    ) : null}
-                  </div>
-                  {c.observacoes ? (
-                    <p className="line-clamp-2 text-xs text-muted-foreground">
-                      {c.observacoes}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-1">
-                  {canUpdate ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-1"
-                      onClick={() => openEdit(c)}
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      Visualizar
-                    </Button>
-                  ) : null}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        aria-label="Mais ações"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {canUpdate ? (
-                        <DropdownMenuItem onSelect={() => openEdit(c)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canDelete ? (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onSelect={() => setToDelete(c)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </>
-                      ) : null}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardContent>
-            </Card>
+            <ContractCard
+              key={c.id}
+              contract={c}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+              onEdit={() => openEdit(c)}
+              onDelete={() => setToDelete(c)}
+            />
           ))}
         </div>
       )}
@@ -248,5 +187,235 @@ export function ContractList({
         onConfirm={handleDelete}
       />
     </div>
+  );
+}
+
+function ContractCard({
+  contract,
+  canUpdate,
+  canDelete,
+  onEdit,
+  onDelete,
+}: {
+  contract: Contract;
+  canUpdate: boolean;
+  canDelete: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const role = useCurrentRole();
+  const canSignatureView = can(role, "crm:signature:view");
+  const canSignatureCreate = can(role, "crm:signature:create");
+  const canSignatureSign = can(role, "crm:signature:sign");
+  const canSignatureUpdate = can(role, "crm:signature:update");
+
+  const { data: signatures } = useSignaturesByContract(contract.id);
+  const updateStatus = useUpdateSignatureStatus();
+  const [reqOpen, setReqOpen] = useState(false);
+
+  const list = signatures ?? [];
+  const latest = list[0] ?? null;
+
+  async function transition(sig: Signature, next: Signature["status"]) {
+    try {
+      await updateStatus.mutateAsync({
+        id: sig.id,
+        status: next,
+        previousStatus: sig.status,
+      });
+      toast.success("Assinatura atualizada");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar");
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">
+                {contract.titulo}
+              </span>
+              <ContractStatusBadge status={contract.status} />
+              <span className="text-xs text-muted-foreground">
+                {contract.numero}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <CalendarClock className="h-3 w-3" />
+                Emissão {fmt(contract.data_emissao)}
+              </span>
+              <span>
+                Vigência {fmt(contract.data_inicio)} — {fmt(contract.data_fim)}
+              </span>
+              {typeof contract.valor === "number" ? (
+                <span className="font-semibold text-foreground">
+                  {currency.format(contract.valor)}
+                </span>
+              ) : null}
+            </div>
+            {contract.observacoes ? (
+              <p className="line-clamp-2 text-xs text-muted-foreground">
+                {contract.observacoes}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-1">
+            {canUpdate ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1"
+                onClick={onEdit}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                Visualizar
+              </Button>
+            ) : null}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  aria-label="Mais ações"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {canUpdate ? (
+                  <DropdownMenuItem onSelect={onEdit}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar
+                  </DropdownMenuItem>
+                ) : null}
+                {canSignatureCreate ? (
+                  <DropdownMenuItem onSelect={() => setReqOpen(true)}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Enviar para assinatura
+                  </DropdownMenuItem>
+                ) : null}
+                {canDelete ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onSelect={onDelete}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {canSignatureView ? (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <PenLine className="h-3 w-3" />
+                Assinatura
+              </span>
+              {latest ? (
+                <SignatureStatusBadge status={latest.status} />
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  Nenhuma solicitação
+                </span>
+              )}
+            </div>
+            {latest ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div className="min-w-0">
+                  <span className="font-medium text-foreground">
+                    {latest.signer_name}
+                  </span>{" "}
+                  · {latest.signer_email}
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  {latest.signed_at ? (
+                    <span className="inline-flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Assinado {fmt(latest.signed_at)}
+                    </span>
+                  ) : null}
+                  {canSignatureSign && latest.status !== "assinado" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1"
+                      onClick={() => transition(latest, "assinado")}
+                      disabled={updateStatus.isPending}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Marcar como assinado
+                    </Button>
+                  ) : null}
+                  {canSignatureUpdate &&
+                  latest.status !== "assinado" &&
+                  latest.status !== "recusado" ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 gap-1 text-destructive"
+                      onClick={() => transition(latest, "recusado")}
+                      disabled={updateStatus.isPending}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                      Recusar
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            ) : canSignatureCreate ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1"
+                onClick={() => setReqOpen(true)}
+              >
+                <Send className="h-3.5 w-3.5" />
+                Enviar para assinatura
+              </Button>
+            ) : null}
+            {list.length > 1 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="ghost" className="mt-2 h-7 text-xs">
+                    Histórico ({list.length})
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-72">
+                  <DropdownMenuLabel>Assinaturas anteriores</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {list.slice(1).map((s) => (
+                    <DropdownMenuItem key={s.id} className="flex-col items-start">
+                      <span className="text-xs font-medium">{s.signer_name}</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {s.signer_email} · {s.status}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
+        ) : null}
+
+        <SignatureRequestDialog
+          open={reqOpen}
+          onOpenChange={setReqOpen}
+          contractId={contract.id}
+          empresaId={contract.empresa_id}
+        />
+      </CardContent>
+    </Card>
   );
 }

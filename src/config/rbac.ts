@@ -63,7 +63,8 @@ export type Action =
 export type Permission =
   | `${ModuleKey}:${Action}`
   | `crm:proposal:${"view" | "create" | "update" | "approve"}`
-  | `crm:contract:${"view" | "create" | "update" | "delete" | "send" | "sign"}`;
+  | `crm:contract:${"view" | "create" | "update" | "delete" | "send" | "sign"}`
+  | `crm:signature:${"view" | "create" | "update" | "sign"}`;
 
 /** Sub-ações do domínio CRM > Propostas. */
 type ProposalAction = "view" | "create" | "update" | "approve";
@@ -84,6 +85,19 @@ const CONTRACT_MATRIX: Record<Role, readonly ContractAction[]> = {
   administrador: ["view", "create", "update", "delete", "send", "sign"],
   gestor: ["view", "create", "update", "delete", "send", "sign"],
   comercial: ["view", "create", "update", "send"],
+  operacional: ["view"],
+  financeiro: ["view"],
+  marketing: ["view"],
+  desenvolvimento: ["view"],
+  suporte: ["view"],
+};
+
+/** Sub-ações do domínio CRM > Assinaturas. */
+type SignatureAction = "view" | "create" | "update" | "sign";
+const SIGNATURE_MATRIX: Record<Role, readonly SignatureAction[]> = {
+  administrador: ["view", "create", "update", "sign"],
+  gestor: ["view", "create", "update", "sign"],
+  comercial: ["view", "create", "update"],
   operacional: ["view"],
   financeiro: ["view"],
   marketing: ["view"],
@@ -183,6 +197,11 @@ export function can(role: Role, permission: Permission): boolean {
     if (!canAccessModule(role, "crm")) return false;
     const action = permission.slice("crm:contract:".length) as ContractAction;
     return CONTRACT_MATRIX[role]?.includes(action) ?? false;
+  }
+  if (permission.startsWith("crm:signature:")) {
+    if (!canAccessModule(role, "crm")) return false;
+    const action = permission.slice("crm:signature:".length) as SignatureAction;
+    return SIGNATURE_MATRIX[role]?.includes(action) ?? false;
   }
   const [moduleKey, action] = permission.split(":") as [ModuleKey, Action];
   if (!canAccessModule(role, moduleKey)) return false;

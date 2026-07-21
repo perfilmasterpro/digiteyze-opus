@@ -8,6 +8,7 @@ import {
   EmpresaContractsSummary,
   EmpresaCrmSection,
   EmpresaProposalsSummary,
+  EmpresaSignaturesSummary,
 } from "@/modules/crm";
 
 export const Route = createFileRoute("/empresas/$id/comercial")({
@@ -24,6 +25,7 @@ function ComercialTab() {
       <EmpresaCrmSection empresaId={data.id} />
       <EmpresaProposalsSummary empresaId={data.id} />
       <EmpresaContractsSummary empresaId={data.id} />
+      <EmpresaSignaturesSummary empresaId={data.id} />
       <EmpresaComercial empresa={data} />
     </div>
   );

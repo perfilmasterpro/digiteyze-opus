@@ -55,6 +55,11 @@ export const EMPRESA_EVENT_TYPES = [
   "contract.sent",
   "contract.signed",
   "contract.cancelled",
+  "signature.created",
+  "signature.sent",
+  "signature.viewed",
+  "signature.signed",
+  "signature.rejected",
 ] as const;
 export type EmpresaEventType = (typeof EMPRESA_EVENT_TYPES)[number];
 
@@ -83,6 +88,11 @@ export const EMPRESA_EVENT_TYPE_LABEL: Record<EmpresaEventType, string> = {
   "contract.sent": "Contrato enviado",
   "contract.signed": "Contrato assinado",
   "contract.cancelled": "Contrato cancelado",
+  "signature.created": "Assinatura solicitada",
+  "signature.sent": "Assinatura enviada",
+  "signature.viewed": "Assinatura visualizada",
+  "signature.signed": "Documento assinado",
+  "signature.rejected": "Assinatura recusada",
 };
 
 

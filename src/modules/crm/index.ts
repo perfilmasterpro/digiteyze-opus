@@ -107,4 +107,7 @@ export { ContractList } from "./components/contract-list";
 export { ContractStatusBadge } from "./components/contract-status-badge";
 export { EmpresaContractsSummary } from "./components/empresa-contracts-summary";
 
+// --- Assinaturas ---
+export * from "./signatures";
+
 

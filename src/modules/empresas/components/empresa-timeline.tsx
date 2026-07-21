@@ -14,6 +14,7 @@ import {
   Headset,
   Kanban,
   MessageCircle,
+  PenLine,
   RefreshCcw,
   Send,
   Sparkles,
@@ -75,6 +76,11 @@ const TYPE_ICON: Record<EmpresaEventType, React.ComponentType<{ className?: stri
   "contract.sent": Send,
   "contract.signed": CheckCircle2,
   "contract.cancelled": XCircle,
+  "signature.created": PenLine,
+  "signature.sent": Send,
+  "signature.viewed": Activity,
+  "signature.signed": CheckCircle2,
+  "signature.rejected": XCircle,
 };
 
 
