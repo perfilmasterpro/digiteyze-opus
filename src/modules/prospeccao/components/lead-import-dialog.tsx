@@ -144,7 +144,8 @@ export function LeadImportDialog({
 
         {preview ? (
           <div className="space-y-3">
-            <div className="flex flex-wrap gap-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <StatusBadge tone="info">Layout: {preview.profileLabel}</StatusBadge>
               <StatusBadge tone="success">Novos: {preview.totalNovos}</StatusBadge>
               <StatusBadge tone="warning">
                 Duplicados: {preview.totalDuplicados}
@@ -152,6 +153,11 @@ export function LeadImportDialog({
               <StatusBadge tone="destructive">
                 Inválidos: {preview.totalInvalidos}
               </StatusBadge>
+              {preview.totalIgnorados > 0 ? (
+                <StatusBadge tone="neutral">
+                  Anúncios ignorados: {preview.totalIgnorados}
+                </StatusBadge>
+              ) : null}
             </div>
             <div className="max-h-72 overflow-auto rounded-md border">
               <table className="w-full text-sm">
