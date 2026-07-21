@@ -187,20 +187,23 @@ const ROLE_ACTION_OVERRIDES: Partial<Record<Role, Partial<Record<ModuleKey, Acti
   administrador: {
     prospeccao: ["view", "create", "update", "move", "convert", "delete", "archive", "export"],
     crm: ["view", "create", "update", "move", "delete", "archive", "export"],
+    mensagens: ["view", "create", "update", "delete", "export"],
   },
   gestor: {
     prospeccao: ["view", "create", "update", "move", "convert", "delete", "archive", "export"],
     crm: ["view", "create", "update", "move", "delete", "archive", "export"],
+    mensagens: ["view", "create", "update", "delete", "export"],
   },
   comercial: {
     prospeccao: ["view", "create", "update", "move", "convert"],
     crm: ["view", "create", "update", "move"],
+    mensagens: ["view", "create", "update"],
   },
-  operacional: { prospeccao: ["view"], crm: ["view"] },
-  financeiro: { prospeccao: ["view"], crm: ["view"] },
-  marketing: { prospeccao: ["view"], crm: ["view"] },
-  desenvolvimento: { prospeccao: ["view"], crm: ["view"] },
-  suporte: { prospeccao: ["view"], crm: ["view"] },
+  operacional: { prospeccao: ["view"], crm: ["view"], mensagens: ["view"] },
+  financeiro: { prospeccao: ["view"], crm: ["view"], mensagens: ["view"] },
+  marketing: { prospeccao: ["view"], crm: ["view"], mensagens: ["view", "create", "update"] },
+  desenvolvimento: { prospeccao: ["view"], crm: ["view"], mensagens: ["view"] },
+  suporte: { prospeccao: ["view"], crm: ["view"], mensagens: ["view"] },
 };
 
 
