@@ -22,15 +22,18 @@ export interface ImportRow {
   status: ImportRowStatus;
   data: Partial<LeadInput>;
   errors: string[];
+  corrections: string[];
   duplicateReason?: string;
 }
 
 export interface ImportPreview {
   rows: ImportRow[];
+  totalAnalisados: number;
   totalNovos: number;
   totalDuplicados: number;
   totalInvalidos: number;
   totalIgnorados: number;
+  totalCorrigidos: number;
   profileId: string;
   profileLabel: string;
 }
