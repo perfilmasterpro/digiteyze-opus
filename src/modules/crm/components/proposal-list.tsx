@@ -197,7 +197,16 @@ export function ProposalList({
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem onSelect={() => handleGeneratePdf(p, "preview")}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Visualizar PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleGeneratePdf(p, "download")}>
+                          <Download className="mr-2 h-4 w-4" />
+                          Baixar PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         {canUpdate ? (
                           <DropdownMenuItem onSelect={() => openEdit(p)}>
                             <Edit className="mr-2 h-4 w-4" />
