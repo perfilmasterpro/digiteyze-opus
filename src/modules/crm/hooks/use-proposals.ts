@@ -15,6 +15,13 @@ import {
   useCurrentUserId,
   useCurrentWorkspaceId,
 } from "@/lib/workspace";
+import { getEmpresa } from "@/modules/empresas";
+
+import {
+  buildProposalPdfFilename,
+  empresaToClient,
+  generateProposalPdf,
+} from "../services/proposal-pdf.service";
 
 import {
   createProposal,
@@ -293,6 +300,62 @@ export function useDeleteProposal() {
       invalidate({ id, opportunityId, empresaId }),
   });
 }
+
+export type ProposalPdfMode = "download" | "preview";
+
+export interface GenerateProposalPdfResult {
+  blob: Blob;
+  objectUrl: string;
+  filename: string;
+}
+
+/**
+ * Gera o PDF de uma proposta usando a service isolada `proposal-pdf.service`
+ * e publica o evento `proposal.pdf_generated` na timeline da empresa.
+ * O hook resolve a Empresa via barrel público (sem acesso direto a storage).
+ */
+export function useGenerateProposalPdf() {
+  const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
+  return useMutation({
+    mutationFn: async ({
+      proposal,
+      mode = "download",
+    }: {
+      proposal: Proposal;
+      mode?: ProposalPdfMode;
+    }): Promise<GenerateProposalPdfResult> => {
+      const empresa = await getEmpresa(workspaceId, proposal.empresa_id);
+      const blob = await generateProposalPdf({
+        proposal,
+        client: empresa ? empresaToClient(empresa) : undefined,
+      });
+      const objectUrl = URL.createObjectURL(blob);
+      const filename = buildProposalPdfFilename(proposal);
+
+      if (mode === "download") {
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        window.open(objectUrl, "_blank", "noopener,noreferrer");
+      }
+
+      await publish(
+        workspaceId,
+        proposal,
+        "proposal.pdf_generated",
+        `PDF gerado: ${proposal.titulo}`,
+        userId,
+        mode === "preview" ? "Visualização" : "Download",
+      );
+
+      return { blob, objectUrl, filename };
+    },
+  });
 
 /** Métricas puras a partir de um conjunto de propostas. */
 export function computeProposalKpis(proposals: Proposal[]) {
