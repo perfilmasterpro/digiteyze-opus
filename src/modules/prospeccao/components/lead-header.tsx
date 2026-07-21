@@ -31,7 +31,6 @@ type Props = {
   canUpdate: boolean;
   canMove: boolean;
   canConvert: boolean;
-  onEdit: () => void;
   onChangeStatus: (status: LeadStatus) => void;
   onConvert: () => void;
 };
@@ -47,7 +46,6 @@ export function LeadHeader({
   canUpdate,
   canMove,
   canConvert,
-  onEdit,
   onChangeStatus,
   onConvert,
 }: Props) {
