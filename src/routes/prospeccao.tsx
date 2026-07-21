@@ -46,6 +46,7 @@ function ProspeccaoPage() {
   const canView = can(role, "prospeccao:view");
   const canCreate = can(role, "prospeccao:create");
   const canMove = can(role, "prospeccao:move");
+  const canImport = can(role, "growth:prospection:import");
   const navigate = useNavigate();
 
   const { data, isLoading, isError, refetch } = useLeads();
@@ -54,6 +55,7 @@ function ProspeccaoPage() {
   const [search, setSearch] = useState("");
   const [origemFilter, setOrigemFilter] = useState<LeadOrigem | "todos">("todos");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
