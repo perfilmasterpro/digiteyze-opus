@@ -50,6 +50,11 @@ export const EMPRESA_EVENT_TYPES = [
   "proposal.rejected",
   "proposal.expired",
   "proposal.pdf_generated",
+  "contract.created",
+  "contract.updated",
+  "contract.sent",
+  "contract.signed",
+  "contract.cancelled",
 ] as const;
 export type EmpresaEventType = (typeof EMPRESA_EVENT_TYPES)[number];
 
@@ -73,6 +78,11 @@ export const EMPRESA_EVENT_TYPE_LABEL: Record<EmpresaEventType, string> = {
   "proposal.rejected": "Proposta recusada",
   "proposal.expired": "Proposta expirada",
   "proposal.pdf_generated": "PDF da proposta gerado",
+  "contract.created": "Contrato criado",
+  "contract.updated": "Contrato atualizado",
+  "contract.sent": "Contrato enviado",
+  "contract.signed": "Contrato assinado",
+  "contract.cancelled": "Contrato cancelado",
 };
 
 
