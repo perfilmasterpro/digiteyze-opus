@@ -4,7 +4,11 @@ import { cn } from "@/lib/utils";
 
 type TabDef = {
   label: string;
-  to: "/crm/$id" | "/crm/$id/propostas" | "/crm/$id/timeline";
+  to:
+    | "/crm/$id"
+    | "/crm/$id/propostas"
+    | "/crm/$id/contratos"
+    | "/crm/$id/timeline";
   exact?: boolean;
 };
 
@@ -13,6 +17,7 @@ export function OpportunityTabs({ opportunityId }: { opportunityId: string }) {
   const tabs: TabDef[] = [
     { label: "Visão Geral", to: "/crm/$id", exact: true },
     { label: "Propostas", to: "/crm/$id/propostas" },
+    { label: "Contratos", to: "/crm/$id/contratos" },
     { label: "Timeline", to: "/crm/$id/timeline" },
   ];
   return (

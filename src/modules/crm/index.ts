@@ -81,4 +81,30 @@ export { ProposalList } from "./components/proposal-list";
 export { ProposalStatusBadge } from "./components/proposal-status-badge";
 export { EmpresaProposalsSummary } from "./components/empresa-proposals-summary";
 
+// --- Contratos ---
+export * from "./types/contracts.types";
+export {
+  contractSchema,
+  type ContractFormValues,
+} from "./schemas/contracts.schema";
+export {
+  contractKeys,
+  contractsQueryOptions,
+  contractsByProposalQueryOptions,
+  contractsByEmpresaQueryOptions,
+  contractQueryOptions,
+  useContracts,
+  useContract,
+  useContractsByProposal,
+  useContractsByEmpresa,
+  useCreateContract,
+  useUpdateContract,
+  useDeleteContract,
+  computeContractKpis,
+} from "./hooks/use-contracts";
+export { ContractFormDrawer } from "./components/contract-form-drawer";
+export { ContractList } from "./components/contract-list";
+export { ContractStatusBadge } from "./components/contract-status-badge";
+export { EmpresaContractsSummary } from "./components/empresa-contracts-summary";
+
 

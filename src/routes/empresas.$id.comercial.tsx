@@ -4,7 +4,11 @@ import { ErrorState } from "@/components/common/error-state";
 import { LoadingState } from "@/components/common/loading-state";
 import { EmpresaComercial } from "@/modules/empresas/components/empresa-comercial";
 import { useEmpresa } from "@/modules/empresas/use-empresas";
-import { EmpresaCrmSection, EmpresaProposalsSummary } from "@/modules/crm";
+import {
+  EmpresaContractsSummary,
+  EmpresaCrmSection,
+  EmpresaProposalsSummary,
+} from "@/modules/crm";
 
 export const Route = createFileRoute("/empresas/$id/comercial")({
   component: ComercialTab,
@@ -19,6 +23,7 @@ function ComercialTab() {
     <div className="space-y-6">
       <EmpresaCrmSection empresaId={data.id} />
       <EmpresaProposalsSummary empresaId={data.id} />
+      <EmpresaContractsSummary empresaId={data.id} />
       <EmpresaComercial empresa={data} />
     </div>
   );
