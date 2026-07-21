@@ -152,7 +152,7 @@ function MensagensPage() {
       <div className="flex flex-col gap-3 sm:flex-row">
         <SearchInput
           value={search}
-          onChange={setSearch}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por título ou conteúdo..."
           className="sm:flex-1"
         />
