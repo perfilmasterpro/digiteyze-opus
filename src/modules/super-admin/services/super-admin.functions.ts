@@ -154,7 +154,7 @@ export const updateWorkspaceSettings = createServerFn({ method: "POST" })
       actor_id: context.userId,
       workspace_id: data.workspaceId,
       message: `Configurações do workspace atualizadas`,
-      metadata: patch,
+      metadata: patch as never,
     });
 
     return { ok: true };
