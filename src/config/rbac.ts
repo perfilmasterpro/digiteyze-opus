@@ -35,6 +35,7 @@ export const MODULES = [
   "empresas",
   "crm",
   "prospeccao",
+  "mensagens",
   "marketing",
   "conteudo",
   "projetos",
