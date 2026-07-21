@@ -31,6 +31,7 @@ type AuthState = {
   profile: AuthProfile | null;
   workspace: AuthWorkspace | null;
   role: Role | null;
+  isSuperAdmin: boolean;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -125,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [workspace, setWorkspace] = useState<AuthWorkspace | null>(null);
   const [role, setRole] = useState<Role | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const hydrate = useCallback(async (nextSession: Session | null) => {
     setSession(nextSession);
@@ -132,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setWorkspace(null);
       setRole(null);
+      setIsSuperAdmin(false);
       __clearWorkspaceStore();
       setStatus("unauthenticated");
       return;
@@ -151,6 +154,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userName: data.profile.display_name ?? nextSession.user.email ?? "Usuário",
         role: data.role,
       });
+      const { data: sa } = await supabase
+        .from("super_admins")
+        .select("user_id")
+        .eq("user_id", nextSession.user.id)
+        .maybeSingle();
+      setIsSuperAdmin(!!sa);
       setStatus("authenticated");
     } catch (err) {
       console.error("[auth] bootstrap failed", err);
@@ -190,10 +199,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       workspace,
       role,
+      isSuperAdmin,
       signOut,
       refresh,
     }),
-    [status, session, profile, workspace, role, signOut, refresh],
+    [status, session, profile, workspace, role, isSuperAdmin, signOut, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

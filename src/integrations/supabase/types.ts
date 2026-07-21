@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          message: string | null
+          metadata: Json
+          severity: string
+          workspace_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_logs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           created_at: string
@@ -469,6 +510,24 @@ export type Database = {
           },
         ]
       }
+      super_admins: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -530,6 +589,44 @@ export type Database = {
           },
         ]
       }
+      workspace_settings: {
+        Row: {
+          created_at: string
+          features: Json
+          limits: Json
+          plan: string
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          features?: Json
+          limits?: Json
+          plan?: string
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          features?: Json
+          limits?: Json
+          plan?: string
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_settings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           created_at: string
@@ -560,6 +657,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
     }
     Enums: {

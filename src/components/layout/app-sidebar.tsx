@@ -1,5 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Zap } from "lucide-react";
+import { ShieldAlert, Zap } from "lucide-react";
+
+import { useAuth } from "@/lib/auth-context";
 
 import {
   Sidebar,
@@ -29,6 +31,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const current = useCurrentPath();
+  const { isSuperAdmin } = useAuth();
 
   const groups = NAV_ITEMS.reduce<Record<string, NavItem[]>>((acc, item) => {
     (acc[item.group] ??= []).push(item);
@@ -80,6 +83,27 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+        {isSuperAdmin && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Sistema</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(current, "/super-admin")}
+                    tooltip="Super Admin"
+                  >
+                    <Link to="/super-admin" className="flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4 shrink-0" />
+                      <span className="truncate">Super Admin</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProspeccaoRouteImport } from './routes/prospeccao'
 import { Route as ProjetosRouteImport } from './routes/projetos'
@@ -24,6 +25,11 @@ import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
+import { Route as SuperAdminWorkspacesRouteImport } from './routes/super-admin.workspaces'
+import { Route as SuperAdminUsuariosRouteImport } from './routes/super-admin.usuarios'
+import { Route as SuperAdminLogsRouteImport } from './routes/super-admin.logs'
+import { Route as SuperAdminConfiguracoesRouteImport } from './routes/super-admin.configuracoes'
 import { Route as ProspeccaoListaRouteImport } from './routes/prospeccao.lista'
 import { Route as ProspeccaoIdRouteImport } from './routes/prospeccao.$id'
 import { Route as GrowthDashboardRouteImport } from './routes/growth.dashboard'
@@ -48,6 +54,11 @@ import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperAdminRoute = SuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -119,6 +130,31 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SuperAdminIndexRoute = SuperAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminWorkspacesRoute = SuperAdminWorkspacesRouteImport.update({
+  id: '/workspaces',
+  path: '/workspaces',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminUsuariosRoute = SuperAdminUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminLogsRoute = SuperAdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminConfiguracoesRoute = SuperAdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => SuperAdminRoute,
 } as any)
 const ProspeccaoListaRoute = ProspeccaoListaRouteImport.update({
   id: '/lista',
@@ -237,12 +273,18 @@ export interface FileRoutesByFullPath {
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/suporte': typeof SuporteRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
   '/prospeccao/lista': typeof ProspeccaoListaRoute
+  '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
+  '/super-admin/logs': typeof SuperAdminLogsRoute
+  '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
+  '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
+  '/super-admin/': typeof SuperAdminIndexRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -277,6 +319,11 @@ export interface FileRoutesByTo {
   '/suporte': typeof SuporteRoute
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/lista': typeof ProspeccaoListaRoute
+  '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
+  '/super-admin/logs': typeof SuperAdminLogsRoute
+  '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
+  '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
+  '/super-admin': typeof SuperAdminIndexRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -309,12 +356,18 @@ export interface FileRoutesById {
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/suporte': typeof SuporteRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
   '/prospeccao/lista': typeof ProspeccaoListaRoute
+  '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
+  '/super-admin/logs': typeof SuperAdminLogsRoute
+  '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
+  '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
+  '/super-admin/': typeof SuperAdminIndexRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -348,12 +401,18 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/reset-password'
+    | '/super-admin'
     | '/suporte'
     | '/crm/$id'
     | '/empresas/$id'
     | '/growth/dashboard'
     | '/prospeccao/$id'
     | '/prospeccao/lista'
+    | '/super-admin/configuracoes'
+    | '/super-admin/logs'
+    | '/super-admin/usuarios'
+    | '/super-admin/workspaces'
+    | '/super-admin/'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -388,6 +447,11 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/growth/dashboard'
     | '/prospeccao/lista'
+    | '/super-admin/configuracoes'
+    | '/super-admin/logs'
+    | '/super-admin/usuarios'
+    | '/super-admin/workspaces'
+    | '/super-admin'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -419,12 +483,18 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/reset-password'
+    | '/super-admin'
     | '/suporte'
     | '/crm/$id'
     | '/empresas/$id'
     | '/growth/dashboard'
     | '/prospeccao/$id'
     | '/prospeccao/lista'
+    | '/super-admin/configuracoes'
+    | '/super-admin/logs'
+    | '/super-admin/usuarios'
+    | '/super-admin/workspaces'
+    | '/super-admin/'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -457,6 +527,7 @@ export interface RootRouteChildren {
   ProjetosRoute: typeof ProjetosRoute
   ProspeccaoRoute: typeof ProspeccaoRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SuperAdminRoute: typeof SuperAdminRouteWithChildren
   SuporteRoute: typeof SuporteRoute
 }
 
@@ -467,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/suporte'
       fullPath: '/suporte'
       preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -566,6 +644,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/super-admin/': {
+      id: '/super-admin/'
+      path: '/'
+      fullPath: '/super-admin/'
+      preLoaderRoute: typeof SuperAdminIndexRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/workspaces': {
+      id: '/super-admin/workspaces'
+      path: '/workspaces'
+      fullPath: '/super-admin/workspaces'
+      preLoaderRoute: typeof SuperAdminWorkspacesRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/usuarios': {
+      id: '/super-admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/super-admin/usuarios'
+      preLoaderRoute: typeof SuperAdminUsuariosRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/logs': {
+      id: '/super-admin/logs'
+      path: '/logs'
+      fullPath: '/super-admin/logs'
+      preLoaderRoute: typeof SuperAdminLogsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/configuracoes': {
+      id: '/super-admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/super-admin/configuracoes'
+      preLoaderRoute: typeof SuperAdminConfiguracoesRouteImport
+      parentRoute: typeof SuperAdminRoute
     }
     '/prospeccao/lista': {
       id: '/prospeccao/lista'
@@ -815,6 +928,26 @@ const ProspeccaoRouteWithChildren = ProspeccaoRoute._addFileChildren(
   ProspeccaoRouteChildren,
 )
 
+interface SuperAdminRouteChildren {
+  SuperAdminConfiguracoesRoute: typeof SuperAdminConfiguracoesRoute
+  SuperAdminLogsRoute: typeof SuperAdminLogsRoute
+  SuperAdminUsuariosRoute: typeof SuperAdminUsuariosRoute
+  SuperAdminWorkspacesRoute: typeof SuperAdminWorkspacesRoute
+  SuperAdminIndexRoute: typeof SuperAdminIndexRoute
+}
+
+const SuperAdminRouteChildren: SuperAdminRouteChildren = {
+  SuperAdminConfiguracoesRoute: SuperAdminConfiguracoesRoute,
+  SuperAdminLogsRoute: SuperAdminLogsRoute,
+  SuperAdminUsuariosRoute: SuperAdminUsuariosRoute,
+  SuperAdminWorkspacesRoute: SuperAdminWorkspacesRoute,
+  SuperAdminIndexRoute: SuperAdminIndexRoute,
+}
+
+const SuperAdminRouteWithChildren = SuperAdminRoute._addFileChildren(
+  SuperAdminRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -830,6 +963,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProjetosRoute: ProjetosRoute,
   ProspeccaoRoute: ProspeccaoRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  SuperAdminRoute: SuperAdminRouteWithChildren,
   SuporteRoute: SuporteRoute,
 }
 export const routeTree = rootRouteImport
