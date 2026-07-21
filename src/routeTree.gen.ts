@@ -39,6 +39,7 @@ import { Route as EmpresasIdContatosRouteImport } from './routes/empresas.$id.co
 import { Route as EmpresasIdComercialRouteImport } from './routes/empresas.$id.comercial'
 import { Route as CrmIdTimelineRouteImport } from './routes/crm.$id.timeline'
 import { Route as CrmIdPropostasRouteImport } from './routes/crm.$id.propostas'
+import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
@@ -191,6 +192,11 @@ const CrmIdPropostasRoute = CrmIdPropostasRouteImport.update({
   path: '/propostas',
   getParentRoute: () => CrmIdRoute,
 } as any)
+const CrmIdContratosRoute = CrmIdContratosRouteImport.update({
+  id: '/contratos',
+  path: '/contratos',
+  getParentRoute: () => CrmIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
+  '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
   '/empresas/$id/comercial': typeof EmpresasIdComercialRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/suporte': typeof SuporteRoute
+  '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
   '/empresas/$id/comercial': typeof EmpresasIdComercialRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
+  '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
   '/empresas/$id/comercial': typeof EmpresasIdComercialRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/crm/$id'
     | '/empresas/$id'
     | '/prospeccao/$id'
+    | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
     | '/empresas/$id/comercial'
@@ -334,6 +344,7 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/suporte'
+    | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
     | '/empresas/$id/comercial'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/crm/$id'
     | '/empresas/$id'
     | '/prospeccao/$id'
+    | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
     | '/empresas/$id/comercial'
@@ -610,16 +622,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIdPropostasRouteImport
       parentRoute: typeof CrmIdRoute
     }
+    '/crm/$id/contratos': {
+      id: '/crm/$id/contratos'
+      path: '/contratos'
+      fullPath: '/crm/$id/contratos'
+      preLoaderRoute: typeof CrmIdContratosRouteImport
+      parentRoute: typeof CrmIdRoute
+    }
   }
 }
 
 interface CrmIdRouteChildren {
+  CrmIdContratosRoute: typeof CrmIdContratosRoute
   CrmIdPropostasRoute: typeof CrmIdPropostasRoute
   CrmIdTimelineRoute: typeof CrmIdTimelineRoute
   CrmIdIndexRoute: typeof CrmIdIndexRoute
 }
 
 const CrmIdRouteChildren: CrmIdRouteChildren = {
+  CrmIdContratosRoute: CrmIdContratosRoute,
   CrmIdPropostasRoute: CrmIdPropostasRoute,
   CrmIdTimelineRoute: CrmIdTimelineRoute,
   CrmIdIndexRoute: CrmIdIndexRoute,
@@ -721,13 +742,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

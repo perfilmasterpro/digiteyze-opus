@@ -8,6 +8,7 @@ import {
   Clock,
   DollarSign,
   FileEdit,
+  FileSignature,
   FileText,
   Handshake,
   Headset,
@@ -69,6 +70,11 @@ const TYPE_ICON: Record<EmpresaEventType, React.ComponentType<{ className?: stri
   "proposal.rejected": XCircle,
   "proposal.expired": Clock,
   "proposal.pdf_generated": FileText,
+  "contract.created": FileSignature,
+  "contract.updated": FileEdit,
+  "contract.sent": Send,
+  "contract.signed": CheckCircle2,
+  "contract.cancelled": XCircle,
 };
 
 
