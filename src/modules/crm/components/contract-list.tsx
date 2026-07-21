@@ -153,83 +153,14 @@ export function ContractList({
       ) : (
         <div className="space-y-3">
           {list.map((c) => (
-            <Card key={c.id}>
-              <CardContent className="flex flex-wrap items-start justify-between gap-3 p-4">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">
-                      {c.titulo}
-                    </span>
-                    <ContractStatusBadge status={c.status} />
-                    <span className="text-xs text-muted-foreground">{c.numero}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarClock className="h-3 w-3" />
-                      Emissão {fmt(c.data_emissao)}
-                    </span>
-                    <span>
-                      Vigência {fmt(c.data_inicio)} — {fmt(c.data_fim)}
-                    </span>
-                    {typeof c.valor === "number" ? (
-                      <span className="font-semibold text-foreground">
-                        {currency.format(c.valor)}
-                      </span>
-                    ) : null}
-                  </div>
-                  {c.observacoes ? (
-                    <p className="line-clamp-2 text-xs text-muted-foreground">
-                      {c.observacoes}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-1">
-                  {canUpdate ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-1"
-                      onClick={() => openEdit(c)}
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      Visualizar
-                    </Button>
-                  ) : null}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        aria-label="Mais ações"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {canUpdate ? (
-                        <DropdownMenuItem onSelect={() => openEdit(c)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canDelete ? (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onSelect={() => setToDelete(c)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </>
-                      ) : null}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardContent>
-            </Card>
+            <ContractCard
+              key={c.id}
+              contract={c}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+              onEdit={() => openEdit(c)}
+              onDelete={() => setToDelete(c)}
+            />
           ))}
         </div>
       )}
