@@ -69,6 +69,28 @@ export const LEAD_TEMPERATURA_DOT: Record<LeadTemperatura, string> = {
   quente: "bg-destructive",
 };
 
+export const LEAD_TEMPERATURA_EMOJI: Record<LeadTemperatura, string> = {
+  frio: "❄️",
+  morno: "🌡️",
+  quente: "🔥",
+};
+
+/**
+ * Cor por estágio do pipeline (referencia tokens em src/styles.css).
+ * Usada para: barra superior da coluna, indicador do card e badge de status.
+ */
+export const LEAD_STATUS_COLOR_VAR: Record<LeadStatus, string> = {
+  novo_lead: "--stage-novo",
+  primeiro_contato: "--stage-primeiro",
+  whatsapp: "--stage-whatsapp",
+  respondeu: "--stage-respondeu",
+  reuniao: "--stage-reuniao",
+  proposta: "--stage-proposta",
+  negociacao: "--stage-negociacao",
+  cliente: "--stage-cliente",
+  perdido: "--stage-perdido",
+};
+
 export const LEAD_PORTES = ["mei", "micro", "pequeno", "medio", "grande"] as const;
 export type LeadPorte = (typeof LEAD_PORTES)[number];
 
