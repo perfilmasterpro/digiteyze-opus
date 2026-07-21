@@ -217,6 +217,11 @@ export function can(role: Role, permission: Permission): boolean {
     const action = permission.slice("crm:signature:".length) as SignatureAction;
     return SIGNATURE_MATRIX[role]?.includes(action) ?? false;
   }
+  if (permission.startsWith("growth:prospection:")) {
+    if (!canAccessModule(role, "growth")) return false;
+    const action = permission.slice("growth:prospection:".length) as GrowthProspectionAction;
+    return GROWTH_PROSPECTION_MATRIX[role]?.includes(action) ?? false;
+  }
   const [moduleKey, action] = permission.split(":") as [ModuleKey, Action];
   if (!canAccessModule(role, moduleKey)) return false;
   const override = ROLE_ACTION_OVERRIDES[role]?.[moduleKey];
