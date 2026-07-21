@@ -190,6 +190,7 @@ function ProspeccaoPage() {
           leads={filtered}
           onSelect={openLead}
           canMove={canMove}
+          canUpdate={canUpdate}
           onChangeStatus={handleChangeStatus}
         />
       )}
