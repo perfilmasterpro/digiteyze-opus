@@ -60,7 +60,7 @@ function GrowthDashboardPage() {
 
     const pipeline = opps
       .filter((o) => !["ganho", "perdido"].includes(o.status))
-      .reduce((sum, o) => sum + (o.valor ?? 0), 0);
+      .reduce((sum, o) => sum + (o.valor_estimado ?? 0), 0);
 
     return {
       leadsNovos,
