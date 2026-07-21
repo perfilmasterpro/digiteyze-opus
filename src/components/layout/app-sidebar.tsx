@@ -83,6 +83,27 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+        {isSuperAdmin && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Sistema</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(current, "/super-admin")}
+                    tooltip="Super Admin"
+                  >
+                    <Link to="/super-admin" className="flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4 shrink-0" />
+                      <span className="truncate">Super Admin</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
