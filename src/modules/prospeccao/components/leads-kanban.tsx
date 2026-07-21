@@ -266,9 +266,21 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
 
 
             <div className="flex items-center justify-between gap-2 text-xs">
-              <span className="rounded-full bg-background px-2 py-0.5 text-muted-foreground ring-1 ring-inset ring-border">
-                {LEAD_ORIGEM_LABEL[lead.origem]}
-              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset"
+                  style={{
+                    backgroundColor: `color-mix(in oklab, var(${LEAD_STATUS_COLOR_VAR[lead.status]}) 15%, transparent)`,
+                    color: `var(${LEAD_STATUS_COLOR_VAR[lead.status]})`,
+                    boxShadow: `inset 0 0 0 1px color-mix(in oklab, var(${LEAD_STATUS_COLOR_VAR[lead.status]}) 30%, transparent)`,
+                  }}
+                >
+                  {LEAD_STATUS_LABEL[lead.status]}
+                </span>
+                <span className="rounded-full bg-background px-2 py-0.5 text-muted-foreground ring-1 ring-inset ring-border">
+                  {LEAD_ORIGEM_LABEL[lead.origem]}
+                </span>
+              </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 {lead.updated_at ? (
                   <span className="inline-flex items-center gap-1" title="Último contato">
