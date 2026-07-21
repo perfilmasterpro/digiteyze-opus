@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProspeccaoRouteImport } from './routes/prospeccao'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as MarketingRouteImport } from './routes/marketing'
@@ -21,6 +22,7 @@ import { Route as CrmRouteImport } from './routes/crm'
 import { Route as ConteudoRouteImport } from './routes/conteudo'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProspeccaoListaRouteImport } from './routes/prospeccao.lista'
 import { Route as ProspeccaoIdRouteImport } from './routes/prospeccao.$id'
@@ -46,6 +48,11 @@ import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProspeccaoRoute = ProspeccaoRouteImport.update({
@@ -101,6 +108,11 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
 const BaseConhecimentoRoute = BaseConhecimentoRouteImport.update({
   id: '/base-conhecimento',
   path: '/base-conhecimento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -212,6 +224,7 @@ const CrmIdContratosRoute = CrmIdContratosRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
@@ -223,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/marketing': typeof MarketingRoute
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/suporte': typeof SuporteRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
@@ -247,6 +261,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
@@ -258,6 +273,7 @@ export interface FileRoutesByTo {
   '/marketing': typeof MarketingRoute
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/suporte': typeof SuporteRoute
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/lista': typeof ProspeccaoListaRoute
@@ -280,6 +296,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
@@ -291,6 +308,7 @@ export interface FileRoutesById {
   '/marketing': typeof MarketingRoute
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/suporte': typeof SuporteRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
@@ -317,6 +335,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/base-conhecimento'
     | '/configuracoes'
     | '/conteudo'
@@ -328,6 +347,7 @@ export interface FileRouteTypes {
     | '/marketing'
     | '/projetos'
     | '/prospeccao'
+    | '/reset-password'
     | '/suporte'
     | '/crm/$id'
     | '/empresas/$id'
@@ -352,6 +372,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/base-conhecimento'
     | '/configuracoes'
     | '/conteudo'
@@ -363,6 +384,7 @@ export interface FileRouteTypes {
     | '/marketing'
     | '/projetos'
     | '/prospeccao'
+    | '/reset-password'
     | '/suporte'
     | '/growth/dashboard'
     | '/prospeccao/lista'
@@ -384,6 +406,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/base-conhecimento'
     | '/configuracoes'
     | '/conteudo'
@@ -395,6 +418,7 @@ export interface FileRouteTypes {
     | '/marketing'
     | '/projetos'
     | '/prospeccao'
+    | '/reset-password'
     | '/suporte'
     | '/crm/$id'
     | '/empresas/$id'
@@ -420,6 +444,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   BaseConhecimentoRoute: typeof BaseConhecimentoRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ConteudoRoute: typeof ConteudoRoute
@@ -431,6 +456,7 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRoute
   ProjetosRoute: typeof ProjetosRoute
   ProspeccaoRoute: typeof ProspeccaoRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SuporteRoute: typeof SuporteRoute
 }
 
@@ -441,6 +467,13 @@ declare module '@tanstack/react-router' {
       path: '/suporte'
       fullPath: '/suporte'
       preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prospeccao': {
@@ -518,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/base-conhecimento'
       fullPath: '/base-conhecimento'
       preLoaderRoute: typeof BaseConhecimentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -777,6 +817,7 @@ const ProspeccaoRouteWithChildren = ProspeccaoRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   BaseConhecimentoRoute: BaseConhecimentoRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   ConteudoRoute: ConteudoRoute,
@@ -788,6 +829,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRoute,
   ProjetosRoute: ProjetosRoute,
   ProspeccaoRoute: ProspeccaoRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRoute,
   SuporteRoute: SuporteRoute,
 }
 export const routeTree = rootRouteImport

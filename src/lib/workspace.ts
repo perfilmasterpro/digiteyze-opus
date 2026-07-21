@@ -1,20 +1,46 @@
 /**
  * Workspace Context
  *
- * Centraliza a obtenção do workspace e usuário atual. Placeholder enquanto
- * auth/multi-tenant real não existe — toda leitura de contexto DEVE passar
- * por aqui.
- *
- * Quando o Lovable Cloud + auth entrarem, apenas a implementação abaixo muda;
- * consumidores permanecem intactos.
+ * Fornece contexto do workspace/usuário atual a partir da sessão real
+ * (populada pelo AuthProvider). Mantém API síncrona para não quebrar os
+ * services existentes enquanto a migração para Supabase não é concluída.
  */
 
-const DEFAULT_WORKSPACE_ID = "default";
-const DEFAULT_USER_ID = "user_local";
-const DEFAULT_USER_NAME = "Você";
+import type { Role } from "@/config/rbac";
+
+type WorkspaceStore = {
+  workspaceId: string;
+  userId: string;
+  userName: string;
+  role: Role;
+};
+
+let currentStore: WorkspaceStore | null = null;
+const listeners = new Set<() => void>();
+
+/** @internal — usado apenas pelo AuthProvider. */
+export function __setWorkspaceStore(next: WorkspaceStore): void {
+  currentStore = next;
+  listeners.forEach((l) => l());
+}
+
+/** @internal — usado apenas pelo AuthProvider. */
+export function __clearWorkspaceStore(): void {
+  currentStore = null;
+  listeners.forEach((l) => l());
+}
+
+function requireStore(): WorkspaceStore {
+  if (!currentStore) {
+    throw new Error(
+      "Workspace context indisponível: usuário não autenticado ou sessão ainda carregando.",
+    );
+  }
+  return currentStore;
+}
 
 export function getCurrentWorkspaceId(): string {
-  return DEFAULT_WORKSPACE_ID;
+  return requireStore().workspaceId;
 }
 
 export function useCurrentWorkspaceId(): string {
@@ -22,7 +48,7 @@ export function useCurrentWorkspaceId(): string {
 }
 
 export function getCurrentUserId(): string {
-  return DEFAULT_USER_ID;
+  return requireStore().userId;
 }
 
 export function useCurrentUserId(): string {
@@ -30,5 +56,9 @@ export function useCurrentUserId(): string {
 }
 
 export function getCurrentUserName(): string {
-  return DEFAULT_USER_NAME;
+  return requireStore().userName;
+}
+
+export function getCurrentRole(): Role {
+  return requireStore().role;
 }

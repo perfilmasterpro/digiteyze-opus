@@ -1,5 +1,5 @@
 import { LogOut, Settings, UserCircle } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/lib/auth-context";
 
-/** User menu — placeholder até integrar auth. */
 export function UserMenu() {
-  const displayName = "Usuário";
-  const email = "voce@digiteyze.com";
+  const { profile, user, workspace, signOut } = useAuth();
+  const navigate = useNavigate();
+  const displayName = profile?.displayName ?? user?.email?.split("@")[0] ?? "Usuário";
+  const email = user?.email ?? "";
+
+  async function handleSignOut() {
+    await signOut();
+    void navigate({ to: "/auth" });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -31,6 +39,11 @@ export function UserMenu() {
         <DropdownMenuLabel className="flex flex-col">
           <span className="text-sm font-medium">{displayName}</span>
           <span className="text-xs font-normal text-muted-foreground">{email}</span>
+          {workspace ? (
+            <span className="mt-1 text-xs font-normal text-muted-foreground">
+              {workspace.name}
+            </span>
+          ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
@@ -44,7 +57,7 @@ export function UserMenu() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
+        <DropdownMenuItem onSelect={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" /> Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
