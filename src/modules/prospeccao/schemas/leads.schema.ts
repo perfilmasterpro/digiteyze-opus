@@ -35,7 +35,7 @@ export const leadSchema = z.object({
     .optional(),
   cidade: optionalString(80),
   estado: z.enum(UFS).optional().or(z.literal("")),
-  site: z.string().trim().url("URL inválida").optional().or(z.literal("")),
+  site: optionalString(200),
   instagram: optionalString(80),
   whatsapp: optionalString(32),
   observacoes: optionalString(2000),

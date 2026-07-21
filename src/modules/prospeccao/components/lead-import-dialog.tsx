@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge, type StatusTone } from "@/components/common/status-badge";
-import { useCurrentWorkspaceId } from "@/lib/workspace";
+import { useCurrentWorkspaceId, getCurrentUserName } from "@/lib/workspace";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { leadsKeys } from "../hooks/use-leads";
@@ -47,10 +47,13 @@ export function LeadImportDialog({
 }) {
   const workspaceId = useCurrentWorkspaceId();
   const qc = useQueryClient();
+  const defaultUser = (() => {
+    try { return getCurrentUserName(); } catch { return ""; }
+  })();
   const [fileName, setFileName] = useState<string | null>(null);
   const [csvText, setCsvText] = useState<string>("");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
-  const [defaultResponsavel, setDefaultResponsavel] = useState("");
+  const [defaultResponsavel, setDefaultResponsavel] = useState(defaultUser);
   const [busy, setBusy] = useState(false);
 
   const disabledCommit = useMemo(
@@ -62,7 +65,7 @@ export function LeadImportDialog({
     setFileName(null);
     setCsvText("");
     setPreview(null);
-    setDefaultResponsavel("");
+    setDefaultResponsavel(defaultUser);
   }
 
   async function handleFile(file: File) {
@@ -146,16 +149,26 @@ export function LeadImportDialog({
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <StatusBadge tone="info">Layout: {preview.profileLabel}</StatusBadge>
-              <StatusBadge tone="success">Novos: {preview.totalNovos}</StatusBadge>
+              <StatusBadge tone="neutral">
+                Total analisados: {preview.totalAnalisados}
+              </StatusBadge>
+              <StatusBadge tone="success">
+                ✅ Prontos: {preview.totalNovos}
+              </StatusBadge>
+              {preview.totalCorrigidos > 0 ? (
+                <StatusBadge tone="info">
+                  ⚠️ Corrigidos: {preview.totalCorrigidos}
+                </StatusBadge>
+              ) : null}
               <StatusBadge tone="warning">
                 Duplicados: {preview.totalDuplicados}
               </StatusBadge>
               <StatusBadge tone="destructive">
-                Inválidos: {preview.totalInvalidos}
+                ❌ Erros: {preview.totalInvalidos}
               </StatusBadge>
               {preview.totalIgnorados > 0 ? (
                 <StatusBadge tone="neutral">
-                  Anúncios ignorados: {preview.totalIgnorados}
+                  ⛔ Anúncios ignorados: {preview.totalIgnorados}
                 </StatusBadge>
               ) : null}
             </div>
@@ -188,7 +201,12 @@ export function LeadImportDialog({
                         </StatusBadge>
                       </td>
                       <td className="px-2 py-1.5 text-xs text-muted-foreground">
-                        {r.duplicateReason ?? r.errors.join(", ") ?? ""}
+                        {r.duplicateReason ??
+                          (r.errors.length
+                            ? r.errors.join(", ")
+                            : r.corrections.length
+                              ? r.corrections.join(", ")
+                              : "")}
                       </td>
                     </tr>
                   ))}
