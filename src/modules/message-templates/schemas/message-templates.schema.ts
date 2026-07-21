@@ -14,7 +14,7 @@ export const messageTemplateSchema = z.object({
     .trim()
     .min(4, "Escreva o conteúdo da mensagem.")
     .max(4000, "Mensagem muito longa (máx. 4000 caracteres)."),
-  ativo: z.boolean().default(true),
+  ativo: z.boolean(),
 });
 
 export type MessageTemplateFormValues = z.infer<typeof messageTemplateSchema>;
