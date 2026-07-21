@@ -24,6 +24,7 @@ export const LEAD_STATUS_LABEL: Record<LeadStatus, string> = {
 };
 
 export const LEAD_ORIGENS = [
+  "google_maps",
   "indicacao",
   "inbound",
   "outbound",
@@ -31,11 +32,13 @@ export const LEAD_ORIGENS = [
   "parceria",
   "redes_sociais",
   "site",
+  "anuncio",
   "outro",
 ] as const;
 export type LeadOrigem = (typeof LEAD_ORIGENS)[number];
 
 export const LEAD_ORIGEM_LABEL: Record<LeadOrigem, string> = {
+  google_maps: "Google Maps",
   indicacao: "Indicação",
   inbound: "Inbound",
   outbound: "Outbound",
@@ -43,6 +46,7 @@ export const LEAD_ORIGEM_LABEL: Record<LeadOrigem, string> = {
   parceria: "Parceria",
   redes_sociais: "Redes Sociais",
   site: "Site",
+  anuncio: "Anúncio",
   outro: "Outro",
 };
 
