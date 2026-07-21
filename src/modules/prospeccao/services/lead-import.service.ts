@@ -1,21 +1,19 @@
 /**
  * CSV import service — Prospecção.
  *
- * Parses CSV text, validates required fields, deduplicates against existing
- * leads (por CNPJ, domínio do site, telefone/WhatsApp) e permite preview
- * antes da commit. Multi-tenant: recebe workspaceId explícito.
+ * Estratégia baseada em CSV Profiles (`./csv-profiles`): detecta
+ * automaticamente o layout do arquivo (Thunderbit / Google Maps, genérico
+ * Growth OS, etc.) e usa o mapper adequado. Novos layouts são plugáveis
+ * sem alterar este arquivo.
+ *
+ * Contrato público preservado — `previewCsvImport`, `commitCsvImport`,
+ * `loadExistingLeads`, `ImportRow`, `ImportPreview`, `ImportRowStatus`.
  */
 
 import { createLead, listLeads } from "./leads.service";
 import { leadSchema } from "../schemas/leads.schema";
-import {
-  LEAD_ORIGENS,
-  UFS,
-  type Lead,
-  type LeadInput,
-  type LeadOrigem,
-  type UF,
-} from "../types/leads.types";
+import { type Lead, type LeadInput, type LeadOrigem } from "../types/leads.types";
+import { detectCsvProfile, type CsvProfile } from "./csv-profiles";
 
 export type ImportRowStatus = "novo" | "duplicado" | "invalido";
 
@@ -32,6 +30,9 @@ export interface ImportPreview {
   totalNovos: number;
   totalDuplicados: number;
   totalInvalidos: number;
+  totalIgnorados: number;
+  profileId: string;
+  profileLabel: string;
 }
 
 /** Parser CSV minimalista com suporte a aspas duplas. */
@@ -94,65 +95,6 @@ function normalizeCnpj(v?: string): string {
   return (v ?? "").replace(/\D+/g, "");
 }
 
-const HEADER_ALIASES: Record<string, keyof LeadInput> = {
-  nome_empresa: "nome_empresa",
-  empresa: "nome_empresa",
-  nome: "nome_empresa",
-  segmento: "segmento",
-  cidade: "cidade",
-  estado: "estado",
-  uf: "estado",
-  site: "site",
-  website: "site",
-  instagram: "instagram",
-  telefone: "telefone",
-  whatsapp: "whatsapp",
-  email: "contato_email",
-  contato_email: "contato_email",
-  contato_nome: "contato_nome",
-  contato: "contato_nome",
-  contato_cargo: "contato_cargo",
-  cargo: "contato_cargo",
-  origem: "origem",
-  responsavel: "responsavel",
-  responsável: "responsavel",
-  observacoes: "observacoes",
-  observações: "observacoes",
-  cnpj: "cnpj",
-};
-
-function normalizeHeader(h: string): keyof LeadInput | null {
-  const k = h
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "_");
-  return (HEADER_ALIASES[k] as keyof LeadInput | undefined) ?? null;
-}
-
-function mapOrigem(v?: string): LeadOrigem | undefined {
-  if (!v) return undefined;
-  const k = v.trim().toLowerCase().replace(/\s+/g, "_");
-  if ((LEAD_ORIGENS as readonly string[]).includes(k)) return k as LeadOrigem;
-  if (k.includes("google") || k.includes("maps")) return "google_maps";
-  if (k.includes("indic")) return "indicacao";
-  if (k.includes("anunc") || k.includes("ads")) return "anuncio";
-  if (k.includes("event")) return "evento";
-  if (k.includes("parc")) return "parceria";
-  if (k.includes("insta") || k.includes("social") || k.includes("rede")) return "redes_sociais";
-  if (k.includes("site") || k.includes("form")) return "site";
-  if (k.includes("inbound")) return "inbound";
-  if (k.includes("outbound")) return "outbound";
-  return "outro";
-}
-
-function mapUf(v?: string): UF | undefined {
-  if (!v) return undefined;
-  const u = v.trim().toUpperCase();
-  return (UFS as readonly string[]).includes(u) ? (u as UF) : undefined;
-}
-
 export function previewCsvImport(
   csvText: string,
   existingLeads: Lead[],
@@ -160,9 +102,19 @@ export function previewCsvImport(
 ): ImportPreview {
   const table = parseCsv(csvText);
   if (table.length === 0) {
-    return { rows: [], totalNovos: 0, totalDuplicados: 0, totalInvalidos: 0 };
+    return {
+      rows: [],
+      totalNovos: 0,
+      totalDuplicados: 0,
+      totalInvalidos: 0,
+      totalIgnorados: 0,
+      profileId: "generic",
+      profileLabel: "CSV vazio",
+    };
   }
-  const headers = table[0].map((h) => normalizeHeader(h));
+
+  const rawHeaders = table[0];
+  const { profile, normalizedHeaders } = detectCsvProfile(rawHeaders);
   const dataRows = table.slice(1);
 
   const existingCnpj = new Set(
@@ -183,25 +135,26 @@ export function previewCsvImport(
   const seenDomain = new Set<string>();
   const seenPhones = new Set<string>();
 
-  const rows: ImportRow[] = dataRows.map((row, i) => {
+  let totalIgnorados = 0;
+  const rows: ImportRow[] = [];
+
+  dataRows.forEach((row, i) => {
+    const mapped = profile.mapRow(row, normalizedHeaders, rawHeaders);
+    if (mapped === null) {
+      // Descartada silenciosamente pelo profile (ex.: anúncio).
+      totalIgnorados++;
+      return;
+    }
+
     const data: Partial<LeadInput> = {
-      status: "novo_lead",
-      origem: "outro",
+      ...(profile.defaults ?? {}),
       responsavel: defaults?.responsavel ?? "",
+      ...mapped,
     };
-    row.forEach((cell, colIdx) => {
-      const field = headers[colIdx];
-      if (!field) return;
-      const value = cell.trim();
-      if (!value) return;
-      if (field === "origem") {
-        data.origem = mapOrigem(value) ?? "outro";
-      } else if (field === "estado") {
-        data.estado = mapUf(value);
-      } else {
-        (data as Record<string, unknown>)[field] = value;
-      }
-    });
+    // Se o profile trouxe responsavel vazio e temos padrão, aplica.
+    if ((!data.responsavel || String(data.responsavel).trim() === "") && defaults?.responsavel) {
+      data.responsavel = defaults.responsavel;
+    }
 
     const errors: string[] = [];
     if (!data.nome_empresa || String(data.nome_empresa).trim().length < 2) {
@@ -210,7 +163,6 @@ export function previewCsvImport(
     if (!data.responsavel || String(data.responsavel).trim().length < 2) {
       errors.push("responsavel obrigatório");
     }
-    // valida via schema (retorna avisos, não bloqueia salvo obrigatórios)
     const parsed = leadSchema.safeParse(data);
     if (!parsed.success) {
       parsed.error.errors.forEach((e) => {
@@ -221,7 +173,6 @@ export function previewCsvImport(
       });
     }
 
-    // duplicados
     let duplicateReason: string | undefined;
     const cnpj = normalizeCnpj(data.cnpj);
     const domain = normalizeDomain(data.site);
@@ -248,7 +199,7 @@ export function previewCsvImport(
         ? "duplicado"
         : "novo";
 
-    return { index: i + 2, status, data, errors, duplicateReason };
+    rows.push({ index: i + 2, status, data, errors, duplicateReason });
   });
 
   return {
@@ -256,6 +207,9 @@ export function previewCsvImport(
     totalNovos: rows.filter((r) => r.status === "novo").length,
     totalDuplicados: rows.filter((r) => r.status === "duplicado").length,
     totalInvalidos: rows.filter((r) => r.status === "invalido").length,
+    totalIgnorados,
+    profileId: profile.id,
+    profileLabel: profile.label,
   };
 }
 
@@ -298,3 +252,5 @@ export async function commitCsvImport(
 export async function loadExistingLeads(workspaceId: string): Promise<Lead[]> {
   return listLeads(workspaceId);
 }
+
+export type { CsvProfile };
