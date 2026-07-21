@@ -52,7 +52,13 @@ function ColumnHeader<T>({ col }: { col: KanbanColumn<T> }) {
   return (
     <div className="mb-3 flex flex-col gap-0.5">
       <div className="flex items-center gap-2">
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", ACCENT[col.accent ?? "neutral"])} />
+        <span
+          className={cn(
+            "h-2 w-2 shrink-0 rounded-full",
+            col.accentColor ? undefined : ACCENT[col.accent ?? "neutral"],
+          )}
+          style={col.accentColor ? { backgroundColor: `var(${col.accentColor})` } : undefined}
+        />
         <h4 className="truncate text-sm font-semibold">{col.title}</h4>
         <span className="ml-auto shrink-0 rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground">
           {col.items.length}
