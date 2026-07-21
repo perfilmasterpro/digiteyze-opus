@@ -37,6 +37,14 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Pendências e prioridades do dia",
   },
   {
+    key: "central",
+    label: "Tarefas",
+    to: "/tarefas",
+    icon: FileStack,
+    group: "operacao",
+    description: "Lista, kanban, agenda e calendário",
+  },
+  {
     key: "empresas",
     label: "Empresas",
     to: "/empresas",

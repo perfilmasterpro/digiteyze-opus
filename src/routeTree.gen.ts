@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TarefasRouteImport } from './routes/tarefas'
 import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -52,6 +53,11 @@ import { Route as CrmIdTimelineRouteImport } from './routes/crm.$id.timeline'
 import { Route as CrmIdPropostasRouteImport } from './routes/crm.$id.propostas'
 import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 
+const TarefasRoute = TarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
   '/suporte': typeof SuporteRoute
+  '/tarefas': typeof TarefasRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
   '/growth/dashboard': typeof GrowthDashboardRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/suporte': typeof SuporteRoute
+  '/tarefas': typeof TarefasRoute
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/lista': typeof ProspeccaoListaRoute
   '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
   '/suporte': typeof SuporteRoute
+  '/tarefas': typeof TarefasRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
   '/growth/dashboard': typeof GrowthDashboardRoute
@@ -413,6 +422,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/super-admin'
     | '/suporte'
+    | '/tarefas'
     | '/crm/$id'
     | '/empresas/$id'
     | '/growth/dashboard'
@@ -456,6 +466,7 @@ export interface FileRouteTypes {
     | '/prospeccao'
     | '/reset-password'
     | '/suporte'
+    | '/tarefas'
     | '/growth/dashboard'
     | '/prospeccao/lista'
     | '/super-admin/configuracoes'
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/super-admin'
     | '/suporte'
+    | '/tarefas'
     | '/crm/$id'
     | '/empresas/$id'
     | '/growth/dashboard'
@@ -542,10 +554,18 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   SuporteRoute: typeof SuporteRoute
+  TarefasRoute: typeof TarefasRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tarefas': {
+      id: '/tarefas'
+      path: '/tarefas'
+      fullPath: '/tarefas'
+      preLoaderRoute: typeof TarefasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/suporte': {
       id: '/suporte'
       path: '/suporte'
@@ -986,17 +1006,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
   SuporteRoute: SuporteRoute,
+  TarefasRoute: TarefasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

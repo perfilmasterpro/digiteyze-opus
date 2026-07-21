@@ -55,6 +55,62 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          data: string
+          descricao: string | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          local: string | null
+          participantes: Json | null
+          tipo: Database["public"]["Enums"]["calendar_event_tipo"]
+          titulo: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          data: string
+          descricao?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          local?: string | null
+          participantes?: Json | null
+          tipo?: Database["public"]["Enums"]["calendar_event_tipo"]
+          titulo: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          local?: string | null
+          participantes?: Json | null
+          tipo?: Database["public"]["Enums"]["calendar_event_tipo"]
+          titulo?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           created_at: string
@@ -607,6 +663,298 @@ export type Database = {
         }
         Relationships: []
       }
+      task_attachments: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          id: string
+          nome: string
+          storage_path: string
+          tamanho_bytes: number | null
+          task_id: string
+          tipo_mime: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          nome: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          task_id: string
+          tipo_mime?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          nome?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          task_id?: string
+          tipo_mime?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_attachments_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_checklist_items: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          ordem: number
+          task_id: string
+          titulo: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          ordem?: number
+          task_id: string
+          titulo: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          ordem?: number
+          task_id?: string
+          titulo?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_checklist_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_checklist_items_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          autor_id: string | null
+          autor_nome: string | null
+          corpo: string
+          created_at: string
+          id: string
+          task_id: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          autor_id?: string | null
+          autor_nome?: string | null
+          corpo: string
+          created_at?: string
+          id?: string
+          task_id: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          autor_id?: string | null
+          autor_nome?: string | null
+          corpo?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_dependencies: {
+        Row: {
+          created_at: string
+          depends_on_task_id: string
+          id: string
+          task_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on_task_id: string
+          id?: string
+          task_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          depends_on_task_id?: string
+          id?: string
+          task_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_depends_on_task_id_fkey"
+            columns: ["depends_on_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          categoria: Database["public"]["Enums"]["task_categoria"]
+          completed_at: string | null
+          created_at: string
+          criado_por: string | null
+          data: string | null
+          descricao: string | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          modulo_relacionado: string | null
+          observacoes: string | null
+          ordem: number
+          origem: Database["public"]["Enums"]["task_origem"]
+          origem_ref_id: string | null
+          origem_ref_tipo: string | null
+          prazo: string | null
+          prioridade: Database["public"]["Enums"]["task_prioridade"]
+          projeto: string | null
+          recurrence_parent_id: string | null
+          recurrence_rule: Json | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          titulo: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["task_categoria"]
+          completed_at?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data?: string | null
+          descricao?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          modulo_relacionado?: string | null
+          observacoes?: string | null
+          ordem?: number
+          origem?: Database["public"]["Enums"]["task_origem"]
+          origem_ref_id?: string | null
+          origem_ref_tipo?: string | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["task_prioridade"]
+          projeto?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          titulo: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["task_categoria"]
+          completed_at?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data?: string | null
+          descricao?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          modulo_relacionado?: string | null
+          observacoes?: string | null
+          ordem?: number
+          origem?: Database["public"]["Enums"]["task_origem"]
+          origem_ref_id?: string | null
+          origem_ref_tipo?: string | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["task_prioridade"]
+          projeto?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          titulo?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_recurrence_parent_id_fkey"
+            columns: ["recurrence_parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -749,6 +1097,7 @@ export type Database = {
         | "comercial"
         | "desenvolvimento"
         | "suporte"
+      calendar_event_tipo: "reuniao" | "pessoal" | "externo" | "outro"
       message_template_categoria:
         | "prospeccao"
         | "follow_up"
@@ -757,6 +1106,25 @@ export type Database = {
         | "reengajamento"
         | "agradecimento"
         | "outro"
+      task_categoria:
+        | "comercial"
+        | "desenvolvimento"
+        | "marketing"
+        | "financeiro"
+        | "suporte"
+        | "administrativo"
+        | "conteudo"
+        | "videoaula"
+        | "projeto"
+      task_origem: "manual" | "lead" | "crm" | "projeto" | "ia" | "sistema"
+      task_prioridade: "baixa" | "media" | "alta" | "urgente"
+      task_status:
+        | "pendente"
+        | "em_andamento"
+        | "aguardando"
+        | "homologacao"
+        | "concluida"
+        | "cancelada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -894,6 +1262,7 @@ export const Constants = {
         "desenvolvimento",
         "suporte",
       ],
+      calendar_event_tipo: ["reuniao", "pessoal", "externo", "outro"],
       message_template_categoria: [
         "prospeccao",
         "follow_up",
@@ -902,6 +1271,27 @@ export const Constants = {
         "reengajamento",
         "agradecimento",
         "outro",
+      ],
+      task_categoria: [
+        "comercial",
+        "desenvolvimento",
+        "marketing",
+        "financeiro",
+        "suporte",
+        "administrativo",
+        "conteudo",
+        "videoaula",
+        "projeto",
+      ],
+      task_origem: ["manual", "lead", "crm", "projeto", "ia", "sistema"],
+      task_prioridade: ["baixa", "media", "alta", "urgente"],
+      task_status: [
+        "pendente",
+        "em_andamento",
+        "aguardando",
+        "homologacao",
+        "concluida",
+        "cancelada",
       ],
     },
   },
