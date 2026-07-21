@@ -64,7 +64,8 @@ export type Permission =
   | `${ModuleKey}:${Action}`
   | `crm:proposal:${"view" | "create" | "update" | "approve"}`
   | `crm:contract:${"view" | "create" | "update" | "delete" | "send" | "sign"}`
-  | `crm:signature:${"view" | "create" | "update" | "sign"}`;
+  | `crm:signature:${"view" | "create" | "update" | "sign"}`
+  | `growth:prospection:${"view" | "create" | "update" | "import" | "delete"}`;
 
 /** Sub-ações do domínio CRM > Propostas. */
 type ProposalAction = "view" | "create" | "update" | "approve";
