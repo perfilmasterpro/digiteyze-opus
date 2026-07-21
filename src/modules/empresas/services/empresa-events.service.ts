@@ -1,15 +1,13 @@
 /**
- * Serviço de eventos unificados da Empresa.
+ * Serviço de eventos unificados da Empresa (persistido no Supabase).
  *
- * `empresa_events` é o *event log* consumido pela Timeline da página 360°.
- * Cada módulo (Prospecção, Comercial, Projetos, Financeiro, Suporte)
- * publica aqui via `publishEmpresaEvent()` — nunca acessa storage direto de
- * outro módulo. A leitura é feita via `listEmpresaEvents()`.
- *
- * Persistência atual: `localStorage`. Assinaturas mantidas estáveis para a
- * futura migração ao Supabase (tabela `empresa_events` com RLS por
- * `workspace_id` + índice `workspace_id, empresa_id, occurred_at DESC`).
+ * Tabela `empresa_events` — RLS por `is_workspace_member(workspace_id)`.
+ * O payload de domínio (módulo, tipo, título, autor, etc.) fica em `data`
+ * (JSONB); `occurred_at` é coluna relacional para permitir ordenação e
+ * futuras views/paginate por cursor.
  */
+
+import { supabase } from "@/integrations/supabase/client";
 
 export const EMPRESA_EVENT_MODULES = [
   "empresas",
@@ -95,7 +93,6 @@ export const EMPRESA_EVENT_TYPE_LABEL: Record<EmpresaEventType, string> = {
   "signature.rejected": "Assinatura recusada",
 };
 
-
 export interface EmpresaEvent {
   id: string;
   workspace_id: string;
@@ -106,7 +103,7 @@ export interface EmpresaEvent {
   descricao?: string;
   created_by?: string;
   created_by_name?: string;
-  occurred_at: string; // ISO — quando o fato aconteceu
+  occurred_at: string;
   payload?: Record<string, unknown>;
 }
 
@@ -123,63 +120,69 @@ export type PublishEmpresaEventInput = {
   payload?: Record<string, unknown>;
 };
 
-const STORAGE_KEY = "growth-os:empresa-events";
+type EmpresaEventRow = {
+  id: string;
+  workspace_id: string;
+  empresa_id: string;
+  occurred_at: string;
+  data: Record<string, unknown>;
+};
 
-function isBrowser() {
-  return typeof window !== "undefined";
-}
-
-function readAll(): EmpresaEvent[] {
-  if (!isBrowser()) return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as EmpresaEvent[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeAll(list: EmpresaEvent[]) {
-  if (!isBrowser()) return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-}
-
-function generateId() {
-  if (isBrowser() && "crypto" in window && "randomUUID" in window.crypto) {
-    return window.crypto.randomUUID();
-  }
-  return `eev_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+function rowToEvent(row: EmpresaEventRow): EmpresaEvent {
+  const d = (row.data ?? {}) as Partial<EmpresaEvent> & {
+    payload?: Record<string, unknown>;
+  };
+  return {
+    id: row.id,
+    workspace_id: row.workspace_id,
+    empresa_id: row.empresa_id,
+    occurred_at: row.occurred_at,
+    modulo: (d.modulo ?? "empresas") as EmpresaEventModule,
+    tipo: (d.tipo ?? "empresa.updated") as EmpresaEventType,
+    titulo: d.titulo ?? "",
+    descricao: d.descricao,
+    created_by: d.created_by,
+    created_by_name: d.created_by_name,
+    payload: d.payload,
+  };
 }
 
 export async function listEmpresaEvents(
   workspaceId: string,
   empresaId: string,
 ): Promise<EmpresaEvent[]> {
-  return readAll()
-    .filter((e) => e.workspace_id === workspaceId && e.empresa_id === empresaId)
-    .sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1));
+  const { data, error } = await supabase
+    .from("empresa_events")
+    .select("id, workspace_id, empresa_id, occurred_at, data")
+    .eq("workspace_id", workspaceId)
+    .eq("empresa_id", empresaId)
+    .order("occurred_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r) => rowToEvent(r as EmpresaEventRow));
 }
 
 export async function publishEmpresaEvent(
   input: PublishEmpresaEventInput,
 ): Promise<EmpresaEvent> {
-  const event: EmpresaEvent = {
-    id: generateId(),
-    workspace_id: input.workspaceId,
-    empresa_id: input.empresaId,
+  const eventData = {
     modulo: input.modulo,
     tipo: input.tipo,
     titulo: input.titulo,
     descricao: input.descricao,
     created_by: input.createdBy,
     created_by_name: input.createdByName,
-    occurred_at: input.occurredAt ?? new Date().toISOString(),
     payload: input.payload,
   };
-  const list = readAll();
-  list.unshift(event);
-  writeAll(list);
-  return event;
+  const { data, error } = await supabase
+    .from("empresa_events")
+    .insert({
+      workspace_id: input.workspaceId,
+      empresa_id: input.empresaId,
+      occurred_at: input.occurredAt ?? new Date().toISOString(),
+      data: eventData as unknown as Record<string, unknown>,
+    })
+    .select("id, workspace_id, empresa_id, occurred_at, data")
+    .single();
+  if (error) throw error;
+  return rowToEvent(data as EmpresaEventRow);
 }
