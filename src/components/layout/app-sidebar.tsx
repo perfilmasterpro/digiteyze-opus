@@ -31,6 +31,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const current = useCurrentPath();
+  const { isSuperAdmin } = useAuth();
 
   const groups = NAV_ITEMS.reduce<Record<string, NavItem[]>>((acc, item) => {
     (acc[item.group] ??= []).push(item);
