@@ -12,7 +12,7 @@ import {
 export const recurrenceRuleSchema = z
   .object({
     freq: z.enum(RECURRENCE_FREQS),
-    interval: z.number().int().positive().default(1),
+    interval: z.number().int().positive(),
     byweekday: z.array(z.number().int().min(0).max(6)).optional(),
     bymonthday: z.number().int().min(1).max(31).optional(),
     until: z.string().optional(),
