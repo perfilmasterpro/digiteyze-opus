@@ -17,6 +17,8 @@ export type KanbanColumn<T> = {
   accent?: "primary" | "info" | "warning" | "success" | "destructive" | "neutral";
   /** Meta opcional exibida abaixo do título (ex.: total do estágio). */
   subtitle?: ReactNode;
+  /** Cor CSS (var(--...)) usada na barra superior e no ponto do cabeçalho. */
+  accentColor?: string;
 };
 
 /**
