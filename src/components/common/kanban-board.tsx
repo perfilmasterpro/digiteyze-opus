@@ -17,6 +17,8 @@ export type KanbanColumn<T> = {
   accent?: "primary" | "info" | "warning" | "success" | "destructive" | "neutral";
   /** Meta opcional exibida abaixo do título (ex.: total do estágio). */
   subtitle?: ReactNode;
+  /** Cor CSS (var(--...)) usada na barra superior e no ponto do cabeçalho. */
+  accentColor?: string;
 };
 
 /**
@@ -50,7 +52,13 @@ function ColumnHeader<T>({ col }: { col: KanbanColumn<T> }) {
   return (
     <div className="mb-3 flex flex-col gap-0.5">
       <div className="flex items-center gap-2">
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", ACCENT[col.accent ?? "neutral"])} />
+        <span
+          className={cn(
+            "h-2 w-2 shrink-0 rounded-full",
+            col.accentColor ? undefined : ACCENT[col.accent ?? "neutral"],
+          )}
+          style={col.accentColor ? { backgroundColor: `var(${col.accentColor})` } : undefined}
+        />
         <h4 className="truncate text-sm font-semibold">{col.title}</h4>
         <span className="ml-auto shrink-0 rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground">
           {col.items.length}
@@ -144,9 +152,21 @@ export function KanbanBoard<T>({
         style={{ gridAutoFlow: "column", gridAutoColumns: "minmax(260px, 1fr)" }}
       >
         {columns.map((col) => (
-          <div key={col.id} className="flex min-w-0 flex-col rounded-lg border bg-muted/30 p-3">
-            <ColumnHeader col={col} />
-            <ColumnCards col={col} renderCard={renderCard} itemKey={itemKey} />
+          <div
+            key={col.id}
+            className="flex min-w-0 flex-col overflow-hidden rounded-lg border bg-muted/30"
+          >
+            {col.accentColor ? (
+              <div
+                className="h-1 w-full shrink-0"
+                style={{ backgroundColor: `var(${col.accentColor})` }}
+                aria-hidden
+              />
+            ) : null}
+            <div className="flex min-w-0 flex-1 flex-col p-3">
+              <ColumnHeader col={col} />
+              <ColumnCards col={col} renderCard={renderCard} itemKey={itemKey} />
+            </div>
           </div>
         ))}
       </div>
