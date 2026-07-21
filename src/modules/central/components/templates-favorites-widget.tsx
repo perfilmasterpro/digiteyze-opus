@@ -13,7 +13,9 @@ import { useQuery } from "@tanstack/react-query";
 type FavRow = { template_id: string };
 type TemplateRow = {
   id: string;
-  data: { titulo?: string; corpo?: string; categoria?: string } | null;
+  titulo: string;
+  corpo: string;
+  categoria: string;
 };
 
 export function TemplatesFavoritesWidget() {
@@ -26,14 +28,14 @@ export function TemplatesFavoritesWidget() {
       const { data: favs } = await supabase
         .from("message_template_favorites")
         .select("template_id")
-        .eq("workspace_id", workspaceId)
         .eq("user_id", userId)
         .limit(10);
       const ids = (favs ?? []).map((f: FavRow) => f.template_id);
       if (ids.length === 0) return [] as TemplateRow[];
       const { data: templates } = await supabase
         .from("message_templates")
-        .select("id, data")
+        .select("id, titulo, corpo, categoria")
+        .eq("workspace_id", workspaceId)
         .in("id", ids);
       return (templates ?? []) as TemplateRow[];
     },
