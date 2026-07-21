@@ -47,6 +47,7 @@ export { LeadStatusMenu } from "./components/lead-status-menu";
 export { LeadConvertDialog } from "./components/lead-convert-dialog";
 export { LeadDetailSkeleton } from "./components/lead-detail-skeleton";
 export { LeadOverview } from "./components/lead-overview";
+export { QuickContactActions } from "./components/quick-contact-actions";
 export { LeadEventsTimeline } from "./components/lead-events-timeline";
 export { InteractionList } from "./components/interaction-list";
 export { InteractionForm } from "./components/interaction-form";

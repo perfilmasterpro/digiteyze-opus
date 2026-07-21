@@ -1,4 +1,5 @@
-import { CalendarClock, Clock, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Phone, User } from "lucide-react";
+import { CalendarClock, Clock, Copy, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Phone, User } from "lucide-react";
+import { toast } from "sonner";
 
 import { KanbanBoard, type KanbanColumn } from "@/components/common/kanban-board";
 import { Button } from "@/components/ui/button";
@@ -171,16 +172,60 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
             </div>
 
             {(lead.telefone || lead.whatsapp || lead.site || lead.instagram) ? (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 {lead.whatsapp ? (
-                  <span className="inline-flex items-center gap-1" title={`WhatsApp: ${lead.whatsapp}`}>
-                    <MessageCircle className="h-3 w-3" />
-                    {lead.whatsapp}
+                  <span className="inline-flex items-center gap-1">
+                    <a
+                      href={`https://wa.me/${lead.whatsapp.replace(/\D+/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 hover:text-foreground hover:underline"
+                      title={`Abrir WhatsApp: ${lead.whatsapp}`}
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                      {lead.whatsapp}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void navigator.clipboard.writeText(lead.whatsapp!).then(() =>
+                          toast.success("WhatsApp copiado!"),
+                        );
+                      }}
+                      className="inline-flex h-4 w-4 items-center justify-center rounded hover:bg-muted hover:text-foreground"
+                      aria-label="Copiar WhatsApp"
+                      title="Copiar WhatsApp"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
                   </span>
                 ) : lead.telefone ? (
-                  <span className="inline-flex items-center gap-1" title={`Telefone: ${lead.telefone}`}>
-                    <Phone className="h-3 w-3" />
-                    {lead.telefone}
+                  <span className="inline-flex items-center gap-1">
+                    <a
+                      href={`tel:${lead.telefone.replace(/\D+/g, "")}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 hover:text-foreground hover:underline"
+                      title={`Ligar: ${lead.telefone}`}
+                    >
+                      <Phone className="h-3 w-3" />
+                      {lead.telefone}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void navigator.clipboard.writeText(lead.telefone!).then(() =>
+                          toast.success("Telefone copiado!"),
+                        );
+                      }}
+                      className="inline-flex h-4 w-4 items-center justify-center rounded hover:bg-muted hover:text-foreground"
+                      aria-label="Copiar telefone"
+                      title="Copiar telefone"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
                   </span>
                 ) : null}
                 {lead.site ? (
@@ -211,6 +256,7 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
                 ) : null}
               </div>
             ) : null}
+
 
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="rounded-full bg-background px-2 py-0.5 text-muted-foreground ring-1 ring-inset ring-border">
