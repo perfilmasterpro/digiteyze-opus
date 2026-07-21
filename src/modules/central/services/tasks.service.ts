@@ -103,7 +103,7 @@ export async function updateTask(
   id: string,
   patch: Partial<TaskInput>,
 ): Promise<Task> {
-  const payload: Record<string, unknown> = { ...patch };
+  const payload: TablesUpdate<"tasks"> = { ...patch } as TablesUpdate<"tasks">;
   if ("recurrence_rule" in patch) {
     payload.recurrence_rule = (patch.recurrence_rule as unknown as Json) ?? null;
   }
