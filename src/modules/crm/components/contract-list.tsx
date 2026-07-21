@@ -1,4 +1,4 @@
-import { CalendarClock, Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, Edit, Eye, MoreHorizontal, PenLine, Send, Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -25,6 +26,13 @@ import {
 } from "../hooks/use-contracts";
 import { useProposalsByOpportunity } from "../hooks/use-proposals";
 import type { Contract } from "../types/contracts.types";
+import {
+  SignatureRequestDialog,
+  SignatureStatusBadge,
+  useSignaturesByContract,
+  useUpdateSignatureStatus,
+  type Signature,
+} from "../signatures";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
