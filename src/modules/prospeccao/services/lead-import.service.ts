@@ -98,6 +98,14 @@ function normalizeCnpj(v?: string): string {
   return (v ?? "").replace(/\D+/g, "");
 }
 
+function normalizeSiteUrl(v?: string): { value: string | undefined; corrected: boolean } {
+  if (!v) return { value: undefined, corrected: false };
+  const trimmed = v.trim();
+  if (!trimmed) return { value: undefined, corrected: false };
+  if (/^https?:\/\//i.test(trimmed)) return { value: trimmed, corrected: false };
+  return { value: `https://${trimmed}`, corrected: true };
+}
+
 export function previewCsvImport(
   csvText: string,
   existingLeads: Lead[],
@@ -107,10 +115,12 @@ export function previewCsvImport(
   if (table.length === 0) {
     return {
       rows: [],
+      totalAnalisados: 0,
       totalNovos: 0,
       totalDuplicados: 0,
       totalInvalidos: 0,
       totalIgnorados: 0,
+      totalCorrigidos: 0,
       profileId: "generic",
       profileLabel: "CSV vazio",
     };
@@ -144,33 +154,42 @@ export function previewCsvImport(
   dataRows.forEach((row, i) => {
     const mapped = profile.mapRow(row, normalizedHeaders, rawHeaders);
     if (mapped === null) {
-      // Descartada silenciosamente pelo profile (ex.: anúncio).
       totalIgnorados++;
       return;
     }
 
     const data: Partial<LeadInput> = {
       ...(profile.defaults ?? {}),
-      responsavel: defaults?.responsavel ?? "",
       ...mapped,
     };
-    // Se o profile trouxe responsavel vazio e temos padrão, aplica.
-    if ((!data.responsavel || String(data.responsavel).trim() === "") && defaults?.responsavel) {
-      data.responsavel = defaults.responsavel;
+
+    const corrections: string[] = [];
+
+    // Auto-preencher responsavel com o usuário logado quando ausente.
+    if (!data.responsavel || String(data.responsavel).trim().length < 2) {
+      if (defaults?.responsavel && defaults.responsavel.trim().length >= 2) {
+        data.responsavel = defaults.responsavel.trim();
+        corrections.push("responsável preenchido automaticamente");
+      }
+    }
+
+    // Normalizar site (adicionar https:// quando ausente).
+    if (data.site) {
+      const { value, corrected } = normalizeSiteUrl(data.site);
+      if (value) data.site = value;
+      if (corrected) corrections.push("site normalizado (https://)");
     }
 
     const errors: string[] = [];
     if (!data.nome_empresa || String(data.nome_empresa).trim().length < 2) {
       errors.push("nome_empresa obrigatório");
     }
-    if (!data.responsavel || String(data.responsavel).trim().length < 2) {
-      errors.push("responsavel obrigatório");
-    }
     const parsed = leadSchema.safeParse(data);
     if (!parsed.success) {
       parsed.error.errors.forEach((e) => {
         const path = e.path.join(".");
-        if (["nome_empresa", "responsavel", "status", "origem"].includes(path)) {
+        // Apenas nome_empresa/status/origem bloqueiam. Demais campos são secundários.
+        if (["nome_empresa", "status", "origem"].includes(path)) {
           errors.push(`${path}: ${e.message}`);
         }
       });
@@ -202,19 +221,22 @@ export function previewCsvImport(
         ? "duplicado"
         : "novo";
 
-    rows.push({ index: i + 2, status, data, errors, duplicateReason });
+    rows.push({ index: i + 2, status, data, errors, corrections, duplicateReason });
   });
 
   return {
     rows,
+    totalAnalisados: dataRows.length,
     totalNovos: rows.filter((r) => r.status === "novo").length,
     totalDuplicados: rows.filter((r) => r.status === "duplicado").length,
     totalInvalidos: rows.filter((r) => r.status === "invalido").length,
     totalIgnorados,
+    totalCorrigidos: rows.filter((r) => r.corrections.length > 0).length,
     profileId: profile.id,
     profileLabel: profile.label,
   };
 }
+
 
 export async function commitCsvImport(
   workspaceId: string,
