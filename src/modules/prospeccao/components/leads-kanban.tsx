@@ -16,8 +16,9 @@ import { cn } from "@/lib/utils";
 import {
   LEAD_ORIGEM_LABEL,
   LEAD_STATUS,
+  LEAD_STATUS_COLOR_VAR,
   LEAD_STATUS_LABEL,
-  LEAD_TEMPERATURA_DOT,
+  LEAD_TEMPERATURA_EMOJI,
   LEAD_TEMPERATURA_LABEL,
   type Lead,
   type LeadStatus,
