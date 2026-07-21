@@ -301,7 +301,7 @@ export type AdminLog = {
   actor_id: string | null;
   workspace_id: string | null;
   message: string | null;
-  metadata: unknown;
+  metadata: Json;
   created_at: string;
 };
 
