@@ -106,12 +106,38 @@ function ProspeccaoPage() {
         description="Pipeline visual de leads — do primeiro contato ao fechamento."
         icon={<Target className="h-5 w-5" />}
         actions={
-          canCreate ? (
-            <Button size="sm" className="gap-2" onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              Novo lead
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" className="gap-2" disabled>
+              <LayoutGrid className="h-4 w-4" />
+              Kanban
             </Button>
-          ) : null
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => navigate({ to: "/prospeccao/lista" })}
+            >
+              <List className="h-4 w-4" />
+              Lista
+            </Button>
+            {canImport ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setImportOpen(true)}
+              >
+                <Upload className="h-4 w-4" />
+                Importar
+              </Button>
+            ) : null}
+            {canCreate ? (
+              <Button size="sm" className="gap-2" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                Novo lead
+              </Button>
+            ) : null}
+          </div>
         }
       />
 
