@@ -8,6 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export const EMPRESA_EVENT_MODULES = [
   "empresas",
@@ -179,7 +180,7 @@ export async function publishEmpresaEvent(
       workspace_id: input.workspaceId,
       empresa_id: input.empresaId,
       occurred_at: input.occurredAt ?? new Date().toISOString(),
-      data: eventData as unknown as Record<string, unknown>,
+      data: eventData as unknown as Json,
     })
     .select("id, workspace_id, empresa_id, occurred_at, data")
     .single();

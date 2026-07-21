@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { getCurrentWorkspaceId } from "@/lib/workspace";
 
 import type { Empresa, EmpresaInput, EmpresaStatus } from "./empresas.types";
@@ -75,7 +76,7 @@ export async function createEmpresa(input: EmpresaInput): Promise<Empresa> {
   const workspaceId = getCurrentWorkspaceId();
   const { data, error } = await supabase
     .from("empresas")
-    .insert({ workspace_id: workspaceId, data: input as unknown as Record<string, unknown> })
+    .insert({ workspace_id: workspaceId, data: input as unknown as Json })
     .select("id, workspace_id, data, created_at, updated_at")
     .single();
   if (error) throw error;
@@ -86,7 +87,7 @@ export async function updateEmpresa(id: string, input: EmpresaInput): Promise<Em
   const workspaceId = getCurrentWorkspaceId();
   const { data, error } = await supabase
     .from("empresas")
-    .update({ data: input as unknown as Record<string, unknown> })
+    .update({ data: input as unknown as Json })
     .eq("workspace_id", workspaceId)
     .eq("id", id)
     .select("id, workspace_id, data, created_at, updated_at")
