@@ -356,6 +356,7 @@ export function useGenerateProposalPdf() {
       return { blob, objectUrl, filename };
     },
   });
+}
 
 /** Métricas puras a partir de um conjunto de propostas. */
 export function computeProposalKpis(proposals: Proposal[]) {
