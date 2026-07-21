@@ -220,7 +220,25 @@ export function LeadOverview({ lead }: { lead: Lead }) {
             </CardContent>
           </Card>
         ) : null}
+
+        {lead.custom_fields && Object.keys(lead.custom_fields).length > 0 ? (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Campos personalizados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 sm:grid-cols-2">
+                {Object.entries(lead.custom_fields).map(([key, value]) => (
+                  <Field key={key} label={key}>
+                    {value}
+                  </Field>
+                ))}
+              </dl>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
+
 
       {/* Coluna 2 — Ações rápidas */}
       <div className="space-y-4">

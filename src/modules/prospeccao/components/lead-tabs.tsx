@@ -8,7 +8,8 @@ type TabDef = {
     | "/prospeccao/$id"
     | "/prospeccao/$id/interacoes"
     | "/prospeccao/$id/historico"
-    | "/prospeccao/$id/proximas-acoes";
+    | "/prospeccao/$id/proximas-acoes"
+    | "/prospeccao/$id/editar";
   exact?: boolean;
 };
 
@@ -20,7 +21,9 @@ export function LeadTabs({ leadId }: { leadId: string }) {
     { label: "Interações", to: "/prospeccao/$id/interacoes" },
     { label: "Histórico", to: "/prospeccao/$id/historico" },
     { label: "Próximas Ações", to: "/prospeccao/$id/proximas-acoes" },
+    { label: "Editar", to: "/prospeccao/$id/editar" },
   ];
+
 
   return (
     <div className="border-b" role="tablist" aria-label="Seções do lead">

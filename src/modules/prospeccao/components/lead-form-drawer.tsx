@@ -95,7 +95,9 @@ const EMPTY: LeadFormValues = {
   canal_aquisicao: "",
   probabilidade_fechamento: undefined,
   motivo_perda: "",
+  custom_fields: [],
 };
+
 
 export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
   const isEdit = Boolean(lead);
@@ -729,8 +731,12 @@ function toFormValues(l: Lead): LeadFormValues {
     canal_aquisicao: l.canal_aquisicao ?? "",
     probabilidade_fechamento: l.probabilidade_fechamento,
     motivo_perda: l.motivo_perda ?? "",
+    custom_fields: l.custom_fields
+      ? Object.entries(l.custom_fields).map(([key, value]) => ({ key, value }))
+      : [],
   };
 }
+
 
 function toInput(v: LeadFormValues): LeadInput {
   const clean = (s?: string) => (s && s.trim() ? s.trim() : undefined);
@@ -768,5 +774,13 @@ function toInput(v: LeadFormValues): LeadInput {
       v.status === "perdido"
         ? ((v.motivo_perda || undefined) as LeadMotivoPerda | undefined)
         : undefined,
+    custom_fields: (() => {
+      const entries = (v.custom_fields ?? [])
+        .map((f) => [f.key.trim(), f.value.trim()] as const)
+        .filter(([k, val]) => k.length > 0 && val.length > 0);
+      if (entries.length === 0) return undefined;
+      return Object.fromEntries(entries);
+    })(),
   };
 }
+

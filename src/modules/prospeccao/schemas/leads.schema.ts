@@ -60,8 +60,18 @@ export const leadSchema = z.object({
     ])
     .optional(),
   motivo_perda: z.enum(LEAD_MOTIVOS_PERDA).optional().or(z.literal("")),
+  // Campos personalizados dinâmicos (chave/valor). Persistidos como Record.
+  custom_fields: z
+    .array(
+      z.object({
+        key: z.string().trim().max(60),
+        value: z.string().trim().max(500),
+      }),
+    )
+    .optional(),
 });
 
 export type LeadFormValues = z.infer<typeof leadSchema>;
 
 export { LEAD_PROBABILIDADES };
+
