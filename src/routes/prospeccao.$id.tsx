@@ -91,7 +91,7 @@ function LeadLayout() {
       <LeadTabs leadId={lead.id} />
       <Outlet />
 
-      <LeadFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} lead={lead} />
+      
       <LeadConvertDialog
         lead={lead}
         open={convertOpen}
