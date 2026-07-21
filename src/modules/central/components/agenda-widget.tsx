@@ -35,10 +35,8 @@ export function AgendaWidget() {
           id: `task-${t.id}`,
           source: "task",
           titulo: t.titulo,
-          data: t.data,
           hora_inicio: t.hora_inicio,
           hora_fim: t.hora_fim,
-          ref_id: t.id,
         });
       }
     }
@@ -47,10 +45,8 @@ export function AgendaWidget() {
         id: `event-${e.id}`,
         source: "event",
         titulo: e.titulo,
-        data: e.data,
         hora_inicio: e.hora_inicio,
         hora_fim: e.hora_fim,
-        ref_id: e.id,
       });
     }
     return list.sort((a, b) => (a.hora_inicio ?? "99") < (b.hora_inicio ?? "99") ? -1 : 1);
