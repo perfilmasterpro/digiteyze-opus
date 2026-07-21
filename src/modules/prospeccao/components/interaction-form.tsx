@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, MessageSquareText, Plus } from "lucide-react";
 import { toast } from "sonner";
+
+import { can } from "@/config/rbac";
+import { useCurrentRole } from "@/hooks/use-current-role";
+import { TemplatePickerDialog } from "@/modules/message-templates";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
