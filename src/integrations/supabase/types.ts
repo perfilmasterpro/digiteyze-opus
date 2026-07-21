@@ -340,6 +340,85 @@ export type Database = {
           },
         ]
       }
+      message_template_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_template_favorites_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_templates: {
+        Row: {
+          ativo: boolean
+          categoria: Database["public"]["Enums"]["message_template_categoria"]
+          corpo: string
+          created_at: string
+          created_by: string | null
+          id: string
+          titulo: string
+          updated_at: string
+          updated_by: string | null
+          variaveis: string[]
+          workspace_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["message_template_categoria"]
+          corpo: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          titulo: string
+          updated_at?: string
+          updated_by?: string | null
+          variaveis?: string[]
+          workspace_id: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["message_template_categoria"]
+          corpo?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          titulo?: string
+          updated_at?: string
+          updated_by?: string | null
+          variaveis?: string[]
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           created_at: string
@@ -670,6 +749,14 @@ export type Database = {
         | "comercial"
         | "desenvolvimento"
         | "suporte"
+      message_template_categoria:
+        | "prospeccao"
+        | "follow_up"
+        | "apresentacao"
+        | "objecao"
+        | "reengajamento"
+        | "agradecimento"
+        | "outro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -806,6 +893,15 @@ export const Constants = {
         "comercial",
         "desenvolvimento",
         "suporte",
+      ],
+      message_template_categoria: [
+        "prospeccao",
+        "follow_up",
+        "apresentacao",
+        "objecao",
+        "reengajamento",
+        "agradecimento",
+        "outro",
       ],
     },
   },

@@ -6,6 +6,7 @@ import {
   GraduationCap,
   Headphones,
   LayoutDashboard,
+  MessageSquareText,
   Megaphone,
   PenSquare,
   Rocket,
@@ -55,6 +56,14 @@ export const NAV_ITEMS: NavItem[] = [
     to: "/prospeccao",
     icon: Target,
     group: "comercial",
+  },
+  {
+    key: "mensagens",
+    label: "Biblioteca de Mensagens",
+    to: "/mensagens",
+    icon: MessageSquareText,
+    group: "comercial",
+    description: "Templates comerciais e favoritos",
   },
   {
     key: "marketing",

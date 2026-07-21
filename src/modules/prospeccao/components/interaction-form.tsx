@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, MessageSquareText, Plus } from "lucide-react";
 import { toast } from "sonner";
+
+import { can } from "@/config/rbac";
+import { useCurrentRole } from "@/hooks/use-current-role";
+import { TemplatePickerDialog } from "@/modules/message-templates";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +32,20 @@ function nowLocal(): string {
   return new Date(d.getTime() - off * 60_000).toISOString().slice(0, 16);
 }
 
-export function InteractionForm({ leadId, disabled }: { leadId: string; disabled?: boolean }) {
+import type { Lead } from "../types/leads.types";
+
+export function InteractionForm({
+  leadId,
+  lead,
+  disabled,
+}: {
+  leadId: string;
+  lead?: Lead;
+  disabled?: boolean;
+}) {
+  const role = useCurrentRole();
+  const canUseTemplates = can(role, "mensagens:view");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [tipo, setTipo] = useState<LeadInteractionType>("nota");
   const [data, setData] = useState<string>(nowLocal());
   const [descricao, setDescricao] = useState("");
@@ -92,7 +109,21 @@ export function InteractionForm({ leadId, disabled }: { leadId: string; disabled
               placeholder="O que aconteceu? Próximos passos?"
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-between gap-2">
+            {lead && canUseTemplates ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setPickerOpen(true)}
+              >
+                <MessageSquareText className="h-4 w-4" />
+                Usar mensagem
+              </Button>
+            ) : (
+              <span />
+            )}
             <Button type="submit" size="sm" disabled={disabled || create.isPending} className="gap-2">
               {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Registrar
@@ -100,6 +131,10 @@ export function InteractionForm({ leadId, disabled }: { leadId: string; disabled
           </div>
         </form>
       </CardContent>
+      {lead && (
+        <TemplatePickerDialog open={pickerOpen} onOpenChange={setPickerOpen} lead={lead} />
+      )}
     </Card>
   );
 }
+
