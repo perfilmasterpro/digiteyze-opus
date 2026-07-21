@@ -76,8 +76,8 @@ export function TemplatesFavoritesWidget() {
           </p>
         ) : (
           items.map((t) => {
-            const titulo = t.data?.titulo ?? "Sem título";
-            const corpo = t.data?.corpo ?? "";
+            const titulo = t.titulo ?? "Sem título";
+            const corpo = t.corpo ?? "";
             return (
               <div
                 key={t.id}
