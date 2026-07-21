@@ -11,6 +11,17 @@ import type { LeadInput } from "../../types/leads.types";
  *     ou retorna `null` para descartar silenciosamente (ex.: anúncios).
  *  3. `defaults` — valores padrão aplicados a todas as linhas (ex.: origem).
  */
+export type MappedRow =
+  | Partial<LeadInput>
+  | { __ignoredReason: string }
+  | null;
+
+export function isIgnored(
+  r: MappedRow,
+): r is { __ignoredReason: string } {
+  return !!r && typeof r === "object" && "__ignoredReason" in r;
+}
+
 export interface CsvProfile {
   id: string;
   label: string;
@@ -21,7 +32,7 @@ export interface CsvProfile {
     row: string[],
     normalizedHeaders: (string | null)[],
     rawHeaders: string[],
-  ): Partial<LeadInput> | null;
+  ): MappedRow;
   defaults?: Partial<LeadInput>;
 }
 
