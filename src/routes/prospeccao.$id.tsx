@@ -40,7 +40,6 @@ function LeadLayout() {
   const updateStatus = useUpdateLeadStatus();
   const convert = useConvertLead();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
 
   if (isLoading) return <LeadDetailSkeleton />;
