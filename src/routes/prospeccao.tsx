@@ -22,6 +22,7 @@ import { useCurrentRole } from "@/hooks/use-current-role";
 import {
   LEAD_ORIGEM_LABEL,
   LeadFormDrawer,
+  LeadImportDialog,
   LeadsKanban,
   useLeads,
   useUpdateLeadStatus,
