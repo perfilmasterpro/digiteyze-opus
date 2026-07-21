@@ -87,7 +87,6 @@ function LeadLayout() {
         canUpdate={canUpdate}
         canMove={canMove}
         canConvert={canConvert}
-        onEdit={() => setDrawerOpen(true)}
         onChangeStatus={handleChangeStatus}
         onConvert={() => setConvertOpen(true)}
       />
