@@ -68,6 +68,7 @@ const TYPE_ICON: Record<EmpresaEventType, React.ComponentType<{ className?: stri
   "proposal.approved": CheckCircle2,
   "proposal.rejected": XCircle,
   "proposal.expired": Clock,
+  "proposal.pdf_generated": FileText,
 };
 
 

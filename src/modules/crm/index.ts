@@ -56,8 +56,25 @@ export {
   useTransitionProposalStatus,
   useDuplicateProposal,
   useDeleteProposal,
+  useGenerateProposalPdf,
   computeProposalKpis,
 } from "./hooks/use-proposals";
+export type {
+  GenerateProposalPdfResult,
+  ProposalPdfMode,
+} from "./hooks/use-proposals";
+export {
+  buildProposalNumber,
+  buildProposalPdfFilename,
+  empresaToClient,
+  generateProposalPdf,
+  generateProposalPdfObjectUrl,
+} from "./services/proposal-pdf.service";
+export type {
+  ProposalPdfClient,
+  ProposalPdfInput,
+  ProposalPdfIssuer,
+} from "./services/proposal-pdf.service";
 export { ProposalFormDrawer } from "./components/proposal-form-drawer";
 export { ProposalCard } from "./components/proposal-card";
 export { ProposalList } from "./components/proposal-list";

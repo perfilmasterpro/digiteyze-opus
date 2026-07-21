@@ -1,4 +1,4 @@
-import { Copy, Edit, MoreHorizontal, Send, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
+import { Copy, Download, Edit, Eye, MoreHorizontal, Send, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ import { ProposalFormDrawer } from "./proposal-form-drawer";
 import {
   useDeleteProposal,
   useDuplicateProposal,
+  useGenerateProposalPdf,
   useProposalsByOpportunity,
   useTransitionProposalStatus,
 } from "../hooks/use-proposals";
@@ -46,6 +47,16 @@ export function ProposalList({
   const transition = useTransitionProposalStatus();
   const duplicate = useDuplicateProposal();
   const remove = useDeleteProposal();
+  const generatePdf = useGenerateProposalPdf();
+
+  async function handleGeneratePdf(p: Proposal, mode: "download" | "preview") {
+    try {
+      await generatePdf.mutateAsync({ proposal: p, mode });
+      toast.success(mode === "preview" ? "PDF aberto em nova aba" : "PDF gerado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao gerar PDF.");
+    }
+  }
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<Proposal | null>(null);
@@ -186,7 +197,16 @@ export function ProposalList({
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem onSelect={() => handleGeneratePdf(p, "preview")}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Visualizar PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleGeneratePdf(p, "download")}>
+                          <Download className="mr-2 h-4 w-4" />
+                          Baixar PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         {canUpdate ? (
                           <DropdownMenuItem onSelect={() => openEdit(p)}>
                             <Edit className="mr-2 h-4 w-4" />

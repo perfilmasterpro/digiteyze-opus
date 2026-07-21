@@ -49,6 +49,7 @@ export const EMPRESA_EVENT_TYPES = [
   "proposal.approved",
   "proposal.rejected",
   "proposal.expired",
+  "proposal.pdf_generated",
 ] as const;
 export type EmpresaEventType = (typeof EMPRESA_EVENT_TYPES)[number];
 
@@ -71,6 +72,7 @@ export const EMPRESA_EVENT_TYPE_LABEL: Record<EmpresaEventType, string> = {
   "proposal.approved": "Proposta aprovada",
   "proposal.rejected": "Proposta recusada",
   "proposal.expired": "Proposta expirada",
+  "proposal.pdf_generated": "PDF da proposta gerado",
 };
 
 
