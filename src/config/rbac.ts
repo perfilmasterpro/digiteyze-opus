@@ -149,6 +149,7 @@ export const DEFAULT_ROLE_MODULES: Record<Role, ModuleKey[] | "all"> = {
     "empresas",
     "crm",
     "prospeccao",
+    "growth",
     "ia",
     "base-conhecimento",
   ],
