@@ -14,6 +14,7 @@ import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProspeccaoRouteImport } from './routes/prospeccao'
 import { Route as ProjetosRouteImport } from './routes/projetos'
+import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as MarketingRouteImport } from './routes/marketing'
 import { Route as IaRouteImport } from './routes/ia'
 import { Route as GrowthRouteImport } from './routes/growth'
@@ -74,6 +75,11 @@ const ProspeccaoRoute = ProspeccaoRouteImport.update({
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MensagensRoute = MensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketingRoute = MarketingRouteImport.update({
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/marketing': typeof MarketingRoute
+  '/mensagens': typeof MensagensRoute
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/marketing': typeof MarketingRoute
+  '/mensagens': typeof MensagensRoute
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -353,6 +361,7 @@ export interface FileRoutesById {
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/marketing': typeof MarketingRoute
+  '/mensagens': typeof MensagensRoute
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/growth'
     | '/ia'
     | '/marketing'
+    | '/mensagens'
     | '/projetos'
     | '/prospeccao'
     | '/reset-password'
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/growth'
     | '/ia'
     | '/marketing'
+    | '/mensagens'
     | '/projetos'
     | '/prospeccao'
     | '/reset-password'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/growth'
     | '/ia'
     | '/marketing'
+    | '/mensagens'
     | '/projetos'
     | '/prospeccao'
     | '/reset-password'
@@ -524,6 +536,7 @@ export interface RootRouteChildren {
   GrowthRoute: typeof GrowthRouteWithChildren
   IaRoute: typeof IaRoute
   MarketingRoute: typeof MarketingRoute
+  MensagensRoute: typeof MensagensRoute
   ProjetosRoute: typeof ProjetosRoute
   ProspeccaoRoute: typeof ProspeccaoRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/projetos'
       fullPath: '/projetos'
       preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mensagens': {
+      id: '/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof MensagensRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marketing': {
@@ -960,6 +980,7 @@ const rootRouteChildren: RootRouteChildren = {
   GrowthRoute: GrowthRouteWithChildren,
   IaRoute: IaRoute,
   MarketingRoute: MarketingRoute,
+  MensagensRoute: MensagensRoute,
   ProjetosRoute: ProjetosRoute,
   ProspeccaoRoute: ProspeccaoRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
