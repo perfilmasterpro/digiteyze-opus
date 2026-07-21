@@ -22,7 +22,9 @@ import { Route as ConteudoRouteImport } from './routes/conteudo'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProspeccaoListaRouteImport } from './routes/prospeccao.lista'
 import { Route as ProspeccaoIdRouteImport } from './routes/prospeccao.$id'
+import { Route as GrowthDashboardRouteImport } from './routes/growth.dashboard'
 import { Route as EmpresasIdRouteImport } from './routes/empresas.$id'
 import { Route as CrmIdRouteImport } from './routes/crm.$id'
 import { Route as ProspeccaoIdIndexRouteImport } from './routes/prospeccao.$id.index'
@@ -106,10 +108,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProspeccaoListaRoute = ProspeccaoListaRouteImport.update({
+  id: '/lista',
+  path: '/lista',
+  getParentRoute: () => ProspeccaoRoute,
+} as any)
 const ProspeccaoIdRoute = ProspeccaoIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ProspeccaoRoute,
+} as any)
+const GrowthDashboardRoute = GrowthDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => GrowthRoute,
 } as any)
 const EmpresasIdRoute = EmpresasIdRouteImport.update({
   id: '/$id',
@@ -206,7 +218,7 @@ export interface FileRoutesByFullPath {
   '/crm': typeof CrmRouteWithChildren
   '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
-  '/growth': typeof GrowthRoute
+  '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/marketing': typeof MarketingRoute
   '/projetos': typeof ProjetosRoute
@@ -214,7 +226,9 @@ export interface FileRoutesByFullPath {
   '/suporte': typeof SuporteRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
+  '/prospeccao/lista': typeof ProspeccaoListaRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -239,12 +253,14 @@ export interface FileRoutesByTo {
   '/crm': typeof CrmRouteWithChildren
   '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
-  '/growth': typeof GrowthRoute
+  '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/marketing': typeof MarketingRoute
   '/projetos': typeof ProjetosRoute
   '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/suporte': typeof SuporteRoute
+  '/growth/dashboard': typeof GrowthDashboardRoute
+  '/prospeccao/lista': typeof ProspeccaoListaRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -270,7 +286,7 @@ export interface FileRoutesById {
   '/crm': typeof CrmRouteWithChildren
   '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
-  '/growth': typeof GrowthRoute
+  '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/marketing': typeof MarketingRoute
   '/projetos': typeof ProjetosRoute
@@ -278,7 +294,9 @@ export interface FileRoutesById {
   '/suporte': typeof SuporteRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
+  '/prospeccao/lista': typeof ProspeccaoListaRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -313,7 +331,9 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/crm/$id'
     | '/empresas/$id'
+    | '/growth/dashboard'
     | '/prospeccao/$id'
+    | '/prospeccao/lista'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -344,6 +364,8 @@ export interface FileRouteTypes {
     | '/projetos'
     | '/prospeccao'
     | '/suporte'
+    | '/growth/dashboard'
+    | '/prospeccao/lista'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -376,7 +398,9 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/crm/$id'
     | '/empresas/$id'
+    | '/growth/dashboard'
     | '/prospeccao/$id'
+    | '/prospeccao/lista'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -402,7 +426,7 @@ export interface RootRouteChildren {
   CrmRoute: typeof CrmRouteWithChildren
   EmpresasRoute: typeof EmpresasRouteWithChildren
   FinanceiroRoute: typeof FinanceiroRoute
-  GrowthRoute: typeof GrowthRoute
+  GrowthRoute: typeof GrowthRouteWithChildren
   IaRoute: typeof IaRoute
   MarketingRoute: typeof MarketingRoute
   ProjetosRoute: typeof ProjetosRoute
@@ -503,12 +527,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prospeccao/lista': {
+      id: '/prospeccao/lista'
+      path: '/lista'
+      fullPath: '/prospeccao/lista'
+      preLoaderRoute: typeof ProspeccaoListaRouteImport
+      parentRoute: typeof ProspeccaoRoute
+    }
     '/prospeccao/$id': {
       id: '/prospeccao/$id'
       path: '/$id'
       fullPath: '/prospeccao/$id'
       preLoaderRoute: typeof ProspeccaoIdRouteImport
       parentRoute: typeof ProspeccaoRoute
+    }
+    '/growth/dashboard': {
+      id: '/growth/dashboard'
+      path: '/dashboard'
+      fullPath: '/growth/dashboard'
+      preLoaderRoute: typeof GrowthDashboardRouteImport
+      parentRoute: typeof GrowthRoute
     }
     '/empresas/$id': {
       id: '/empresas/$id'
@@ -694,6 +732,17 @@ const EmpresasRouteWithChildren = EmpresasRoute._addFileChildren(
   EmpresasRouteChildren,
 )
 
+interface GrowthRouteChildren {
+  GrowthDashboardRoute: typeof GrowthDashboardRoute
+}
+
+const GrowthRouteChildren: GrowthRouteChildren = {
+  GrowthDashboardRoute: GrowthDashboardRoute,
+}
+
+const GrowthRouteWithChildren =
+  GrowthRoute._addFileChildren(GrowthRouteChildren)
+
 interface ProspeccaoIdRouteChildren {
   ProspeccaoIdHistoricoRoute: typeof ProspeccaoIdHistoricoRoute
   ProspeccaoIdInteracoesRoute: typeof ProspeccaoIdInteracoesRoute
@@ -714,10 +763,12 @@ const ProspeccaoIdRouteWithChildren = ProspeccaoIdRoute._addFileChildren(
 
 interface ProspeccaoRouteChildren {
   ProspeccaoIdRoute: typeof ProspeccaoIdRouteWithChildren
+  ProspeccaoListaRoute: typeof ProspeccaoListaRoute
 }
 
 const ProspeccaoRouteChildren: ProspeccaoRouteChildren = {
   ProspeccaoIdRoute: ProspeccaoIdRouteWithChildren,
+  ProspeccaoListaRoute: ProspeccaoListaRoute,
 }
 
 const ProspeccaoRouteWithChildren = ProspeccaoRoute._addFileChildren(
@@ -732,7 +783,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrmRoute: CrmRouteWithChildren,
   EmpresasRoute: EmpresasRouteWithChildren,
   FinanceiroRoute: FinanceiroRoute,
-  GrowthRoute: GrowthRoute,
+  GrowthRoute: GrowthRouteWithChildren,
   IaRoute: IaRoute,
   MarketingRoute: MarketingRoute,
   ProjetosRoute: ProjetosRoute,

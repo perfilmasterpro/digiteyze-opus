@@ -64,7 +64,8 @@ export type Permission =
   | `${ModuleKey}:${Action}`
   | `crm:proposal:${"view" | "create" | "update" | "approve"}`
   | `crm:contract:${"view" | "create" | "update" | "delete" | "send" | "sign"}`
-  | `crm:signature:${"view" | "create" | "update" | "sign"}`;
+  | `crm:signature:${"view" | "create" | "update" | "sign"}`
+  | `growth:prospection:${"view" | "create" | "update" | "import" | "delete"}`;
 
 /** Sub-ações do domínio CRM > Propostas. */
 type ProposalAction = "view" | "create" | "update" | "approve";
@@ -105,6 +106,19 @@ const SIGNATURE_MATRIX: Record<Role, readonly SignatureAction[]> = {
   suporte: ["view"],
 };
 
+/** Sub-ações do domínio Growth > Prospecção. */
+type GrowthProspectionAction = "view" | "create" | "update" | "import" | "delete";
+const GROWTH_PROSPECTION_MATRIX: Record<Role, readonly GrowthProspectionAction[]> = {
+  administrador: ["view", "create", "update", "import", "delete"],
+  gestor: ["view", "create", "update", "import", "delete"],
+  comercial: ["view", "create", "update", "import"],
+  operacional: ["view"],
+  financeiro: ["view"],
+  marketing: ["view"],
+  desenvolvimento: ["view"],
+  suporte: ["view"],
+};
+
 /**
  * Mapa padrão de módulos que cada papel enxerga.
  * Serve de default sensato; papéis reais podem sobrescrever no futuro.
@@ -135,6 +149,7 @@ export const DEFAULT_ROLE_MODULES: Record<Role, ModuleKey[] | "all"> = {
     "empresas",
     "crm",
     "prospeccao",
+    "growth",
     "ia",
     "base-conhecimento",
   ],
@@ -202,6 +217,11 @@ export function can(role: Role, permission: Permission): boolean {
     if (!canAccessModule(role, "crm")) return false;
     const action = permission.slice("crm:signature:".length) as SignatureAction;
     return SIGNATURE_MATRIX[role]?.includes(action) ?? false;
+  }
+  if (permission.startsWith("growth:prospection:")) {
+    if (!canAccessModule(role, "growth")) return false;
+    const action = permission.slice("growth:prospection:".length) as GrowthProspectionAction;
+    return GROWTH_PROSPECTION_MATRIX[role]?.includes(action) ?? false;
   }
   const [moduleKey, action] = permission.split(":") as [ModuleKey, Action];
   if (!canAccessModule(role, moduleKey)) return false;

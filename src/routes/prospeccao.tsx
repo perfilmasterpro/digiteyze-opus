@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Target } from "lucide-react";
+import { LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ import { useCurrentRole } from "@/hooks/use-current-role";
 import {
   LEAD_ORIGEM_LABEL,
   LeadFormDrawer,
+  LeadImportDialog,
   LeadsKanban,
   useLeads,
   useUpdateLeadStatus,
@@ -45,6 +46,7 @@ function ProspeccaoPage() {
   const canView = can(role, "prospeccao:view");
   const canCreate = can(role, "prospeccao:create");
   const canMove = can(role, "prospeccao:move");
+  const canImport = can(role, "growth:prospection:import");
   const navigate = useNavigate();
 
   const { data, isLoading, isError, refetch } = useLeads();
@@ -53,6 +55,7 @@ function ProspeccaoPage() {
   const [search, setSearch] = useState("");
   const [origemFilter, setOrigemFilter] = useState<LeadOrigem | "todos">("todos");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -103,12 +106,38 @@ function ProspeccaoPage() {
         description="Pipeline visual de leads — do primeiro contato ao fechamento."
         icon={<Target className="h-5 w-5" />}
         actions={
-          canCreate ? (
-            <Button size="sm" className="gap-2" onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              Novo lead
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" className="gap-2" disabled>
+              <LayoutGrid className="h-4 w-4" />
+              Kanban
             </Button>
-          ) : null
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => navigate({ to: "/prospeccao/lista" })}
+            >
+              <List className="h-4 w-4" />
+              Lista
+            </Button>
+            {canImport ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setImportOpen(true)}
+              >
+                <Upload className="h-4 w-4" />
+                Importar
+              </Button>
+            ) : null}
+            {canCreate ? (
+              <Button size="sm" className="gap-2" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                Novo lead
+              </Button>
+            ) : null}
+          </div>
         }
       />
 
@@ -169,6 +198,7 @@ function ProspeccaoPage() {
         onOpenChange={setDrawerOpen}
         lead={null}
       />
+      <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
