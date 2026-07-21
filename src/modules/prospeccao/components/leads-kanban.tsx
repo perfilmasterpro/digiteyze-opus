@@ -48,9 +48,10 @@ type Props = {
   onSelect?: (lead: Lead) => void;
   onChangeStatus?: (lead: Lead, status: LeadStatus) => void;
   canMove?: boolean;
+  canUpdate?: boolean;
 };
 
-export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props) {
+export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdate }: Props) {
   const columns: KanbanColumn<Lead>[] = LEAD_STATUS.map((status) => {
     const items = leads.filter((l) => l.status === status);
     const total = items.reduce((sum, l) => sum + (l.valor_potencial ?? 0), 0);
