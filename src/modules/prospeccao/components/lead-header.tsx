@@ -93,9 +93,11 @@ export function LeadHeader({
         actions={
           <>
             {canUpdate ? (
-              <Button variant="outline" size="sm" className="gap-2" onClick={onEdit}>
-                <Edit className="h-4 w-4" />
-                Editar
+              <Button asChild variant="outline" size="sm" className="gap-2">
+                <Link to="/prospeccao/$id/editar" params={{ id: lead.id }}>
+                  <Pencil className="h-4 w-4" />
+                  Editar lead
+                </Link>
               </Button>
             ) : null}
             {canMove ? (
