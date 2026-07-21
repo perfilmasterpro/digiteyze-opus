@@ -37,17 +37,23 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+type ProfileRow = { id: string; email: string | null; display_name: string | null };
+
 async function bootstrapForUser(user: User): Promise<{
-  profile: AuthProfile;
+  profile: ProfileRow;
   workspace: AuthWorkspace;
   role: Role;
 }> {
   // Profile
-  let { data: profile } = await supabase
-    .from("profiles")
-    .select("id,email,display_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  let profile: ProfileRow | null = null;
+  {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id,email,display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    profile = data as ProfileRow | null;
+  }
 
   if (!profile) {
     const inserted = await supabase
@@ -62,11 +68,15 @@ async function bootstrapForUser(user: User): Promise<{
       })
       .select("id,email,display_name")
       .single();
-    profile = inserted.data ?? null;
+    profile = (inserted.data as ProfileRow | null) ?? {
+      id: user.id,
+      email: user.email ?? null,
+      display_name: user.email?.split("@")[0] ?? null,
+    };
   }
 
   // Workspace membership
-  let { data: member } = await supabase
+  const { data: member } = await supabase
     .from("workspace_members")
     .select("workspace_id, workspaces(id,name)")
     .eq("user_id", user.id)
@@ -106,15 +116,7 @@ async function bootstrapForUser(user: User): Promise<{
 
   const role = (roleRow?.role as Role | undefined) ?? "administrador";
 
-  return {
-    profile: profile ?? {
-      id: user.id,
-      email: user.email ?? null,
-      displayName: user.email?.split("@")[0] ?? null,
-    },
-    workspace,
-    role,
-  };
+  return { profile, workspace, role };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -138,18 +140,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await bootstrapForUser(nextSession.user);
       setProfile({
         id: data.profile.id,
-        email: (data.profile as { email: string | null }).email,
-        displayName: (data.profile as { display_name: string | null }).display_name ?? null,
-      } as AuthProfile);
+        email: data.profile.email,
+        displayName: data.profile.display_name,
+      });
       setWorkspace(data.workspace);
       setRole(data.role);
       __setWorkspaceStore({
         workspaceId: data.workspace.id,
         userId: nextSession.user.id,
-        userName:
-          (data.profile as { display_name: string | null }).display_name ??
-          nextSession.user.email ??
-          "Usuário",
+        userName: data.profile.display_name ?? nextSession.user.email ?? "Usuário",
         role: data.role,
       });
       setStatus("authenticated");

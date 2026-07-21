@@ -139,13 +139,52 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider delayDuration={200}>
-          <AppLayout>
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-          </AppLayout>
+          <AuthProvider>
+            <AuthGate>
+              <Outlet />
+            </AuthGate>
+          </AuthProvider>
           <Toaster richColors position="top-right" />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
+}
+
+const PUBLIC_ROUTES = new Set(["/auth", "/reset-password"]);
+
+function AuthGate({ children }: { children: ReactNode }) {
+  const { status } = useAuth();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isPublic = PUBLIC_ROUTES.has(pathname);
+
+  useEffect(() => {
+    if (status === "unauthenticated" && !isPublic) {
+      void navigate({ to: "/auth", replace: true });
+    }
+  }, [status, isPublic, navigate]);
+
+  if (isPublic) {
+    return <>{children}</>;
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md space-y-3">
+          <Skeleton className="h-8 w-1/2" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return null;
+  }
+
+  return <AppLayout>{children}</AppLayout>;
 }
