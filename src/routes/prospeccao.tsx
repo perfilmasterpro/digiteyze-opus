@@ -198,6 +198,7 @@ function ProspeccaoPage() {
         onOpenChange={setDrawerOpen}
         lead={null}
       />
+      <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
