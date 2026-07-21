@@ -15,7 +15,25 @@ import type { CsvProfile } from "./types";
  *  - origem sempre = "google_maps".
  */
 
-const AD_MARKERS = ["patrocinado", "sponsored", "anuncio", "anúncio", "ad"];
+const AD_MARKERS = ["patrocinado", "sponsored", "anúncio", "anuncio"];
+
+const THIRD_PARTY_SITE_HOSTS = [
+  "booking.com",
+  "expedia.com",
+  "tripadvisor.com",
+  "tripadvisor.com.br",
+  "hoteis.com",
+  "hotels.com",
+  "airbnb.com",
+  "decolar.com",
+  "trivago.com",
+  "trivago.com.br",
+];
+
+function isThirdPartyListing(url: string): boolean {
+  const lower = url.toLowerCase();
+  return THIRD_PARTY_SITE_HOSTS.some((h) => lower.includes(h));
+}
 
 const HEADER_ALIASES: Record<string, keyof LeadInput | "extra_endereco" | "extra_google_maps_url" | "extra_avaliacao" | "extra_qtd_avaliacoes" | "extra_preco" | "extra_status"> = {
   title: "nome_empresa",
@@ -181,16 +199,23 @@ export const thunderbitProfile: CsvProfile = {
       }
     });
 
-    // Filtro de anúncios — retorna razão para rastreabilidade.
+    // Regra única de descarte: sem nome de empresa.
     const title = (data.nome_empresa ?? "").toString();
+    if (!title.trim()) {
+      return { __ignoredReason: "Linha sem nome de empresa (título vazio)" };
+    }
+
+    // Detecta anúncio patrocinado — NÃO descarta, apenas marca.
     const statusExtra = (extras.status ?? "").toString();
     const combined = `${title} ${statusExtra}`.toLowerCase();
     const adMatch = AD_MARKERS.find((m) => combined.includes(m));
-    if (adMatch) {
-      return { __ignoredReason: `Anúncio patrocinado (marcador: "${adMatch}")` };
-    }
-    if (!title.trim()) {
-      return { __ignoredReason: "Linha sem nome de empresa (título vazio)" };
+    const isSponsored = !!adMatch;
+
+    // Site de terceiros (Booking, TripAdvisor, etc.) é fonte complementar,
+    // não invalida o lead. Mantém no campo site mas registra em notas.
+    let thirdPartyListing: string | undefined;
+    if (data.site && isThirdPartyListing(data.site)) {
+      thirdPartyListing = data.site;
     }
 
     // Parse endereço.
@@ -203,6 +228,8 @@ export const thunderbitProfile: CsvProfile = {
     // Consolida extras em observações — mantém rastreabilidade sem exigir
     // novas colunas no schema `Lead`.
     const notes: string[] = [];
+    if (isSponsored) notes.push("Tipo: Google Maps Patrocinado");
+    if (thirdPartyListing) notes.push(`Listagem externa: ${thirdPartyListing}`);
     if (extras.endereco) notes.push(`Endereço: ${extras.endereco}`);
     const parsedBairro = extras.endereco
       ? parseGoogleMapsAddress(extras.endereco).bairro
