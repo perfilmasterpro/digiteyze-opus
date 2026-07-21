@@ -181,12 +181,16 @@ export const thunderbitProfile: CsvProfile = {
       }
     });
 
-    // Filtro de anúncios — descarta silenciosamente.
+    // Filtro de anúncios — retorna razão para rastreabilidade.
     const title = (data.nome_empresa ?? "").toString();
     const statusExtra = (extras.status ?? "").toString();
     const combined = `${title} ${statusExtra}`.toLowerCase();
-    if (AD_MARKERS.some((m) => combined.includes(m))) {
-      return null;
+    const adMatch = AD_MARKERS.find((m) => combined.includes(m));
+    if (adMatch) {
+      return { __ignoredReason: `Anúncio patrocinado (marcador: "${adMatch}")` };
+    }
+    if (!title.trim()) {
+      return { __ignoredReason: "Linha sem nome de empresa (título vazio)" };
     }
 
     // Parse endereço.
