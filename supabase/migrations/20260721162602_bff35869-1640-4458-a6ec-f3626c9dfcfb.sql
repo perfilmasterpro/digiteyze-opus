@@ -1,0 +1,1 @@
+drop policy if exists "workspaces: authenticated create" on public.workspaces;
