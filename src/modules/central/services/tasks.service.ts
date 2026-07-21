@@ -123,7 +123,7 @@ export async function setTaskStatus(
   id: string,
   status: TaskStatus,
 ): Promise<Task> {
-  const patch: Record<string, unknown> = { status };
+  const patch: TablesUpdate<"tasks"> = { status };
   if (status === "concluida") patch.completed_at = new Date().toISOString();
   if (status !== "concluida") patch.completed_at = null;
   const { data, error } = await supabase
