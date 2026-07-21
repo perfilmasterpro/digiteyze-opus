@@ -158,6 +158,8 @@ export interface Lead {
   canal_aquisicao?: LeadCanal;
   probabilidade_fechamento?: LeadProbabilidade;
   motivo_perda?: LeadMotivoPerda;
+  // Campos personalizados (extensível — sem novas colunas)
+  custom_fields?: Record<string, string>;
   // Rastreabilidade de conversão para CRM
   empresa_id?: string;
   data_conversao?: string; // ISO datetime
@@ -167,3 +169,4 @@ export interface Lead {
 }
 
 export type LeadInput = Omit<Lead, "id" | "workspace_id" | "created_at" | "updated_at">;
+
