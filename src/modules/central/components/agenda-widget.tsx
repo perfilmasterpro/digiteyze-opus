@@ -8,7 +8,14 @@ import { cn } from "@/lib/utils";
 
 import { useCalendarEvents } from "../hooks/use-calendar-events";
 import { useTasks } from "../hooks/use-tasks";
-import type { AgendaItem } from "../types/central.types";
+
+type AgendaRow = {
+  id: string;
+  source: "task" | "event";
+  titulo: string;
+  hora_inicio: string | null;
+  hora_fim: string | null;
+};
 
 function todayStr() {
   const t = new Date();
