@@ -88,18 +88,22 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
         const prev = idx > 0 ? LEAD_STATUS[idx - 1] : undefined;
         const next = idx < LEAD_STATUS.length - 1 ? LEAD_STATUS[idx + 1] : undefined;
         return (
-          <div className="flex flex-col gap-2">
+          <div className="relative flex flex-col gap-2 pl-2">
+            <span
+              className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-full"
+              style={{ backgroundColor: `var(${LEAD_STATUS_COLOR_VAR[lead.status]})` }}
+              aria-hidden
+            />
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 flex-1 items-start gap-2">
                 {lead.temperatura ? (
                   <span
-                    className={cn(
-                      "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                      LEAD_TEMPERATURA_DOT[lead.temperatura],
-                    )}
+                    className="mt-0.5 shrink-0 text-sm leading-none"
                     aria-label={`Temperatura ${LEAD_TEMPERATURA_LABEL[lead.temperatura]}`}
-                    title={LEAD_TEMPERATURA_LABEL[lead.temperatura]}
-                  />
+                    title={`Temperatura ${LEAD_TEMPERATURA_LABEL[lead.temperatura]}`}
+                  >
+                    {LEAD_TEMPERATURA_EMOJI[lead.temperatura]}
+                  </span>
                 ) : null}
                 <button
                   type="button"
@@ -109,6 +113,7 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
                   {lead.nome_empresa}
                 </button>
               </div>
+
               {canMove && onChangeStatus ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
