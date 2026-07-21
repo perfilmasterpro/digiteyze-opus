@@ -27,8 +27,8 @@ export function AgendaWidget() {
   const today = todayStr();
   const { data: events = [], isLoading: le } = useCalendarEvents({ from: today, to: today });
 
-  const items = useMemo<AgendaItem[]>(() => {
-    const list: AgendaItem[] = [];
+  const items = useMemo<AgendaRow[]>(() => {
+    const list: AgendaRow[] = [];
     for (const t of tasks) {
       if (t.data === today && t.hora_inicio && t.status !== "cancelada") {
         list.push({
