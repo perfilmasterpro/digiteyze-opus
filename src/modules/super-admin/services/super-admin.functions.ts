@@ -3,12 +3,8 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertSuperAdmin(
-  supabase: Awaited<ReturnType<typeof import("@/integrations/supabase/auth-middleware")>>["requireSupabaseAuth"] extends never
-    ? never
-    : any,
-  userId: string,
-): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function assertSuperAdmin(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
     .from("super_admins")
     .select("user_id")
