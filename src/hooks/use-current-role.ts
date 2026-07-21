@@ -1,10 +1,10 @@
 import type { Role } from "@/config/rbac";
+import { getCurrentRole } from "@/lib/workspace";
 
 /**
- * Placeholder do papel do usuário logado.
- * Retorna "administrador" enquanto a integração com auth/workspace não existe.
- * Todos os gates de UI devem consumir este hook.
+ * Papel do usuário logado no workspace ativo.
+ * Backed pelo AuthProvider — lança se chamado sem sessão.
  */
 export function useCurrentRole(): Role {
-  return "administrador";
+  return getCurrentRole();
 }
