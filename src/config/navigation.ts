@@ -58,6 +58,14 @@ export const NAV_ITEMS: NavItem[] = [
     group: "comercial",
   },
   {
+    key: "mensagens",
+    label: "Biblioteca de Mensagens",
+    to: "/mensagens",
+    icon: MessageSquareText,
+    group: "comercial",
+    description: "Templates comerciais e favoritos",
+  },
+  {
     key: "marketing",
     label: "Marketing",
     to: "/marketing",
