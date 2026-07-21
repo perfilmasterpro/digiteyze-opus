@@ -1,4 +1,4 @@
-import { CalendarClock, DollarSign, MapPin, MoreVertical, User } from "lucide-react";
+import { CalendarClock, Clock, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Phone, User } from "lucide-react";
 
 import { KanbanBoard, type KanbanColumn } from "@/components/common/kanban-board";
 import { Button } from "@/components/ui/button";
@@ -169,18 +169,69 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
                 </span>
               ) : null}
             </div>
-            <div className="flex items-center justify-between text-xs">
+
+            {(lead.telefone || lead.whatsapp || lead.site || lead.instagram) ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                {lead.whatsapp ? (
+                  <span className="inline-flex items-center gap-1" title={`WhatsApp: ${lead.whatsapp}`}>
+                    <MessageCircle className="h-3 w-3" />
+                    {lead.whatsapp}
+                  </span>
+                ) : lead.telefone ? (
+                  <span className="inline-flex items-center gap-1" title={`Telefone: ${lead.telefone}`}>
+                    <Phone className="h-3 w-3" />
+                    {lead.telefone}
+                  </span>
+                ) : null}
+                {lead.site ? (
+                  <a
+                    href={lead.site}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex max-w-[140px] items-center gap-1 truncate hover:text-foreground hover:underline"
+                    title={lead.site}
+                  >
+                    <Globe className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{lead.site.replace(/^https?:\/\//, "").replace(/^www\./, "")}</span>
+                  </a>
+                ) : null}
+                {lead.instagram ? (
+                  <a
+                    href={lead.instagram.startsWith("http") ? lead.instagram : `https://instagram.com/${lead.instagram.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 hover:text-foreground hover:underline"
+                    title={lead.instagram}
+                  >
+                    <Instagram className="h-3 w-3" />
+                    Instagram
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="flex items-center justify-between gap-2 text-xs">
               <span className="rounded-full bg-background px-2 py-0.5 text-muted-foreground ring-1 ring-inset ring-border">
                 {LEAD_ORIGEM_LABEL[lead.origem]}
               </span>
-              {lead.proxima_acao ? (
-                <span className="inline-flex items-center gap-1 text-muted-foreground">
-                  <CalendarClock className="h-3 w-3" />
-                  {lead.data_proxima_acao
-                    ? new Date(lead.data_proxima_acao).toLocaleDateString("pt-BR")
-                    : lead.proxima_acao}
-                </span>
-              ) : null}
+              <div className="flex items-center gap-2 text-muted-foreground">
+                {lead.updated_at ? (
+                  <span className="inline-flex items-center gap-1" title="Último contato">
+                    <Clock className="h-3 w-3" />
+                    {new Date(lead.updated_at).toLocaleDateString("pt-BR")}
+                  </span>
+                ) : null}
+                {lead.proxima_acao ? (
+                  <span className="inline-flex items-center gap-1" title={lead.proxima_acao}>
+                    <CalendarClock className="h-3 w-3" />
+                    {lead.data_proxima_acao
+                      ? new Date(lead.data_proxima_acao).toLocaleDateString("pt-BR")
+                      : lead.proxima_acao}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
         );
