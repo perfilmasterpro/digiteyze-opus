@@ -109,7 +109,21 @@ export function InteractionForm({
               placeholder="O que aconteceu? Próximos passos?"
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-between gap-2">
+            {lead && canUseTemplates ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setPickerOpen(true)}
+              >
+                <MessageSquareText className="h-4 w-4" />
+                Usar mensagem
+              </Button>
+            ) : (
+              <span />
+            )}
             <Button type="submit" size="sm" disabled={disabled || create.isPending} className="gap-2">
               {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Registrar
@@ -117,6 +131,11 @@ export function InteractionForm({
           </div>
         </form>
       </CardContent>
+      {lead && (
+        <TemplatePickerDialog open={pickerOpen} onOpenChange={setPickerOpen} lead={lead} />
+      )}
     </Card>
+  );
+}
   );
 }
