@@ -199,10 +199,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       workspace,
       role,
+      isSuperAdmin,
       signOut,
       refresh,
     }),
-    [status, session, profile, workspace, role, signOut, refresh],
+    [status, session, profile, workspace, role, isSuperAdmin, signOut, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
