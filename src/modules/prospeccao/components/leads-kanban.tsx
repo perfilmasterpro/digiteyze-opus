@@ -57,6 +57,7 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove }: Props)
       id: status,
       title: LEAD_STATUS_LABEL[status],
       accent: STATUS_ACCENT[status],
+      accentColor: LEAD_STATUS_COLOR_VAR[status],
       items,
       subtitle: (
         <span className="inline-flex items-center gap-2">
