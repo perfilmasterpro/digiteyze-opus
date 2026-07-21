@@ -112,6 +112,7 @@ function toLeadInput(l: Lead) {
 
 function mapOrigem(o: Lead["origem"]) {
   const map: Record<Lead["origem"], EmpresaInput["origem"]> = {
+    google_maps: "prospeccao",
     indicacao: "indicacao",
     inbound: "inbound",
     outbound: "prospeccao",
@@ -119,6 +120,7 @@ function mapOrigem(o: Lead["origem"]) {
     parceria: "parceria",
     redes_sociais: "outro",
     site: "inbound",
+    anuncio: "outro",
     outro: "outro",
   };
   return map[o];
