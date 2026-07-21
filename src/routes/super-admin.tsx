@@ -18,13 +18,13 @@ export const Route = createFileRoute("/super-admin")({
   component: SuperAdminLayout,
 });
 
-const TABS = [
+const TABS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/super-admin", label: "Dashboard", exact: true },
   { to: "/super-admin/workspaces", label: "Workspaces" },
   { to: "/super-admin/usuarios", label: "Usuários" },
   { to: "/super-admin/logs", label: "Logs" },
   { to: "/super-admin/configuracoes", label: "Configurações" },
-] as const;
+];
 
 function SuperAdminLayout() {
   const { status, isSuperAdmin } = useAuth();
