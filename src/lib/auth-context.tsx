@@ -134,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setWorkspace(null);
       setRole(null);
+      setIsSuperAdmin(false);
       __clearWorkspaceStore();
       setStatus("unauthenticated");
       return;
@@ -153,6 +154,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userName: data.profile.display_name ?? nextSession.user.email ?? "Usuário",
         role: data.role,
       });
+      const { data: sa } = await supabase
+        .from("super_admins")
+        .select("user_id")
+        .eq("user_id", nextSession.user.id)
+        .maybeSingle();
+      setIsSuperAdmin(!!sa);
       setStatus("authenticated");
     } catch (err) {
       console.error("[auth] bootstrap failed", err);
