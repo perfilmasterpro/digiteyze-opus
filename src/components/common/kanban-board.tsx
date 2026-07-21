@@ -152,9 +152,21 @@ export function KanbanBoard<T>({
         style={{ gridAutoFlow: "column", gridAutoColumns: "minmax(260px, 1fr)" }}
       >
         {columns.map((col) => (
-          <div key={col.id} className="flex min-w-0 flex-col rounded-lg border bg-muted/30 p-3">
-            <ColumnHeader col={col} />
-            <ColumnCards col={col} renderCard={renderCard} itemKey={itemKey} />
+          <div
+            key={col.id}
+            className="flex min-w-0 flex-col overflow-hidden rounded-lg border bg-muted/30"
+          >
+            {col.accentColor ? (
+              <div
+                className="h-1 w-full shrink-0"
+                style={{ backgroundColor: `var(${col.accentColor})` }}
+                aria-hidden
+              />
+            ) : null}
+            <div className="flex min-w-0 flex-1 flex-col p-3">
+              <ColumnHeader col={col} />
+              <ColumnCards col={col} renderCard={renderCard} itemKey={itemKey} />
+            </div>
           </div>
         ))}
       </div>
