@@ -31,7 +31,7 @@ import {
   type LeadStatus,
 } from "@/modules/prospeccao";
 
-export const Route = createFileRoute("/prospeccao")({
+export const Route = createFileRoute("/prospeccao/")({
   head: () => ({
     meta: [
       { title: "Prospecção — Growth OS" },
