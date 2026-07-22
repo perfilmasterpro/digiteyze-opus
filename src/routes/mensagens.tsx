@@ -33,15 +33,15 @@ import { can } from "@/config/rbac";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import {
   TemplateFormDrawer,
+  useActiveMessageCategories,
   useDeleteTemplate,
+  useMessageCategoryMap,
   useMessageTemplates,
   useMyFavoriteTemplates,
   useSetTemplateActive,
   useToggleFavoriteTemplate,
-  MESSAGE_TEMPLATE_CATEGORIAS,
-  MESSAGE_TEMPLATE_CATEGORIA_LABEL,
+  formatCategoriaLabel,
   type MessageTemplate,
-  type MessageTemplateCategoria,
 } from "@/modules/message-templates";
 
 export const Route = createFileRoute("/mensagens")({
@@ -74,14 +74,14 @@ function MensagensPage() {
 
   const { data = [], isLoading, isError, refetch } = useMessageTemplates();
   const { data: favIds = [] } = useMyFavoriteTemplates();
+  const activeCategories = useActiveMessageCategories();
+  const categoryMap = useMessageCategoryMap();
   const toggleFav = useToggleFavoriteTemplate();
   const setActive = useSetTemplateActive();
   const del = useDeleteTemplate();
 
   const [search, setSearch] = useState("");
-  const [categoriaFilter, setCategoriaFilter] = useState<
-    MessageTemplateCategoria | "todas" | "favoritos"
-  >("todas");
+  const [categoriaFilter, setCategoriaFilter] = useState<string>("todas");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<MessageTemplate | null>(null);
   const [deleting, setDeleting] = useState<MessageTemplate | null>(null);
@@ -158,7 +158,7 @@ function MensagensPage() {
         />
         <Select
           value={categoriaFilter}
-          onValueChange={(v) => setCategoriaFilter(v as typeof categoriaFilter)}
+          onValueChange={(v) => setCategoriaFilter(v)}
         >
           <SelectTrigger className="sm:w-64">
             <SelectValue />
@@ -166,9 +166,16 @@ function MensagensPage() {
           <SelectContent>
             <SelectItem value="todas">Todas as categorias</SelectItem>
             <SelectItem value="favoritos">★ Favoritos</SelectItem>
-            {MESSAGE_TEMPLATE_CATEGORIAS.map((c) => (
-              <SelectItem key={c} value={c}>
-                {MESSAGE_TEMPLATE_CATEGORIA_LABEL[c]}
+            {activeCategories.map((c) => (
+              <SelectItem key={c.id} value={c.slug}>
+                <span className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: c.cor }}
+                  />
+                  {c.nome}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -211,9 +218,34 @@ function MensagensPage() {
                         </Badge>
                       )}
                     </div>
-                    <Badge variant="secondary" className="mt-1 text-[10px]">
-                      {MESSAGE_TEMPLATE_CATEGORIA_LABEL[t.categoria]}
-                    </Badge>
+                    {(() => {
+                      const cat = categoryMap.get(t.categoria);
+                      const color = cat?.cor;
+                      return (
+                        <Badge
+                          variant="secondary"
+                          className="mt-1 gap-1 text-[10px]"
+                          style={
+                            color
+                              ? {
+                                  backgroundColor: `${color}22`,
+                                  color,
+                                  borderColor: `${color}55`,
+                                }
+                              : undefined
+                          }
+                        >
+                          {color && (
+                            <span
+                              aria-hidden
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: color }}
+                            />
+                          )}
+                          {cat?.nome ?? formatCategoriaLabel(t.categoria)}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                   <Button
                     variant="ghost"

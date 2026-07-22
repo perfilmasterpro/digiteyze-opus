@@ -20,15 +20,18 @@ import type { Lead } from "@/modules/prospeccao";
 import { useCreateLeadInteraction } from "@/modules/prospeccao/hooks/use-lead-interactions";
 
 import {
+  useActiveMessageCategories,
+  useMessageCategoryMap,
+} from "../hooks/use-message-categories";
+import {
   useMessageTemplates,
   useMyFavoriteTemplates,
   useToggleFavoriteTemplate,
 } from "../hooks/use-message-templates";
 import { applyVariables } from "../services/apply-variables";
 import {
-  MESSAGE_TEMPLATE_CATEGORIA_LABEL,
+  formatCategoriaLabel,
   type MessageTemplate,
-  type MessageTemplateCategoria,
 } from "../types/message-templates.types";
 
 type Props = {
@@ -47,13 +50,13 @@ export function TemplatePickerDialog({
 }: Props) {
   const { data: templates = [], isLoading } = useMessageTemplates();
   const { data: favIds = [] } = useMyFavoriteTemplates();
+  const activeCategories = useActiveMessageCategories();
+  const categoryMap = useMessageCategoryMap();
   const toggleFav = useToggleFavoriteTemplate();
   const createInteraction = useCreateLeadInteraction(lead.id);
 
   const [search, setSearch] = useState("");
-  const [categoria, setCategoria] = useState<MessageTemplateCategoria | "todas" | "favoritos">(
-    "todas",
-  );
+  const [categoria, setCategoria] = useState<string>("todas");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [renderedText, setRenderedText] = useState("");
 
@@ -140,33 +143,46 @@ export function TemplatePickerDialog({
                 onChange={(e) => setSearch(e.target.value)}
               />
               <div className="flex flex-wrap gap-1">
-                {(
-                  [
-                    "todas",
-                    "favoritos",
-                    "prospeccao",
-                    "follow_up",
-                    "apresentacao",
-                    "objecao",
-                    "reengajamento",
-                    "agradecimento",
-                    "outro",
-                  ] as const
-                ).map((c) => (
-                  <Button
-                    key={c}
-                    size="sm"
-                    variant={categoria === c ? "default" : "outline"}
-                    onClick={() => setCategoria(c)}
-                    className="h-6 px-2 text-[11px]"
-                  >
-                    {c === "todas"
-                      ? "Todas"
-                      : c === "favoritos"
-                        ? "★ Favoritos"
-                        : MESSAGE_TEMPLATE_CATEGORIA_LABEL[c]}
-                  </Button>
-                ))}
+                <Button
+                  size="sm"
+                  variant={categoria === "todas" ? "default" : "outline"}
+                  onClick={() => setCategoria("todas")}
+                  className="h-6 px-2 text-[11px]"
+                >
+                  Todas
+                </Button>
+                <Button
+                  size="sm"
+                  variant={categoria === "favoritos" ? "default" : "outline"}
+                  onClick={() => setCategoria("favoritos")}
+                  className="h-6 px-2 text-[11px]"
+                >
+                  ★ Favoritos
+                </Button>
+                {activeCategories.map((c) => {
+                  const active = categoria === c.slug;
+                  return (
+                    <Button
+                      key={c.id}
+                      size="sm"
+                      variant={active ? "default" : "outline"}
+                      onClick={() => setCategoria(c.slug)}
+                      className="h-6 gap-1 px-2 text-[11px]"
+                      style={
+                        active
+                          ? { backgroundColor: c.cor, borderColor: c.cor, color: "#fff" }
+                          : { borderColor: `${c.cor}66`, color: c.cor }
+                      }
+                    >
+                      <span
+                        aria-hidden
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: active ? "#fff" : c.cor }}
+                      />
+                      {c.nome}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
             <ScrollArea className="h-[420px]">
@@ -212,9 +228,23 @@ export function TemplatePickerDialog({
                         </button>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Badge variant="secondary" className="text-[10px]">
-                          {MESSAGE_TEMPLATE_CATEGORIA_LABEL[t.categoria]}
-                        </Badge>
+                        {(() => {
+                          const cat = categoryMap.get(t.categoria);
+                          const color = cat?.cor;
+                          return (
+                            <Badge
+                              variant="secondary"
+                              className="gap-1 text-[10px]"
+                              style={
+                                color
+                                  ? { backgroundColor: `${color}22`, color, borderColor: `${color}55` }
+                                  : undefined
+                              }
+                            >
+                              {cat?.nome ?? formatCategoriaLabel(t.categoria)}
+                            </Badge>
+                          );
+                        })()}
                         <span className="line-clamp-1 text-xs text-muted-foreground">
                           {t.corpo}
                         </span>
@@ -236,7 +266,8 @@ export function TemplatePickerDialog({
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {MESSAGE_TEMPLATE_CATEGORIA_LABEL[selected.categoria]}
+                    {categoryMap.get(selected.categoria)?.nome ??
+                      formatCategoriaLabel(selected.categoria)}
                   </p>
                   <h3 className="text-base font-semibold">{selected.titulo}</h3>
                 </div>
