@@ -128,8 +128,18 @@ function TarefasPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Tabs value={view} onValueChange={(v) => navigate({ search: { view: v as "lista" | "kanban" | "calendario" | "agenda" } })}>
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <Tabs
+          value={view}
+          onValueChange={(v) =>
+            navigate({
+              search: {
+                view: v as "lista" | "kanban" | "calendario" | "agenda",
+                filtro,
+              },
+            })
+          }
+        >
           <TabsList>
             <TabsTrigger value="lista"><List className="mr-1 h-4 w-4" />Lista</TabsTrigger>
             <TabsTrigger value="kanban"><KanbanSquare className="mr-1 h-4 w-4" />Kanban</TabsTrigger>
@@ -158,6 +168,32 @@ function TarefasPage() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-1">
+        {(
+          [
+            ["todas", `Todas (${counts.todas})`],
+            ["pendentes", `Pendentes (${counts.pendentes})`],
+            ["em_andamento", `Em andamento (${counts.em_andamento})`],
+            ["concluidas", `Concluídas (${counts.concluidas})`],
+            ["atrasadas", `Atrasadas (${counts.atrasadas})`],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => navigate({ search: { view, filtro: key } })}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              filtro === key
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-muted-foreground hover:bg-accent/40",
+            )}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
