@@ -396,6 +396,50 @@ export type Database = {
           },
         ]
       }
+      message_categories: {
+        Row: {
+          ativo: boolean
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          slug: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          slug: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_categories_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_template_favorites: {
         Row: {
           created_at: string
@@ -428,7 +472,7 @@ export type Database = {
       message_templates: {
         Row: {
           ativo: boolean
-          categoria: Database["public"]["Enums"]["message_template_categoria"]
+          categoria: string
           corpo: string
           created_at: string
           created_by: string | null
@@ -441,7 +485,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
-          categoria?: Database["public"]["Enums"]["message_template_categoria"]
+          categoria?: string
           corpo: string
           created_at?: string
           created_by?: string | null
@@ -454,7 +498,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
-          categoria?: Database["public"]["Enums"]["message_template_categoria"]
+          categoria?: string
           corpo?: string
           created_at?: string
           created_by?: string | null
@@ -1098,14 +1142,6 @@ export type Database = {
         | "desenvolvimento"
         | "suporte"
       calendar_event_tipo: "reuniao" | "pessoal" | "externo" | "outro"
-      message_template_categoria:
-        | "prospeccao"
-        | "follow_up"
-        | "apresentacao"
-        | "objecao"
-        | "reengajamento"
-        | "agradecimento"
-        | "outro"
       task_categoria:
         | "comercial"
         | "desenvolvimento"
@@ -1263,15 +1299,6 @@ export const Constants = {
         "suporte",
       ],
       calendar_event_tipo: ["reuniao", "pessoal", "externo", "outro"],
-      message_template_categoria: [
-        "prospeccao",
-        "follow_up",
-        "apresentacao",
-        "objecao",
-        "reengajamento",
-        "agradecimento",
-        "outro",
-      ],
       task_categoria: [
         "comercial",
         "desenvolvimento",
