@@ -33,6 +33,7 @@ export const taskSchema = z.object({
   projeto: z.string().nullable().optional(),
   responsavel_id: z.string().nullable().optional(),
   data: z.string().nullable().optional(),
+  data_inicio: z.string().nullable().optional(),
   hora_inicio: z.string().nullable().optional(),
   hora_fim: z.string().nullable().optional(),
   prazo: z.string().nullable().optional(),

@@ -32,6 +32,9 @@ import {
 
 const searchSchema = z.object({
   view: z.enum(["lista", "kanban", "calendario", "agenda"]).default("lista"),
+  filtro: z
+    .enum(["todas", "pendentes", "em_andamento", "concluidas", "atrasadas"])
+    .default("todas"),
 });
 
 export const Route = createFileRoute("/tarefas")({
@@ -59,7 +62,7 @@ const TONE_CLASSES: Record<string, string> = {
 };
 
 function TarefasPage() {
-  const { view } = Route.useSearch();
+  const { view, filtro } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { data: tasks = [], isLoading } = useTasks();
   const [openForm, setOpenForm] = useState(false);
@@ -73,13 +76,43 @@ function TarefasPage() {
     return Array.from(set).sort();
   }, [tasks]);
 
+  const counts = useMemo(() => {
+    const base = { todas: tasks.length, pendentes: 0, em_andamento: 0, concluidas: 0, atrasadas: 0 };
+    for (const t of tasks) {
+      const d = deriveTaskStatus(t);
+      if (d === "atrasada") base.atrasadas++;
+      if (t.status === "pendente") base.pendentes++;
+      if (t.status === "em_andamento") base.em_andamento++;
+      if (t.status === "concluida") base.concluidas++;
+    }
+    return base;
+  }, [tasks]);
+
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
       if (projeto !== "__all" && t.projeto !== projeto) return false;
       if (q && !t.titulo.toLowerCase().includes(q.toLowerCase())) return false;
+      const derived = deriveTaskStatus(t);
+      switch (filtro) {
+        case "pendentes":
+          if (t.status !== "pendente") return false;
+          break;
+        case "em_andamento":
+          if (t.status !== "em_andamento") return false;
+          break;
+        case "concluidas":
+          if (t.status !== "concluida") return false;
+          break;
+        case "atrasadas":
+          if (derived !== "atrasada") return false;
+          break;
+        case "todas":
+        default:
+          break;
+      }
       return true;
     });
-  }, [tasks, projeto, q]);
+  }, [tasks, projeto, q, filtro]);
 
   return (
     <div>
@@ -95,8 +128,18 @@ function TarefasPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Tabs value={view} onValueChange={(v) => navigate({ search: { view: v as "lista" | "kanban" | "calendario" | "agenda" } })}>
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <Tabs
+          value={view}
+          onValueChange={(v) =>
+            navigate({
+              search: {
+                view: v as "lista" | "kanban" | "calendario" | "agenda",
+                filtro,
+              },
+            })
+          }
+        >
           <TabsList>
             <TabsTrigger value="lista"><List className="mr-1 h-4 w-4" />Lista</TabsTrigger>
             <TabsTrigger value="kanban"><KanbanSquare className="mr-1 h-4 w-4" />Kanban</TabsTrigger>
@@ -125,6 +168,32 @@ function TarefasPage() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-1">
+        {(
+          [
+            ["todas", `Todas (${counts.todas})`],
+            ["pendentes", `Pendentes (${counts.pendentes})`],
+            ["em_andamento", `Em andamento (${counts.em_andamento})`],
+            ["concluidas", `Concluídas (${counts.concluidas})`],
+            ["atrasadas", `Atrasadas (${counts.atrasadas})`],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => navigate({ search: { view, filtro: key } })}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              filtro === key
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-muted-foreground hover:bg-accent/40",
+            )}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
@@ -232,9 +301,9 @@ function KanbanView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => voi
           </div>
           <div className="space-y-2">
             {grouped[col].map((t) => (
-              <Card key={t.id} className="cursor-pointer hover:bg-accent/40" onClick={() => onEdit(t)}>
+              <Card key={t.id} className={cn("cursor-pointer hover:bg-accent/40", t.status === "concluida" && "opacity-60")} onClick={() => onEdit(t)}>
                 <CardContent className="p-3">
-                  <p className="line-clamp-2 text-sm font-medium">{t.titulo}</p>
+                  <p className={cn("line-clamp-2 text-sm font-medium", t.status === "concluida" && "line-through")}>{t.titulo}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                     <span className={cn("rounded-full px-2 py-0.5", TONE_CLASSES[TASK_PRIORIDADE_TONE[t.prioridade]])}>
                       {TASK_PRIORIDADE_LABEL[t.prioridade]}

@@ -69,6 +69,7 @@ function toDefaults(task: Task | null | undefined, defaults?: Partial<TaskInput>
       projeto: task.projeto,
       responsavel_id: task.responsavel_id,
       data: task.data,
+      data_inicio: task.data_inicio,
       hora_inicio: task.hora_inicio?.slice(0, 5) ?? null,
       hora_fim: task.hora_fim?.slice(0, 5) ?? null,
       prazo: task.prazo,
@@ -89,6 +90,7 @@ function toDefaults(task: Task | null | undefined, defaults?: Partial<TaskInput>
     projeto: defaults?.projeto ?? null,
     responsavel_id: null,
     data: defaults?.data ?? null,
+    data_inicio: defaults?.data_inicio ?? null,
     hora_inicio: null,
     hora_fim: null,
     prazo: null,
@@ -301,22 +303,63 @@ export function TaskFormDrawer({ open, onOpenChange, task, defaults }: Props) {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="prazo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prazo final (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value || null)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="data_inicio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de início</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value || null)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="prazo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prazo final</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value || null)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {task ? (
+              <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                <div className="grid grid-cols-2 gap-y-1">
+                  <span>Criada em:</span>
+                  <span className="text-right text-foreground">
+                    {new Date(task.created_at).toLocaleString("pt-BR")}
+                  </span>
+                  <span>Concluída em:</span>
+                  <span className="text-right text-foreground">
+                    {task.completed_at
+                      ? new Date(task.completed_at).toLocaleString("pt-BR")
+                      : "—"}
+                  </span>
+                  <span>Repetição:</span>
+                  <span className="text-right text-foreground">
+                    {task.recurrence_rule
+                      ? `${RECURRENCE_FREQ_LABEL[task.recurrence_rule.freq]} · a cada ${task.recurrence_rule.interval}`
+                      : "Não repetir"}
+                  </span>
+                </div>
+              </div>
+            ) : null}
 
             <FormField
               control={form.control}

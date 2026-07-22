@@ -907,6 +907,7 @@ export type Database = {
           created_at: string
           criado_por: string | null
           data: string | null
+          data_inicio: string | null
           descricao: string | null
           hora_fim: string | null
           hora_inicio: string | null
@@ -934,6 +935,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           data?: string | null
+          data_inicio?: string | null
           descricao?: string | null
           hora_fim?: string | null
           hora_inicio?: string | null
@@ -961,6 +963,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           data?: string | null
+          data_inicio?: string | null
           descricao?: string | null
           hora_fim?: string | null
           hora_inicio?: string | null
