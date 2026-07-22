@@ -252,6 +252,9 @@ export function LeadOverview({ lead }: { lead: Lead }) {
           mapsFallbackQuery={mapsQuery || undefined}
         />
 
+        <LeadCadenceBlock leadId={lead.id} />
+
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Ações rápidas</CardTitle>
