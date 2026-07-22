@@ -94,7 +94,7 @@ export async function startCadenceForLead(
   await recordLeadEvent({
     workspaceId,
     leadId,
-    tipo: "note",
+    tipo: "updated",
     descricao: `Cadência iniciada — ${first?.nome ?? "sem etapa"}`,
   });
 
@@ -139,7 +139,7 @@ export async function advanceLeadCadence(
     await recordLeadEvent({
       workspaceId,
       leadId,
-      tipo: "note",
+      tipo: "updated",
       descricao: `Cadência concluída — última etapa: ${currentStep?.nome ?? "—"}`,
     });
     return data as LeadCadence;
@@ -165,7 +165,7 @@ export async function advanceLeadCadence(
   await recordLeadEvent({
     workspaceId,
     leadId,
-    tipo: "note",
+    tipo: "updated",
     descricao: `Etapa concluída — ${currentStep?.nome ?? "—"} → próxima: ${nextStep.nome}`,
   });
 
@@ -180,7 +180,7 @@ export async function advanceLeadCadence(
       await recordLeadEvent({
         workspaceId,
         leadId,
-        tipo: "task_created",
+        tipo: "task_added",
         descricao: `Próxima ação criada: ${nextStep.nome}`,
       });
     } catch {
@@ -207,7 +207,7 @@ export async function pauseLeadCadence(
   await recordLeadEvent({
     workspaceId,
     leadId,
-    tipo: "note",
+    tipo: "updated",
     descricao: "Cadência pausada",
   });
   return data as LeadCadence;
@@ -229,7 +229,7 @@ export async function resumeLeadCadence(
   await recordLeadEvent({
     workspaceId,
     leadId,
-    tipo: "note",
+    tipo: "updated",
     descricao: "Cadência retomada",
   });
   return data as LeadCadence;
@@ -255,7 +255,7 @@ export async function finishLeadCadence(
   await recordLeadEvent({
     workspaceId,
     leadId,
-    tipo: "note",
+    tipo: "updated",
     descricao: "Cadência finalizada manualmente",
   });
   return data as LeadCadence;
