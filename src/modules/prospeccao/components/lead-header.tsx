@@ -51,6 +51,12 @@ export function LeadHeader({
   onConvert,
 }: Props) {
   const isConverted = Boolean(lead.empresa_id);
+  const navigate = useNavigate();
+
+  const goToEdit = () => {
+    toast.message("Abrindo edição do lead…");
+    void navigate({ to: "/prospeccao/$id/editar", params: { id: lead.id } });
+  };
 
   return (
     <div className="space-y-3">
