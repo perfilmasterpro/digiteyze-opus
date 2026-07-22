@@ -283,12 +283,10 @@ function ListView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => void 
                 {t.titulo}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <PriorityBadge prioridade={t.prioridade} />
                 <Badge variant="outline" className="font-normal">
                   {TASK_STATUS_LABEL[t.status]}
                 </Badge>
-                <span className={cn("rounded-full px-2 py-0.5", TONE_CLASSES[TASK_PRIORIDADE_TONE[t.prioridade]])}>
-                  {TASK_PRIORIDADE_LABEL[t.prioridade]}
-                </span>
                 {t.projeto ? <Badge variant="outline">{t.projeto}</Badge> : null}
                 {t.data ? <span>{t.data.split("-").reverse().join("/")}</span> : null}
                 {t.hora_inicio ? <span>{t.hora_inicio.slice(0, 5)}</span> : null}
