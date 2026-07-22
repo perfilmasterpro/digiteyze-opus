@@ -90,6 +90,7 @@ function toDefaults(task: Task | null | undefined, defaults?: Partial<TaskInput>
     projeto: defaults?.projeto ?? null,
     responsavel_id: null,
     data: defaults?.data ?? null,
+    data_inicio: defaults?.data_inicio ?? null,
     hora_inicio: null,
     hora_fim: null,
     prazo: null,
