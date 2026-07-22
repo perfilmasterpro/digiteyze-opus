@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, KanbanSquare, List, ListTodo, Plus } from "lucide-react";
+import { CalendarDays, Check, KanbanSquare, List, ListTodo, Plus } from "lucide-react";
 import { z } from "zod";
 
 import { PageHeader } from "@/components/common/page-header";
