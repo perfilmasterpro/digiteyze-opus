@@ -3,6 +3,7 @@ import {
   Bell,
   Building,
   FileText,
+  MessageSquareText,
   Palette,
   Plug,
   Settings as SettingsIcon,
@@ -18,6 +19,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROLE_LABELS, ROLES } from "@/config/rbac";
+import { CategoryManager } from "@/modules/message-templates";
 
 export const Route = createFileRoute("/configuracoes")({
   head: () => ({
@@ -99,6 +101,19 @@ function ConfiguracoesPage() {
       label: "Permissões",
       icon: ShieldCheck,
       content: <SectionShell title="Permissões" description="Matriz de acesso por módulo × papel." />,
+    },
+    {
+      value: "mensagens",
+      label: "Mensagens",
+      icon: MessageSquareText,
+      content: (
+        <SectionShell
+          title="Categorias de mensagens"
+          description="Nome, cor, status e ordem de exibição. As cores são compartilhadas com a Biblioteca de Mensagens, o Kanban de Leads e as Cadências comerciais."
+        >
+          <CategoryManager />
+        </SectionShell>
+      ),
     },
     {
       value: "integracoes",
