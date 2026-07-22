@@ -138,10 +138,11 @@ export interface Task {
   origem_ref_id: string | null;
   modulo_relacionado: string | null;
   projeto: string | null;
-  data: string | null; // yyyy-MM-dd
+  data: string | null; // yyyy-MM-dd (data de execução / agenda)
+  data_inicio: string | null; // yyyy-MM-dd (data de início opcional)
   hora_inicio: string | null; // HH:mm:ss
   hora_fim: string | null;
-  prazo: string | null;
+  prazo: string | null; // yyyy-MM-dd (prazo final)
   observacoes: string | null;
   recurrence_rule: RecurrenceRule | null;
   recurrence_parent_id: string | null;
