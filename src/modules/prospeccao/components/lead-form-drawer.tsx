@@ -616,7 +616,19 @@ export function LeadFormDrawer({ open, onOpenChange, lead }: Props) {
                         <FormItem>
                           <FormLabel>WhatsApp</FormLabel>
                           <FormControl>
-                            <Input placeholder="(00) 00000-0000" {...field} />
+                            <Input
+                              placeholder="(00) 00000-0000"
+                              inputMode="tel"
+                              autoComplete="tel"
+                              {...field}
+                              onPaste={(e) => {
+                                const text = e.clipboardData.getData("text");
+                                if (text) {
+                                  e.preventDefault();
+                                  field.onChange(text.trim());
+                                }
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
