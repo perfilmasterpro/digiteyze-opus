@@ -32,6 +32,9 @@ import {
 
 const searchSchema = z.object({
   view: z.enum(["lista", "kanban", "calendario", "agenda"]).default("lista"),
+  filtro: z
+    .enum(["todas", "pendentes", "em_andamento", "concluidas", "atrasadas"])
+    .default("todas"),
 });
 
 export const Route = createFileRoute("/tarefas")({
