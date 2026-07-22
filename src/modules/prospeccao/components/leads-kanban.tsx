@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { CalendarClock, Clock, Copy, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Pencil, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 
