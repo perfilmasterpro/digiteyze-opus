@@ -54,6 +54,8 @@ function invalidateAllTasks(qc: ReturnType<typeof useQueryClient>, workspaceId: 
   qc.invalidateQueries({ queryKey: ["central-indicators", workspaceId] });
   qc.invalidateQueries({ queryKey: ["central-summary", workspaceId] });
   qc.invalidateQueries({ queryKey: ["ai-suggestions", workspaceId] });
+  // Tarefas de lead (ficha do lead) — mantém sincronia bidirecional.
+  qc.invalidateQueries({ queryKey: ["lead-tasks", workspaceId] });
 }
 
 export function useCreateTask() {
