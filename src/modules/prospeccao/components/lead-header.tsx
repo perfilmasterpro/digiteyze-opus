@@ -1,5 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRightLeft, Building2, ChevronLeft, Pencil, Flame, Target, UserRoundCog, DollarSign } from "lucide-react";
+import { toast } from "sonner";
 
 import { PageHeader } from "@/components/common/page-header";
 import { StatusBadge, type StatusTone } from "@/components/common/status-badge";
@@ -50,6 +51,12 @@ export function LeadHeader({
   onConvert,
 }: Props) {
   const isConverted = Boolean(lead.empresa_id);
+  const navigate = useNavigate();
+
+  const goToEdit = () => {
+    toast.message("Abrindo edição do lead…");
+    void navigate({ to: "/prospeccao/$id/editar", params: { id: lead.id } });
+  };
 
   return (
     <div className="space-y-3">
@@ -91,11 +98,9 @@ export function LeadHeader({
         actions={
           <>
             {canUpdate ? (
-              <Button asChild variant="outline" size="sm" className="gap-2">
-                <Link to="/prospeccao/$id/editar" params={{ id: lead.id }}>
-                  <Pencil className="h-4 w-4" />
-                  Editar lead
-                </Link>
+              <Button type="button" variant="outline" size="sm" className="gap-2" onClick={goToEdit}>
+                <Pencil className="h-4 w-4" />
+                Editar lead
               </Button>
             ) : null}
             {canMove ? (

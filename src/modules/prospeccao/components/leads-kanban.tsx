@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { CalendarClock, Clock, Copy, DollarSign, Globe, Instagram, MapPin, MessageCircle, MoreVertical, Pencil, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -52,6 +52,12 @@ type Props = {
 };
 
 export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdate }: Props) {
+  const navigate = useNavigate();
+  const openEdit = (leadId: string) => {
+    toast.message("Abrindo edição do lead…");
+    void navigate({ to: "/prospeccao/$id/editar", params: { id: leadId } });
+  };
+
   const columns: KanbanColumn<Lead>[] = LEAD_STATUS.map((status) => {
     const items = leads.filter((l) => l.status === status);
     const total = items.reduce((sum, l) => sum + (l.valor_potencial ?? 0), 0);
@@ -131,15 +137,15 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdat
                   <DropdownMenuContent align="end" className="w-56">
                     {canUpdate ? (
                       <>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to="/prospeccao/$id/editar"
-                            params={{ id: lead.id }}
-                            className="flex items-center gap-2"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                            Editar lead
-                          </Link>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            openEdit(lead.id);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Editar lead
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
