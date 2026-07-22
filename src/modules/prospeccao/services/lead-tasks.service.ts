@@ -1,56 +1,71 @@
+/**
+ * Lead Tasks — persistidas na tabela central `tasks` para que apareçam
+ * automaticamente na Central de Tarefas. O vínculo com o lead é feito via
+ * `origem='lead'` + `origem_ref_tipo='lead'` + `origem_ref_id=<leadId>`.
+ *
+ * A UI da ficha do lead continua consumindo o tipo `LeadTask` (subset).
+ */
+
+import { supabase } from "@/integrations/supabase/client";
+import type { Task, TaskRow } from "@/modules/central/types/central.types";
+
 import type {
   LeadTask,
   LeadTaskInput,
+  LeadTaskPrioridade,
   LeadTaskStatus,
 } from "../types/entities.types";
 
-const STORAGE_KEY = "growth-os:lead-tasks";
+const SELECT = "*";
 
-function isBrowser() {
-  return typeof window !== "undefined";
+/** Central prioridade → LeadTask prioridade (downcast: "urgente" vira "alta"). */
+function toLeadPrioridade(p: Task["prioridade"]): LeadTaskPrioridade {
+  return p === "urgente" ? "alta" : (p as LeadTaskPrioridade);
 }
 
-function readAll(): LeadTask[] {
-  if (!isBrowser()) return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as LeadTask[];
-    if (!Array.isArray(parsed)) return [];
-    // Compat: registros antigos podem não ter `prioridade`.
-    return parsed.map((t) => (t.prioridade ? t : { ...t, prioridade: "media" as const }));
-  } catch {
-    return [];
-  }
+/** LeadTask status é subset do central; qualquer status extra vira "pendente". */
+function toLeadStatus(s: Task["status"]): LeadTaskStatus {
+  if (s === "concluida" || s === "cancelada") return s;
+  return "pendente";
 }
 
-function writeAll(list: LeadTask[]) {
-  if (!isBrowser()) return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-}
-
-function generateId() {
-  if (isBrowser() && "crypto" in window && "randomUUID" in window.crypto) {
-    return window.crypto.randomUUID();
-  }
-  return `tsk_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+function rowToLeadTask(row: TaskRow): LeadTask {
+  return {
+    id: row.id,
+    workspace_id: row.workspace_id,
+    lead_id: row.origem_ref_id ?? "",
+    titulo: row.titulo,
+    data: (row.prazo ?? row.data) ?? undefined,
+    status: toLeadStatus(row.status),
+    prioridade: toLeadPrioridade(row.prioridade),
+    responsavel_id: row.responsavel_id ?? undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
 }
 
 export async function listLeadTasks(
   workspaceId: string,
   leadId: string,
 ): Promise<LeadTask[]> {
-  return readAll()
-    .filter((t) => t.workspace_id === workspaceId && t.lead_id === leadId)
-    .sort((a, b) => {
-      if (a.status !== b.status) {
-        if (a.status === "pendente") return -1;
-        if (b.status === "pendente") return 1;
-      }
-      const ad = a.data ?? "9999";
-      const bd = b.data ?? "9999";
-      return ad < bd ? -1 : ad > bd ? 1 : 0;
-    });
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(SELECT)
+    .eq("workspace_id", workspaceId)
+    .eq("origem_ref_tipo", "lead")
+    .eq("origem_ref_id", leadId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const items = (data ?? []).map((r) => rowToLeadTask(r as TaskRow));
+  return items.sort((a, b) => {
+    if (a.status !== b.status) {
+      if (a.status === "pendente") return -1;
+      if (b.status === "pendente") return 1;
+    }
+    const ad = a.data ?? "9999";
+    const bd = b.data ?? "9999";
+    return ad < bd ? -1 : ad > bd ? 1 : 0;
+  });
 }
 
 export async function createLeadTask(
@@ -58,23 +73,28 @@ export async function createLeadTask(
   leadId: string,
   input: LeadTaskInput,
 ): Promise<LeadTask> {
-  const now = new Date().toISOString();
-  const task: LeadTask = {
-    id: generateId(),
-    workspace_id: workspaceId,
-    lead_id: leadId,
-    titulo: input.titulo,
-    data: input.data,
-    status: "pendente",
-    prioridade: input.prioridade ?? "media",
-    responsavel_id: input.responsavel_id,
-    created_at: now,
-    updated_at: now,
-  };
-  const list = readAll();
-  list.unshift(task);
-  writeAll(list);
-  return task;
+  const prioridade: LeadTaskPrioridade = input.prioridade ?? "media";
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert({
+      workspace_id: workspaceId,
+      criado_por: input.responsavel_id ?? null,
+      responsavel_id: input.responsavel_id ?? null,
+      titulo: input.titulo,
+      categoria: "comercial",
+      status: "pendente",
+      prioridade,
+      origem: "lead",
+      origem_ref_tipo: "lead",
+      origem_ref_id: leadId,
+      modulo_relacionado: "prospeccao",
+      data: input.data ?? null,
+      prazo: input.data ?? null,
+    })
+    .select(SELECT)
+    .single();
+  if (error) throw error;
+  return rowToLeadTask(data as TaskRow);
 }
 
 export async function updateLeadTaskStatus(
@@ -82,15 +102,20 @@ export async function updateLeadTaskStatus(
   id: string,
   status: LeadTaskStatus,
 ): Promise<LeadTask> {
-  const list = readAll();
-  const idx = list.findIndex((t) => t.id === id && t.workspace_id === workspaceId);
-  if (idx === -1) throw new Error("Tarefa não encontrada");
-  const updated: LeadTask = {
-    ...list[idx],
+  const patch: {
+    status: LeadTaskStatus;
+    completed_at: string | null;
+  } = {
     status,
-    updated_at: new Date().toISOString(),
+    completed_at: status === "concluida" ? new Date().toISOString() : null,
   };
-  list[idx] = updated;
-  writeAll(list);
-  return updated;
+  const { data, error } = await supabase
+    .from("tasks")
+    .update(patch)
+    .eq("workspace_id", workspaceId)
+    .eq("id", id)
+    .select(SELECT)
+    .single();
+  if (error) throw error;
+  return rowToLeadTask(data as TaskRow);
 }
