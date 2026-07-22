@@ -218,9 +218,34 @@ function MensagensPage() {
                         </Badge>
                       )}
                     </div>
-                    <Badge variant="secondary" className="mt-1 text-[10px]">
-                      {MESSAGE_TEMPLATE_CATEGORIA_LABEL[t.categoria]}
-                    </Badge>
+                    {(() => {
+                      const cat = categoryMap.get(t.categoria);
+                      const color = cat?.cor;
+                      return (
+                        <Badge
+                          variant="secondary"
+                          className="mt-1 gap-1 text-[10px]"
+                          style={
+                            color
+                              ? {
+                                  backgroundColor: `${color}22`,
+                                  color,
+                                  borderColor: `${color}55`,
+                                }
+                              : undefined
+                          }
+                        >
+                          {color && (
+                            <span
+                              aria-hidden
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: color }}
+                            />
+                          )}
+                          {cat?.nome ?? formatCategoriaLabel(t.categoria)}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                   <Button
                     variant="ghost"
