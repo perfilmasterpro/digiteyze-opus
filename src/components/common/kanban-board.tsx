@@ -152,7 +152,8 @@ export function KanbanBoard<T>({
         style={{
           gridAutoFlow: "column",
           gridAutoColumns: "minmax(260px, 1fr)",
-          maxHeight: "calc(100vh - 220px)",
+          gridAutoRows: "minmax(0, 1fr)",
+          height: "calc(100vh - 220px)",
         }}
       >
         {columns.map((col) => (
