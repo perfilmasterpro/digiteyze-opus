@@ -26,6 +26,7 @@ function rowToTask(row: TaskRow): Task {
     modulo_relacionado: row.modulo_relacionado,
     projeto: row.projeto,
     data: row.data,
+    data_inicio: (row as TaskRow & { data_inicio: string | null }).data_inicio ?? null,
     hora_inicio: row.hora_inicio,
     hora_fim: row.hora_fim,
     prazo: row.prazo,
