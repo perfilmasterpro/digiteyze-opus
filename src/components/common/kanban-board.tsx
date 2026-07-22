@@ -148,13 +148,17 @@ export function KanbanBoard<T>({
 
       {/* Desktop */}
       <div
-        className="hidden gap-4 overflow-x-auto pb-2 md:grid"
-        style={{ gridAutoFlow: "column", gridAutoColumns: "minmax(260px, 1fr)" }}
+        className="hidden gap-4 overflow-x-auto overflow-y-hidden pb-3 md:grid"
+        style={{
+          gridAutoFlow: "column",
+          gridAutoColumns: "minmax(260px, 1fr)",
+          maxHeight: "calc(100vh - 220px)",
+        }}
       >
         {columns.map((col) => (
           <div
             key={col.id}
-            className="flex min-w-0 flex-col overflow-hidden rounded-lg border bg-muted/30"
+            className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border bg-muted/30"
           >
             {col.accentColor ? (
               <div
@@ -163,9 +167,13 @@ export function KanbanBoard<T>({
                 aria-hidden
               />
             ) : null}
-            <div className="flex min-w-0 flex-1 flex-col p-3">
-              <ColumnHeader col={col} />
-              <ColumnCards col={col} renderCard={renderCard} itemKey={itemKey} />
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col p-3">
+              <div className="sticky top-0 z-10 -mx-3 -mt-3 bg-muted/30 px-3 pt-3 backdrop-blur">
+                <ColumnHeader col={col} />
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <ColumnCards col={col} renderCard={renderCard} itemKey={itemKey} />
+              </div>
             </div>
           </div>
         ))}
