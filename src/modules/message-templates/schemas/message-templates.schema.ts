@@ -1,14 +1,16 @@
 import { z } from "zod";
 
-import { MESSAGE_TEMPLATE_CATEGORIAS } from "../types/message-templates.types";
-
 export const messageTemplateSchema = z.object({
   titulo: z
     .string()
     .trim()
     .min(2, "Informe um título com pelo menos 2 caracteres.")
     .max(120, "Título muito longo (máx. 120 caracteres)."),
-  categoria: z.enum(MESSAGE_TEMPLATE_CATEGORIAS),
+  categoria: z
+    .string()
+    .trim()
+    .min(1, "Selecione uma categoria.")
+    .max(40, "Categoria inválida."),
   corpo: z
     .string()
     .trim()

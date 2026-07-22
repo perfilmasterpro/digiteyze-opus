@@ -25,6 +25,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
+import { useActiveMessageCategories } from "../hooks/use-message-categories";
 import { useCreateTemplate, useUpdateTemplate } from "../hooks/use-message-templates";
 import {
   messageTemplateSchema,
@@ -32,9 +33,8 @@ import {
 } from "../schemas/message-templates.schema";
 import { extractTokens } from "../services/apply-variables";
 import {
-  MESSAGE_TEMPLATE_CATEGORIAS,
-  MESSAGE_TEMPLATE_CATEGORIA_LABEL,
   MESSAGE_TEMPLATE_VARIABLES,
+  formatCategoriaLabel,
   type MessageTemplate,
 } from "../types/message-templates.types";
 
@@ -47,13 +47,16 @@ type Props = {
 export function TemplateFormDrawer({ open, onOpenChange, template }: Props) {
   const create = useCreateTemplate();
   const update = useUpdateTemplate();
+  const categories = useActiveMessageCategories();
   const editing = Boolean(template);
+
+  const defaultSlug = categories[0]?.slug ?? "prospeccao";
 
   const form = useForm<MessageTemplateFormValues>({
     resolver: zodResolver(messageTemplateSchema),
     defaultValues: {
       titulo: "",
-      categoria: "prospeccao",
+      categoria: defaultSlug,
       corpo: "",
       ativo: true,
     },
@@ -63,7 +66,7 @@ export function TemplateFormDrawer({ open, onOpenChange, template }: Props) {
     if (open) {
       form.reset({
         titulo: template?.titulo ?? "",
-        categoria: template?.categoria ?? "prospeccao",
+        categoria: template?.categoria ?? defaultSlug,
         corpo: template?.corpo ?? "",
         ativo: template?.ativo ?? true,
       });
@@ -138,11 +141,23 @@ export function TemplateFormDrawer({ open, onOpenChange, template }: Props) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {MESSAGE_TEMPLATE_CATEGORIAS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {MESSAGE_TEMPLATE_CATEGORIA_LABEL[c]}
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.slug}>
+                        <span className="flex items-center gap-2">
+                          <span
+                            aria-hidden
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: c.cor }}
+                          />
+                          {c.nome}
+                        </span>
                       </SelectItem>
                     ))}
+                    {template && !categories.some((c) => c.slug === template.categoria) && (
+                      <SelectItem value={template.categoria}>
+                        {formatCategoriaLabel(template.categoria)} (legada)
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

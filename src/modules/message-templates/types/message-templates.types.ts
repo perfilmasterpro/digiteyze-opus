@@ -1,30 +1,52 @@
 /**
  * Tipos do domínio "Biblioteca de Mensagens Comerciais".
  *
- * Refletem o schema Supabase (`message_templates`, `message_template_favorites`)
- * mais os labels/enums usados na UI.
+ * A categoria agora é uma string livre — a lista real de categorias vive na
+ * tabela `message_categories` (gerenciada em Configurações). Os valores abaixo
+ * permanecem como fallback para labels legadas.
  */
 
 export const MESSAGE_TEMPLATE_CATEGORIAS = [
   "prospeccao",
+  "qualificacao",
+  "demonstracao",
+  "teste_gratuito",
+  "proposta",
   "follow_up",
+  "reengajamento",
+  "perdido",
   "apresentacao",
   "objecao",
-  "reengajamento",
   "agradecimento",
   "outro",
 ] as const;
-export type MessageTemplateCategoria = (typeof MESSAGE_TEMPLATE_CATEGORIAS)[number];
+export type MessageTemplateCategoria = string;
 
-export const MESSAGE_TEMPLATE_CATEGORIA_LABEL: Record<MessageTemplateCategoria, string> = {
+export const MESSAGE_TEMPLATE_CATEGORIA_LABEL: Record<string, string> = {
   prospeccao: "Prospecção",
+  qualificacao: "Qualificação",
+  demonstracao: "Demonstração",
+  teste_gratuito: "Teste Gratuito",
+  proposta: "Proposta/Preço",
   follow_up: "Follow-up",
+  reengajamento: "Reengajamento",
+  perdido: "Perdido",
   apresentacao: "Apresentação",
   objecao: "Objeção",
-  reengajamento: "Reengajamento",
   agradecimento: "Agradecimento",
   outro: "Outro",
 };
+
+/** Retorna um label amigável para qualquer slug, mesmo custom. */
+export function formatCategoriaLabel(slug: string): string {
+  return (
+    MESSAGE_TEMPLATE_CATEGORIA_LABEL[slug] ??
+    slug
+      .split("_")
+      .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : p))
+      .join(" ")
+  );
+}
 
 export interface MessageTemplate {
   id: string;
@@ -49,7 +71,6 @@ export type MessageTemplateInput = {
 
 /**
  * Variáveis disponíveis para substituição a partir do Lead atual.
- * Mantido em um único lugar para que o Picker e o form usem a mesma lista.
  */
 export const MESSAGE_TEMPLATE_VARIABLES = [
   { token: "nome_empresa", label: "Nome da empresa" },

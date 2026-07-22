@@ -1,4 +1,5 @@
 export * from "./types/message-templates.types";
+export * from "./types/message-categories.types";
 export {
   messageTemplateSchema,
   type MessageTemplateFormValues,
@@ -32,5 +33,18 @@ export {
   useDeleteTemplate,
   useToggleFavoriteTemplate,
 } from "./hooks/use-message-templates";
+export {
+  messageCategoriesKeys,
+  messageCategoriesQueryOptions,
+  useMessageCategories,
+  useActiveMessageCategories,
+  useMessageCategoryMap,
+  useMessageCategoryColor,
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+  useReorderCategories,
+} from "./hooks/use-message-categories";
 export { TemplateFormDrawer } from "./components/template-form-drawer";
 export { TemplatePickerDialog } from "./components/template-picker-dialog";
+export { CategoryManager } from "./components/category-manager";
