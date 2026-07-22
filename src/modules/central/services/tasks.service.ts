@@ -87,6 +87,7 @@ export async function createTask(
       projeto: input.projeto ?? null,
       responsavel_id: input.responsavel_id ?? userId,
       data: input.data ?? null,
+      data_inicio: input.data_inicio ?? null,
       hora_inicio: input.hora_inicio ?? null,
       hora_fim: input.hora_fim ?? null,
       prazo: input.prazo ?? null,
