@@ -263,7 +263,8 @@ function ListView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => void 
             type="button"
             onClick={() => onEdit(t)}
             className={cn(
-              "flex w-full items-start gap-3 rounded-md border bg-card p-3 text-left transition-colors hover:bg-accent/30",
+              "flex w-full items-start gap-3 rounded-md border border-l-4 bg-card p-3 text-left transition-colors hover:bg-accent/30",
+              PRIORIDADE_BORDER[t.prioridade],
               derived === "atrasada" && "border-destructive/40",
               t.status === "concluida" && "opacity-60",
             )}
