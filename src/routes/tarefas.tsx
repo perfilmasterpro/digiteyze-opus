@@ -61,6 +61,35 @@ const TONE_CLASSES: Record<string, string> = {
   destructive: "bg-destructive/10 text-destructive",
 };
 
+const PRIORIDADE_DOT: Record<string, string> = {
+  baixa: "bg-emerald-500",
+  media: "bg-yellow-500",
+  alta: "bg-orange-500",
+  urgente: "bg-red-500",
+};
+
+const PRIORIDADE_BORDER: Record<string, string> = {
+  baixa: "border-l-emerald-500",
+  media: "border-l-yellow-500",
+  alta: "border-l-orange-500",
+  urgente: "border-l-red-500",
+};
+
+function PriorityBadge({ prioridade }: { prioridade: keyof typeof PRIORIDADE_DOT }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium",
+        TONE_CLASSES[TASK_PRIORIDADE_TONE[prioridade as keyof typeof TASK_PRIORIDADE_TONE]],
+      )}
+      title={`Prioridade: ${TASK_PRIORIDADE_LABEL[prioridade as keyof typeof TASK_PRIORIDADE_LABEL]}`}
+    >
+      <span className={cn("h-2 w-2 rounded-full", PRIORIDADE_DOT[prioridade])} aria-hidden />
+      {TASK_PRIORIDADE_LABEL[prioridade as keyof typeof TASK_PRIORIDADE_LABEL]}
+    </span>
+  );
+}
+
 function TarefasPage() {
   const { view, filtro } = Route.useSearch();
   const navigate = Route.useNavigate();
