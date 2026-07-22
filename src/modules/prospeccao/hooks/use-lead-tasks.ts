@@ -98,6 +98,9 @@ export function useUpdateLeadTaskStatus(leadId: string) {
       }
       qc.invalidateQueries({ queryKey: leadTasksKeys.all(workspaceId, leadId) });
       qc.invalidateQueries({ queryKey: leadEventsKeys.all(workspaceId, leadId) });
+      qc.invalidateQueries({ queryKey: ["central-tasks", workspaceId] });
+      qc.invalidateQueries({ queryKey: ["central-indicators", workspaceId] });
+      qc.invalidateQueries({ queryKey: ["central-summary", workspaceId] });
     },
   });
 }
