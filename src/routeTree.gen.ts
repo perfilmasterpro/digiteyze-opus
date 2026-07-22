@@ -28,6 +28,7 @@ import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
+import { Route as ProspeccaoIndexRouteImport } from './routes/prospeccao.index'
 import { Route as SuperAdminWorkspacesRouteImport } from './routes/super-admin.workspaces'
 import { Route as SuperAdminUsuariosRouteImport } from './routes/super-admin.usuarios'
 import { Route as SuperAdminLogsRouteImport } from './routes/super-admin.logs'
@@ -149,6 +150,11 @@ const SuperAdminIndexRoute = SuperAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SuperAdminRoute,
+} as any)
+const ProspeccaoIndexRoute = ProspeccaoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProspeccaoRoute,
 } as any)
 const SuperAdminWorkspacesRoute = SuperAdminWorkspacesRouteImport.update({
   id: '/workspaces',
@@ -311,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/logs': typeof SuperAdminLogsRoute
   '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
+  '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -343,7 +350,6 @@ export interface FileRoutesByTo {
   '/marketing': typeof MarketingRoute
   '/mensagens': typeof MensagensRoute
   '/projetos': typeof ProjetosRoute
-  '/prospeccao': typeof ProspeccaoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/suporte': typeof SuporteRoute
   '/tarefas': typeof TarefasRoute
@@ -354,6 +360,7 @@ export interface FileRoutesByTo {
   '/super-admin/logs': typeof SuperAdminLogsRoute
   '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
+  '/prospeccao': typeof ProspeccaoIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -402,6 +409,7 @@ export interface FileRoutesById {
   '/super-admin/logs': typeof SuperAdminLogsRoute
   '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
+  '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -451,6 +459,7 @@ export interface FileRouteTypes {
     | '/super-admin/logs'
     | '/super-admin/usuarios'
     | '/super-admin/workspaces'
+    | '/prospeccao/'
     | '/super-admin/'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -483,7 +492,6 @@ export interface FileRouteTypes {
     | '/marketing'
     | '/mensagens'
     | '/projetos'
-    | '/prospeccao'
     | '/reset-password'
     | '/suporte'
     | '/tarefas'
@@ -494,6 +502,7 @@ export interface FileRouteTypes {
     | '/super-admin/logs'
     | '/super-admin/usuarios'
     | '/super-admin/workspaces'
+    | '/prospeccao'
     | '/super-admin'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -541,6 +550,7 @@ export interface FileRouteTypes {
     | '/super-admin/logs'
     | '/super-admin/usuarios'
     | '/super-admin/workspaces'
+    | '/prospeccao/'
     | '/super-admin/'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -715,6 +725,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/super-admin/'
       preLoaderRoute: typeof SuperAdminIndexRouteImport
       parentRoute: typeof SuperAdminRoute
+    }
+    '/prospeccao/': {
+      id: '/prospeccao/'
+      path: '/'
+      fullPath: '/prospeccao/'
+      preLoaderRoute: typeof ProspeccaoIndexRouteImport
+      parentRoute: typeof ProspeccaoRoute
     }
     '/super-admin/workspaces': {
       id: '/super-admin/workspaces'
@@ -999,11 +1016,13 @@ const ProspeccaoIdRouteWithChildren = ProspeccaoIdRoute._addFileChildren(
 interface ProspeccaoRouteChildren {
   ProspeccaoIdRoute: typeof ProspeccaoIdRouteWithChildren
   ProspeccaoListaRoute: typeof ProspeccaoListaRoute
+  ProspeccaoIndexRoute: typeof ProspeccaoIndexRoute
 }
 
 const ProspeccaoRouteChildren: ProspeccaoRouteChildren = {
   ProspeccaoIdRoute: ProspeccaoIdRouteWithChildren,
   ProspeccaoListaRoute: ProspeccaoListaRoute,
+  ProspeccaoIndexRoute: ProspeccaoIndexRoute,
 }
 
 const ProspeccaoRouteWithChildren = ProspeccaoRoute._addFileChildren(
