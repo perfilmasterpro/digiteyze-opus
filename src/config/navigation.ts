@@ -117,6 +117,14 @@ export const NAV_ITEMS: NavItem[] = [
     group: "gestao",
   },
   {
+    key: "growth",
+    label: "Cadências",
+    to: "/growth/cadencias",
+    icon: Route,
+    group: "gestao",
+    description: "Sequências comerciais reutilizáveis",
+  },
+  {
     key: "ia",
     label: "Inteligência Artificial",
     to: "/ia",
