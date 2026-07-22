@@ -62,7 +62,7 @@ const TONE_CLASSES: Record<string, string> = {
 };
 
 function TarefasPage() {
-  const { view } = Route.useSearch();
+  const { view, filtro } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { data: tasks = [], isLoading } = useTasks();
   const [openForm, setOpenForm] = useState(false);
@@ -76,13 +76,43 @@ function TarefasPage() {
     return Array.from(set).sort();
   }, [tasks]);
 
+  const counts = useMemo(() => {
+    const base = { todas: tasks.length, pendentes: 0, em_andamento: 0, concluidas: 0, atrasadas: 0 };
+    for (const t of tasks) {
+      const d = deriveTaskStatus(t);
+      if (d === "atrasada") base.atrasadas++;
+      if (t.status === "pendente") base.pendentes++;
+      if (t.status === "em_andamento") base.em_andamento++;
+      if (t.status === "concluida") base.concluidas++;
+    }
+    return base;
+  }, [tasks]);
+
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
       if (projeto !== "__all" && t.projeto !== projeto) return false;
       if (q && !t.titulo.toLowerCase().includes(q.toLowerCase())) return false;
+      const derived = deriveTaskStatus(t);
+      switch (filtro) {
+        case "pendentes":
+          if (t.status !== "pendente") return false;
+          break;
+        case "em_andamento":
+          if (t.status !== "em_andamento") return false;
+          break;
+        case "concluidas":
+          if (t.status !== "concluida") return false;
+          break;
+        case "atrasadas":
+          if (derived !== "atrasada") return false;
+          break;
+        case "todas":
+        default:
+          break;
+      }
       return true;
     });
-  }, [tasks, projeto, q]);
+  }, [tasks, projeto, q, filtro]);
 
   return (
     <div>
