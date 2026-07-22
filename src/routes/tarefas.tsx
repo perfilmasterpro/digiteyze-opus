@@ -329,13 +329,26 @@ function KanbanView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => voi
           </div>
           <div className="space-y-2">
             {grouped[col].map((t) => (
-              <Card key={t.id} className={cn("cursor-pointer hover:bg-accent/40", t.status === "concluida" && "opacity-60")} onClick={() => onEdit(t)}>
+              <Card
+                key={t.id}
+                className={cn(
+                  "cursor-pointer border-l-4 hover:bg-accent/40",
+                  PRIORIDADE_BORDER[t.prioridade],
+                  t.status === "concluida" && "opacity-60",
+                )}
+                onClick={() => onEdit(t)}
+              >
                 <CardContent className="p-3">
-                  <p className={cn("line-clamp-2 text-sm font-medium", t.status === "concluida" && "line-through")}>{t.titulo}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={cn("line-clamp-2 text-sm font-medium", t.status === "concluida" && "line-through")}>{t.titulo}</p>
+                    <span
+                      className={cn("mt-1 h-2.5 w-2.5 shrink-0 rounded-full", PRIORIDADE_DOT[t.prioridade])}
+                      title={`Prioridade: ${TASK_PRIORIDADE_LABEL[t.prioridade]}`}
+                      aria-label={`Prioridade ${TASK_PRIORIDADE_LABEL[t.prioridade]}`}
+                    />
+                  </div>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                    <span className={cn("rounded-full px-2 py-0.5", TONE_CLASSES[TASK_PRIORIDADE_TONE[t.prioridade]])}>
-                      {TASK_PRIORIDADE_LABEL[t.prioridade]}
-                    </span>
+                    <PriorityBadge prioridade={t.prioridade} />
                     {t.projeto ? <Badge variant="outline">{t.projeto}</Badge> : null}
                     {t.data ? <span>{t.data.split("-").reverse().join("/")}</span> : null}
                   </div>
