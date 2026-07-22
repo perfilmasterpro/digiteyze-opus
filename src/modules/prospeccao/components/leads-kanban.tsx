@@ -137,15 +137,15 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdat
                   <DropdownMenuContent align="end" className="w-56">
                     {canUpdate ? (
                       <>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to="/prospeccao/$id/editar"
-                            params={{ id: lead.id }}
-                            className="flex items-center gap-2"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                            Editar lead
-                          </Link>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            openEdit(lead.id);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Editar lead
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
