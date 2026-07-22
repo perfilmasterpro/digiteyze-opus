@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, KanbanSquare, List, ListTodo, Plus } from "lucide-react";
+import { CalendarDays, Check, KanbanSquare, List, ListTodo, Plus } from "lucide-react";
 import { z } from "zod";
 
 import { PageHeader } from "@/components/common/page-header";
@@ -248,6 +248,21 @@ function TarefasPage() {
 
 /* ─────────── Lista ─────────── */
 
+function fmtDateTime(iso: string | null | undefined) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return null;
+  }
+}
+
 function ListView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => void }) {
   const setStatus = useSetTaskStatus();
   if (tasks.length === 0) {
@@ -257,29 +272,31 @@ function ListView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => void 
     <div className="space-y-2">
       {tasks.map((t) => {
         const derived = deriveTaskStatus(t);
+        const isDone = t.status === "concluida";
         return (
-          <button
+          <div
             key={t.id}
-            type="button"
-            onClick={() => onEdit(t)}
             className={cn(
               "flex w-full items-start gap-3 rounded-md border border-l-4 bg-card p-3 text-left transition-colors hover:bg-accent/30",
               PRIORIDADE_BORDER[t.prioridade],
               derived === "atrasada" && "border-destructive/40",
-              t.status === "concluida" && "opacity-60",
+              isDone && "opacity-60",
             )}
           >
             <input
               type="checkbox"
-              checked={t.status === "concluida"}
-              onClick={(e) => e.stopPropagation()}
+              checked={isDone}
               onChange={(e) =>
                 setStatus.mutate({ id: t.id, status: e.target.checked ? "concluida" : "pendente" })
               }
               className="mt-1 h-4 w-4"
             />
-            <div className="min-w-0 flex-1">
-              <p className={cn("truncate text-sm font-medium", t.status === "concluida" && "line-through")}>
+            <button
+              type="button"
+              onClick={() => onEdit(t)}
+              className="min-w-0 flex-1 text-left"
+            >
+              <p className={cn("truncate text-sm font-medium", isDone && "line-through")}>
                 {t.titulo}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -288,12 +305,33 @@ function ListView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => void 
                   {TASK_STATUS_LABEL[t.status]}
                 </Badge>
                 {t.projeto ? <Badge variant="outline">{t.projeto}</Badge> : null}
-                {t.data ? <span>{t.data.split("-").reverse().join("/")}</span> : null}
+                {t.data ? <span>Data: {t.data.split("-").reverse().join("/")}</span> : null}
                 {t.hora_inicio ? <span>{t.hora_inicio.slice(0, 5)}</span> : null}
+                {t.prazo ? <span>Prazo: {t.prazo.split("-").reverse().join("/")}</span> : null}
                 {derived === "atrasada" ? <Badge variant="destructive">Atrasada</Badge> : null}
+                <span title={new Date(t.created_at).toLocaleString("pt-BR")}>
+                  Criada: {fmtDateTime(t.created_at)}
+                </span>
+                {isDone && t.completed_at ? (
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    Concluída: {fmtDateTime(t.completed_at)}
+                  </span>
+                ) : null}
               </div>
-            </div>
-          </button>
+            </button>
+            {!isDone ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                onClick={() => setStatus.mutate({ id: t.id, status: "concluida" })}
+                disabled={setStatus.isPending}
+              >
+                <Check className="mr-1 h-3.5 w-3.5" />
+                Concluir
+              </Button>
+            ) : null}
+          </div>
         );
       })}
     </div>
@@ -311,6 +349,7 @@ const KANBAN_COLUMNS: TaskStatus[] = [
 ];
 
 function KanbanView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => void }) {
+  const setStatus = useSetTaskStatus();
   const grouped = useMemo(() => {
     const map: Record<TaskStatus, Task[]> = {
       pendente: [], em_andamento: [], aguardando: [], homologacao: [], concluida: [], cancelada: [],
@@ -328,33 +367,60 @@ function KanbanView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => voi
             <Badge variant="outline">{grouped[col].length}</Badge>
           </div>
           <div className="space-y-2">
-            {grouped[col].map((t) => (
-              <Card
-                key={t.id}
-                className={cn(
-                  "cursor-pointer border-l-4 hover:bg-accent/40",
-                  PRIORIDADE_BORDER[t.prioridade],
-                  t.status === "concluida" && "opacity-60",
-                )}
-                onClick={() => onEdit(t)}
-              >
-                <CardContent className="p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className={cn("line-clamp-2 text-sm font-medium", t.status === "concluida" && "line-through")}>{t.titulo}</p>
-                    <span
-                      className={cn("mt-1 h-2.5 w-2.5 shrink-0 rounded-full", PRIORIDADE_DOT[t.prioridade])}
-                      title={`Prioridade: ${TASK_PRIORIDADE_LABEL[t.prioridade]}`}
-                      aria-label={`Prioridade ${TASK_PRIORIDADE_LABEL[t.prioridade]}`}
-                    />
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                    <PriorityBadge prioridade={t.prioridade} />
-                    {t.projeto ? <Badge variant="outline">{t.projeto}</Badge> : null}
-                    {t.data ? <span>{t.data.split("-").reverse().join("/")}</span> : null}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {grouped[col].map((t) => {
+              const isDone = t.status === "concluida";
+              return (
+                <Card
+                  key={t.id}
+                  className={cn(
+                    "cursor-pointer border-l-4 hover:bg-accent/40",
+                    PRIORIDADE_BORDER[t.prioridade],
+                    isDone && "opacity-60",
+                  )}
+                  onClick={() => onEdit(t)}
+                >
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={cn("line-clamp-2 text-sm font-medium", isDone && "line-through")}>{t.titulo}</p>
+                      <span
+                        className={cn("mt-1 h-2.5 w-2.5 shrink-0 rounded-full", PRIORIDADE_DOT[t.prioridade])}
+                        title={`Prioridade: ${TASK_PRIORIDADE_LABEL[t.prioridade]}`}
+                        aria-label={`Prioridade ${TASK_PRIORIDADE_LABEL[t.prioridade]}`}
+                      />
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                      <PriorityBadge prioridade={t.prioridade} />
+                      {t.projeto ? <Badge variant="outline">{t.projeto}</Badge> : null}
+                      {t.data ? <span>{t.data.split("-").reverse().join("/")}</span> : null}
+                    </div>
+                    <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
+                      <div>Criada: {fmtDateTime(t.created_at)}</div>
+                      {isDone && t.completed_at ? (
+                        <div className="text-emerald-600 dark:text-emerald-400">
+                          Concluída: {fmtDateTime(t.completed_at)}
+                        </div>
+                      ) : null}
+                    </div>
+                    {!isDone ? (
+                      <div className="mt-2 flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setStatus.mutate({ id: t.id, status: "concluida" });
+                          }}
+                          disabled={setStatus.isPending}
+                        >
+                          <Check className="mr-1 h-3.5 w-3.5" />
+                          Concluir
+                        </Button>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       ))}
