@@ -400,8 +400,8 @@ export function TaskFormDrawer({ open, onOpenChange, task, defaults }: Props) {
 
               {recurrenceEnabled ? (
                 <div className="mt-3 grid grid-cols-2 gap-3">
-                  <FormItem>
-                    <FormLabel>Frequência</FormLabel>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">Frequência</label>
                     <Select
                       value={recurrenceFreq}
                       onValueChange={(freq) =>
@@ -424,9 +424,9 @@ export function TaskFormDrawer({ open, onOpenChange, task, defaults }: Props) {
                         ))}
                       </SelectContent>
                     </Select>
-                  </FormItem>
-                  <FormItem>
-                    <FormLabel>A cada</FormLabel>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">A cada</label>
                     <Input
                       type="number"
                       min={1}
@@ -439,10 +439,11 @@ export function TaskFormDrawer({ open, onOpenChange, task, defaults }: Props) {
                         })
                       }
                     />
-                  </FormItem>
+                  </div>
                 </div>
               ) : null}
             </div>
+
 
             <SheetFooter className="mt-4 flex gap-2 sm:justify-end">
               <Button
