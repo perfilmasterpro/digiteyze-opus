@@ -52,6 +52,12 @@ type Props = {
 };
 
 export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdate }: Props) {
+  const navigate = useNavigate();
+  const openEdit = (leadId: string) => {
+    toast.message("Abrindo edição do lead…");
+    void navigate({ to: "/prospeccao/$id/editar", params: { id: leadId } });
+  };
+
   const columns: KanbanColumn<Lead>[] = LEAD_STATUS.map((status) => {
     const items = leads.filter((l) => l.status === status);
     const total = items.reduce((sum, l) => sum + (l.valor_potencial ?? 0), 0);
