@@ -228,9 +228,23 @@ export function TemplatePickerDialog({
                         </button>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Badge variant="secondary" className="text-[10px]">
-                          {MESSAGE_TEMPLATE_CATEGORIA_LABEL[t.categoria]}
-                        </Badge>
+                        {(() => {
+                          const cat = categoryMap.get(t.categoria);
+                          const color = cat?.cor;
+                          return (
+                            <Badge
+                              variant="secondary"
+                              className="gap-1 text-[10px]"
+                              style={
+                                color
+                                  ? { backgroundColor: `${color}22`, color, borderColor: `${color}55` }
+                                  : undefined
+                              }
+                            >
+                              {cat?.nome ?? formatCategoriaLabel(t.categoria)}
+                            </Badge>
+                          );
+                        })()}
                         <span className="line-clamp-1 text-xs text-muted-foreground">
                           {t.corpo}
                         </span>
@@ -252,7 +266,8 @@ export function TemplatePickerDialog({
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {MESSAGE_TEMPLATE_CATEGORIA_LABEL[selected.categoria]}
+                    {categoryMap.get(selected.categoria)?.nome ??
+                      formatCategoriaLabel(selected.categoria)}
                   </p>
                   <h3 className="text-base font-semibold">{selected.titulo}</h3>
                 </div>
