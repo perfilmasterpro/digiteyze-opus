@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   Palette,
   Plug,
+  Route as RouteIcon,
   Settings as SettingsIcon,
   ShieldCheck,
   UserCog,
@@ -19,6 +20,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROLE_LABELS, ROLES } from "@/config/rbac";
+import { CadenceList } from "@/modules/cadences";
 import { CategoryManager } from "@/modules/message-templates";
 
 export const Route = createFileRoute("/configuracoes")({
