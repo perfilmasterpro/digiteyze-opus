@@ -35,6 +35,7 @@ import { Route as SuperAdminConfiguracoesRouteImport } from './routes/super-admi
 import { Route as ProspeccaoListaRouteImport } from './routes/prospeccao.lista'
 import { Route as ProspeccaoIdRouteImport } from './routes/prospeccao.$id'
 import { Route as GrowthDashboardRouteImport } from './routes/growth.dashboard'
+import { Route as GrowthCadenciasRouteImport } from './routes/growth.cadencias'
 import { Route as EmpresasIdRouteImport } from './routes/empresas.$id'
 import { Route as CrmIdRouteImport } from './routes/crm.$id'
 import { Route as ProspeccaoIdIndexRouteImport } from './routes/prospeccao.$id.index'
@@ -184,6 +185,11 @@ const GrowthDashboardRoute = GrowthDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => GrowthRoute,
 } as any)
+const GrowthCadenciasRoute = GrowthCadenciasRouteImport.update({
+  id: '/cadencias',
+  path: '/cadencias',
+  getParentRoute: () => GrowthRoute,
+} as any)
 const EmpresasIdRoute = EmpresasIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/tarefas': typeof TarefasRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/growth/cadencias': typeof GrowthCadenciasRoute
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
   '/prospeccao/lista': typeof ProspeccaoListaRoute
@@ -340,6 +347,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/suporte': typeof SuporteRoute
   '/tarefas': typeof TarefasRoute
+  '/growth/cadencias': typeof GrowthCadenciasRoute
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/lista': typeof ProspeccaoListaRoute
   '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/tarefas': typeof TarefasRoute
   '/crm/$id': typeof CrmIdRouteWithChildren
   '/empresas/$id': typeof EmpresasIdRouteWithChildren
+  '/growth/cadencias': typeof GrowthCadenciasRoute
   '/growth/dashboard': typeof GrowthDashboardRoute
   '/prospeccao/$id': typeof ProspeccaoIdRouteWithChildren
   '/prospeccao/lista': typeof ProspeccaoListaRoute
@@ -434,6 +443,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/crm/$id'
     | '/empresas/$id'
+    | '/growth/cadencias'
     | '/growth/dashboard'
     | '/prospeccao/$id'
     | '/prospeccao/lista'
@@ -477,6 +487,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/suporte'
     | '/tarefas'
+    | '/growth/cadencias'
     | '/growth/dashboard'
     | '/prospeccao/lista'
     | '/super-admin/configuracoes'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/crm/$id'
     | '/empresas/$id'
+    | '/growth/cadencias'
     | '/growth/dashboard'
     | '/prospeccao/$id'
     | '/prospeccao/lista'
@@ -753,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GrowthDashboardRouteImport
       parentRoute: typeof GrowthRoute
     }
+    '/growth/cadencias': {
+      id: '/growth/cadencias'
+      path: '/cadencias'
+      fullPath: '/growth/cadencias'
+      preLoaderRoute: typeof GrowthCadenciasRouteImport
+      parentRoute: typeof GrowthRoute
+    }
     '/empresas/$id': {
       id: '/empresas/$id'
       path: '/$id'
@@ -945,10 +964,12 @@ const EmpresasRouteWithChildren = EmpresasRoute._addFileChildren(
 )
 
 interface GrowthRouteChildren {
+  GrowthCadenciasRoute: typeof GrowthCadenciasRoute
   GrowthDashboardRoute: typeof GrowthDashboardRoute
 }
 
 const GrowthRouteChildren: GrowthRouteChildren = {
+  GrowthCadenciasRoute: GrowthCadenciasRoute,
   GrowthDashboardRoute: GrowthDashboardRoute,
 }
 

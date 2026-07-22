@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   Palette,
   Plug,
+  Route as RouteIcon,
   Settings as SettingsIcon,
   ShieldCheck,
   UserCog,
@@ -19,6 +20,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROLE_LABELS, ROLES } from "@/config/rbac";
+import { CadenceList } from "@/modules/cadences";
 import { CategoryManager } from "@/modules/message-templates";
 
 export const Route = createFileRoute("/configuracoes")({
@@ -112,6 +114,19 @@ function ConfiguracoesPage() {
           description="Nome, cor, status e ordem de exibição. As cores são compartilhadas com a Biblioteca de Mensagens, o Kanban de Leads e as Cadências comerciais."
         >
           <CategoryManager />
+        </SectionShell>
+      ),
+    },
+    {
+      value: "cadencias",
+      label: "Cadências",
+      icon: RouteIcon,
+      content: (
+        <SectionShell
+          title="Cadências Comerciais"
+          description="Sequências reutilizáveis que guiam o atendimento dos leads, integradas à biblioteca de mensagens e ao módulo de tarefas."
+        >
+          <CadenceList />
         </SectionShell>
       ),
     },

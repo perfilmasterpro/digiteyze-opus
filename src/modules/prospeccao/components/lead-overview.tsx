@@ -23,6 +23,7 @@ import {
   type Lead,
 } from "../types/leads.types";
 import { QuickContactActions } from "./quick-contact-actions";
+import { LeadCadenceBlock } from "@/modules/cadences";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -250,6 +251,9 @@ export function LeadOverview({ lead }: { lead: Lead }) {
           googleMapsUrl={extras.googleMapsUrl}
           mapsFallbackQuery={mapsQuery || undefined}
         />
+
+        <LeadCadenceBlock leadId={lead.id} />
+
 
         <Card>
           <CardHeader className="pb-3">

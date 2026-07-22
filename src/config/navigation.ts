@@ -10,6 +10,7 @@ import {
   Megaphone,
   PenSquare,
   Rocket,
+  Route,
   Settings,
   Sparkles,
   Target,
@@ -114,6 +115,14 @@ export const NAV_ITEMS: NavItem[] = [
     to: "/growth",
     icon: Sparkles,
     group: "gestao",
+  },
+  {
+    key: "growth",
+    label: "Cadências",
+    to: "/growth/cadencias",
+    icon: Route,
+    group: "gestao",
+    description: "Sequências comerciais reutilizáveis",
   },
   {
     key: "ia",

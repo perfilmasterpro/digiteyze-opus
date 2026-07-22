@@ -55,6 +55,121 @@ export type Database = {
           },
         ]
       }
+      cadence_steps: {
+        Row: {
+          cadence_id: string
+          categoria_id: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          template_id: string | null
+          tempo_espera_dias: number
+          tipo_acao: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          cadence_id: string
+          categoria_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          template_id?: string | null
+          tempo_espera_dias?: number
+          tipo_acao?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          cadence_id?: string
+          categoria_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          template_id?: string | null
+          tempo_espera_dias?: number
+          tipo_acao?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cadence_steps_cadence_id_fkey"
+            columns: ["cadence_id"]
+            isOneToOne: false
+            referencedRelation: "cadences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cadence_steps_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "message_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cadence_steps_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cadence_steps_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cadences: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cadences_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           created_at: string
@@ -227,6 +342,70 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "empresas_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_cadences: {
+        Row: {
+          cadence_id: string
+          created_at: string
+          data_inicio: string
+          data_proxima_acao: string | null
+          etapa_atual: number
+          id: string
+          lead_id: string
+          proxima_acao: string | null
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          cadence_id: string
+          created_at?: string
+          data_inicio?: string
+          data_proxima_acao?: string | null
+          etapa_atual?: number
+          id?: string
+          lead_id: string
+          proxima_acao?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          cadence_id?: string
+          created_at?: string
+          data_inicio?: string
+          data_proxima_acao?: string | null
+          etapa_atual?: number
+          id?: string
+          lead_id?: string
+          proxima_acao?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_cadences_cadence_id_fkey"
+            columns: ["cadence_id"]
+            isOneToOne: false
+            referencedRelation: "cadences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_cadences_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_cadences_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
