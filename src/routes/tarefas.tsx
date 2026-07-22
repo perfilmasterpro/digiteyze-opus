@@ -301,9 +301,9 @@ function KanbanView({ tasks, onEdit }: { tasks: Task[]; onEdit: (t: Task) => voi
           </div>
           <div className="space-y-2">
             {grouped[col].map((t) => (
-              <Card key={t.id} className="cursor-pointer hover:bg-accent/40" onClick={() => onEdit(t)}>
+              <Card key={t.id} className={cn("cursor-pointer hover:bg-accent/40", t.status === "concluida" && "opacity-60")} onClick={() => onEdit(t)}>
                 <CardContent className="p-3">
-                  <p className="line-clamp-2 text-sm font-medium">{t.titulo}</p>
+                  <p className={cn("line-clamp-2 text-sm font-medium", t.status === "concluida" && "line-through")}>{t.titulo}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                     <span className={cn("rounded-full px-2 py-0.5", TONE_CLASSES[TASK_PRIORIDADE_TONE[t.prioridade]])}>
                       {TASK_PRIORIDADE_LABEL[t.prioridade]}
