@@ -165,6 +165,7 @@ export type TaskInput = {
   projeto?: string | null;
   responsavel_id?: string | null;
   data?: string | null;
+  data_inicio?: string | null;
   hora_inicio?: string | null;
   hora_fim?: string | null;
   prazo?: string | null;
