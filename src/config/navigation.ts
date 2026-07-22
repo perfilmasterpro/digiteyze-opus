@@ -10,6 +10,7 @@ import {
   Megaphone,
   PenSquare,
   Rocket,
+  Route,
   Settings,
   Sparkles,
   Target,
