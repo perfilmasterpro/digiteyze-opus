@@ -118,6 +118,19 @@ function ConfiguracoesPage() {
       ),
     },
     {
+      value: "cadencias",
+      label: "Cadências",
+      icon: RouteIcon,
+      content: (
+        <SectionShell
+          title="Cadências Comerciais"
+          description="Sequências reutilizáveis que guiam o atendimento dos leads, integradas à biblioteca de mensagens e ao módulo de tarefas."
+        >
+          <CadenceList />
+        </SectionShell>
+      ),
+    },
+    {
       value: "integracoes",
       label: "Integrações",
       icon: Plug,
