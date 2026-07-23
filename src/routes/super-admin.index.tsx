@@ -117,10 +117,8 @@ function LeadsBackupCard() {
         {message ? (
           <div
             className={cn(
-              "flex items-start gap-2 rounded-lg border p-3 text-sm",
-              message.type === "success"
-                ? "border-success/30 bg-success/10 text-success"
-                : "border-destructive/30 bg-destructive/10 text-destructive",
+              "flex items-start gap-2 rounded-lg border bg-muted p-3 text-sm text-foreground",
+              message.type === "success" ? "border-success/30" : "border-destructive/30",
             )}
           >
             {message.type === "success" ? (
