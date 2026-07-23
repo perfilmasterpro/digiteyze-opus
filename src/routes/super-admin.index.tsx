@@ -119,8 +119,8 @@ function LeadsBackupCard() {
             className={cn(
               "flex items-start gap-2 rounded-lg border p-3 text-sm",
               message.type === "success"
-                ? "border-success/30 bg-success/10 text-success-foreground"
-                : "border-destructive/30 bg-destructive/10 text-destructive-foreground",
+                ? "border-success/30 bg-success/10 text-success"
+                : "border-destructive/30 bg-destructive/10 text-destructive",
             )}
           >
             {message.type === "success" ? (
