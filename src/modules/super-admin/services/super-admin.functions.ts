@@ -399,7 +399,7 @@ export const migrateLeads = createServerFn({ method: "POST" })
       delete legacyData.created_at;
       delete legacyData.updated_at;
 
-      const mappedData: Record<string, unknown> = {
+      const mappedData: Record<string, Json> = {
         ...legacyData,
         // Alias para compatibilidade com a Central / agregador.
         empresa: lead.nome_empresa,
@@ -408,7 +408,7 @@ export const migrateLeads = createServerFn({ method: "POST" })
         whatsapp: lead.whatsapp,
         email: lead.contato_email,
         status: lead.status,
-      };
+      } as Record<string, Json>;
 
       rows.push({
         workspace_id: lead.workspace_id,
@@ -417,6 +417,7 @@ export const migrateLeads = createServerFn({ method: "POST" })
         created_at: lead.created_at ?? new Date().toISOString(),
         updated_at: lead.updated_at ?? new Date().toISOString(),
       });
+
     }
 
     if (rows.length > 0) {
