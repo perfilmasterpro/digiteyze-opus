@@ -126,12 +126,13 @@ export async function createLead(workspaceId: string, input: LeadInput): Promise
   const payload = {
     workspace_id: workspaceId,
     empresa_id: input.empresa_id ?? null,
-    data: inputToData(input),
+    data: inputToData(input) as Json,
   };
 
   const { data, error } = await supabase
     .from("leads")
     .insert(payload)
+
     .select("id, workspace_id, empresa_id, data, created_at, updated_at")
     .single();
 
