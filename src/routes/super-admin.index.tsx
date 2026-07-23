@@ -140,3 +140,107 @@ function LeadsBackupCard() {
     </Card>
   );
 }
+
+function LeadsMigrationCard() {
+  const migrate = useServerFn(migrateLeads);
+  const [file, setFile] = useState<File | null>(null);
+  const [parsed, setParsed] = useState<unknown[] | null>(null);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = e.target.files?.[0];
+    setFile(selected ?? null);
+    setParsed(null);
+    setMessage(null);
+
+    if (!selected) return;
+
+    try {
+      const text = await selected.text();
+      const json = JSON.parse(text) as unknown;
+      if (!json || typeof json !== "object" || !Array.isArray((json as { leads?: unknown }).leads)) {
+        setMessage({ type: "error", text: "O arquivo não possui a propriedade 'leads' como array." });
+        return;
+      }
+      const leads = (json as { leads: unknown[] }).leads;
+      setParsed(leads);
+      setMessage({
+        type: "success",
+        text: `${leads.length} lead${leads.length === 1 ? "" : "s"} encontrado${leads.length === 1 ? "" : "s"} no backup.`,
+      });
+    } catch {
+      setMessage({ type: "error", text: "Arquivo inválido. Selecione um JSON exportado pelo backup." });
+    }
+  }
+
+  async function handleMigrate() {
+    if (!parsed || parsed.length === 0) {
+      setMessage({ type: "error", text: "Nenhum lead válido para migrar." });
+      return;
+    }
+
+    setIsMigrating(true);
+    setMessage(null);
+
+    try {
+      const result = await migrate({ data: { leads: parsed } });
+      const text = [
+        `${result.inserted} migrado${result.inserted === 1 ? "" : "s"} com sucesso.`,
+        result.skipped > 0 ? `${result.skipped} ignorado${result.skipped === 1 ? "" : "s"}.` : "",
+        result.errors.length > 0 ? `${result.errors.length} erro(s).` : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      setMessage({ type: result.errors.length > 0 && result.inserted === 0 ? "error" : "success", text });
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Erro inesperado na migração.",
+      });
+    } finally {
+      setIsMigrating(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Upload className="h-4 w-4 text-primary" />
+          Migrar Leads para o Banco
+        </CardTitle>
+        <CardDescription>
+          Envie o arquivo de backup para importar os leads permanentemente no Supabase.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Selecione o JSON gerado pelo card de backup. A migração só pode ser executada por super
+          administradores e os leads serão vinculados aos workspaces informados no arquivo.
+        </p>
+        <Input type="file" accept="application/json" onChange={handleFileChange} />
+        <Button onClick={handleMigrate} disabled={!parsed || isMigrating} className="gap-2">
+          <Upload className="h-4 w-4" />
+          {isMigrating ? "Migrando…" : "Migrar leads"}
+        </Button>
+        {message ? (
+          <div
+            className={cn(
+              "flex items-start gap-2 rounded-lg border bg-muted p-3 text-sm text-foreground",
+              message.type === "success" ? "border-success/30" : "border-destructive/30",
+            )}
+          >
+            {message.type === "success" ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            ) : (
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            )}
+            {message.text}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
