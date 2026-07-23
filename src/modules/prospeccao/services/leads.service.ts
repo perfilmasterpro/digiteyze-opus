@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+
 
 import type { Lead, LeadInput, LeadStatus } from "../types/leads.types";
 
