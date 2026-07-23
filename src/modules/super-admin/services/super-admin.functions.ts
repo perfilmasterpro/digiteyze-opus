@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import type { Lead } from "@/modules/prospeccao";
+
+
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -332,3 +335,113 @@ export const checkIsSuperAdmin = createServerFn({ method: "GET" })
       .maybeSingle();
     return { isSuperAdmin: !!data };
   });
+
+export type MigrateLeadsResult = {
+  inserted: number;
+  skipped: number;
+  errors: string[];
+};
+
+/**
+ * Migra leads do formato legado (localStorage) para a tabela `public.leads`
+ * do Supabase. Executado apenas por super admins.
+ *
+ * Cada lead recebe um novo UUID; o conteúdo original é preservado dentro do
+ * campo `data` (jsonb), com aliases para compatibilidade com a Central.
+ */
+export const migrateLeads = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        leads: z.array(z.record(z.unknown())).max(10_000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }): Promise<MigrateLeadsResult> => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const result: MigrateLeadsResult = { inserted: 0, skipped: 0, errors: [] };
+
+    // Carrega workspaces válidos uma única vez para validação rápida.
+    const { data: workspaces } = await supabaseAdmin.from("workspaces").select("id");
+    const validWorkspaceIds = new Set((workspaces ?? []).map((w) => w.id));
+
+    const rows: {
+      workspace_id: string;
+      empresa_id?: string;
+      data: Record<string, Json>;
+      created_at: string;
+      updated_at: string;
+    }[] = [];
+
+
+    for (let i = 0; i < data.leads.length; i++) {
+      const raw = data.leads[i];
+      const lead = raw as Partial<Lead>;
+
+      if (!lead.workspace_id || !validWorkspaceIds.has(lead.workspace_id)) {
+        result.skipped++;
+        result.errors.push(`Linha ${i + 1}: workspace_id inválido ou inexistente.`);
+        continue;
+      }
+
+      if (!lead.nome_empresa || typeof lead.nome_empresa !== "string") {
+        result.skipped++;
+        result.errors.push(`Linha ${i + 1}: nome_empresa ausente.`);
+        continue;
+      }
+
+      const legacyData = { ...raw };
+      delete legacyData.id;
+      delete legacyData.workspace_id;
+      delete legacyData.empresa_id;
+      delete legacyData.created_at;
+      delete legacyData.updated_at;
+
+      const mappedData: Record<string, Json> = {
+        ...legacyData,
+        // Alias para compatibilidade com a Central / agregador.
+        empresa: lead.nome_empresa,
+        nome: lead.nome_empresa,
+        telefone: lead.telefone,
+        whatsapp: lead.whatsapp,
+        email: lead.contato_email,
+        status: lead.status,
+      } as Record<string, Json>;
+
+      rows.push({
+        workspace_id: lead.workspace_id,
+        empresa_id: lead.empresa_id,
+        data: mappedData,
+        created_at: lead.created_at ?? new Date().toISOString(),
+        updated_at: lead.updated_at ?? new Date().toISOString(),
+      });
+
+    }
+
+    if (rows.length > 0) {
+      const { error } = await supabaseAdmin.from("leads").insert(rows);
+      if (error) {
+        result.errors.push(`Erro ao inserir no Supabase: ${error.message}`);
+        return result;
+      }
+      result.inserted = rows.length;
+    }
+
+    await supabaseAdmin.from("admin_logs").insert({
+      event_type: "leads.migrated",
+      severity: "info",
+      actor_id: context.userId,
+      message: `Migração de leads do localStorage executada`,
+      metadata: {
+        inserted: result.inserted,
+        skipped: result.skipped,
+        errors: result.errors.length,
+      },
+    });
+
+    return result;
+  });
+
