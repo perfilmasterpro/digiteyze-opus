@@ -76,10 +76,14 @@ function SuperAdminDashboard() {
         </div>
       </div>
 
-      <LeadsBackupCard />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <LeadsBackupCard />
+        <LeadsMigrationCard />
+      </div>
     </div>
   );
 }
+
 
 function LeadsBackupCard() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
