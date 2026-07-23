@@ -20,6 +20,7 @@ import { KpiCard } from "@/components/common/kpi-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { downloadLeadsBackup } from "@/lib/backup-leads";
 import { getSuperAdminStats } from "@/modules/super-admin";
 
