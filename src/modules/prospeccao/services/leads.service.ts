@@ -151,7 +151,7 @@ export async function updateLead(
     .from("leads")
     .update({
       empresa_id: input.empresa_id ?? null,
-      data: inputToData(input),
+      data: inputToData(input) as Json,
       updated_at: new Date().toISOString(),
     })
     .eq("workspace_id", workspaceId)
