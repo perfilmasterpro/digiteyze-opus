@@ -371,10 +371,11 @@ export const migrateLeads = createServerFn({ method: "POST" })
     const rows: {
       workspace_id: string;
       empresa_id?: string;
-      data: Record<string, unknown>;
+      data: Record<string, Json>;
       created_at: string;
       updated_at: string;
     }[] = [];
+
 
     for (let i = 0; i < data.leads.length; i++) {
       const raw = data.leads[i];
