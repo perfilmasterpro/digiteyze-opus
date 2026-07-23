@@ -188,7 +188,7 @@ export async function updateLeadStatus(
   const { data, error } = await supabase
     .from("leads")
     .update({
-      data: nextData,
+      data: nextData as Json,
       updated_at: new Date().toISOString(),
     })
     .eq("workspace_id", workspaceId)
