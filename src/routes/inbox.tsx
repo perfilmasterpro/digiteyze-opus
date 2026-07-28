@@ -97,7 +97,7 @@ function InboxPage() {
         <ErrorState onRetry={() => void refetch()} />
       ) : items.length === 0 ? (
         <EmptyState
-          icon={Inbox}
+          icon={<Inbox className="h-5 w-5" aria-hidden />}
           title="Nada por aqui"
           description="Capture uma ideia por voz, texto ou colando um conteúdo externo."
           action={
