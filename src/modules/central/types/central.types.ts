@@ -91,6 +91,7 @@ export const TASK_ORIGENS = [
   "projeto",
   "ia",
   "sistema",
+  "inbox_ia",
 ] as const;
 export type TaskOrigem = (typeof TASK_ORIGENS)[number];
 export const TASK_ORIGEM_LABEL: Record<TaskOrigem, string> = {
@@ -100,6 +101,7 @@ export const TASK_ORIGEM_LABEL: Record<TaskOrigem, string> = {
   projeto: "Projeto",
   ia: "IA",
   sistema: "Sistema",
+  inbox_ia: "Inbox IA",
 };
 
 /* ─────────── Recorrência ─────────── */
