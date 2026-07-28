@@ -38,6 +38,14 @@ export const NAV_ITEMS: NavItem[] = [
     description: "Pendências e prioridades do dia",
   },
   {
+    key: "ia",
+    label: "Inbox IA",
+    to: "/inbox",
+    icon: Sparkles,
+    group: "operacao",
+    description: "Captura rápida por voz, texto ou colagem",
+  },
+  {
     key: "central",
     label: "Tarefas",
     to: "/tarefas",
@@ -45,6 +53,7 @@ export const NAV_ITEMS: NavItem[] = [
     group: "operacao",
     description: "Lista, kanban, agenda e calendário",
   },
+
   {
     key: "empresas",
     label: "Empresas",
