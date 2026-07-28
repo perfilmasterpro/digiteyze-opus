@@ -1,6 +1,6 @@
 /**
- * Serviços do módulo Inbox IA — CRUD dos rascunhos, upload de áudio
- * e conversão do rascunho em entidades de outros módulos (Central).
+ * Serviços do módulo Inbox — CRUD dos rascunhos capturados
+ * e conversão manual do rascunho em tarefas da Central.
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -15,11 +15,8 @@ import {
   type InboxItem,
   type InboxRow,
   type InboxStatus,
-  type InboxSuggestion,
   type InboxTipo,
 } from "../types/inbox.types";
-
-const AUDIO_BUCKET = "inbox-audio";
 
 export async function listInbox(workspaceId: string): Promise<InboxItem[]> {
   const { data, error } = await supabase
@@ -58,9 +55,11 @@ export async function createCapture(
       origem: input.origem,
       origem_detalhe: input.origem_detalhe ?? null,
       conteudo_raw: input.conteudo_raw,
-      audio_path: input.audio_path ?? null,
-      duracao_seg: input.duracao_seg ?? null,
-      status: "processando" as InboxStatus,
+      tipo_sugerido: input.tipo_sugerido ?? null,
+      titulo: input.titulo ?? null,
+      prioridade: input.prioridade ?? null,
+      status: "capturado" as InboxStatus,
+
     })
     .select("*")
     .single();
@@ -84,38 +83,6 @@ export async function updateInboxItem(
   return rowToInboxItem(data as InboxRow);
 }
 
-/** Salva a sugestão da IA no rascunho (nada é criado em outros módulos). */
-export async function applySuggestion(
-  workspaceId: string,
-  id: string,
-  suggestion: InboxSuggestion,
-): Promise<InboxItem> {
-  return updateInboxItem(workspaceId, id, {
-    status: "sugerido",
-    tipo_sugerido: suggestion.tipo,
-    titulo: suggestion.titulo,
-    descricao: suggestion.descricao,
-    categoria: suggestion.categoria,
-    prioridade: suggestion.prioridade,
-    prazo_sugerido: suggestion.prazo,
-    projeto_sugerido: suggestion.projeto,
-    proximas_acoes: suggestion.proximas_acoes as unknown as Json,
-    confianca: suggestion.confianca,
-    ai_payload: suggestion as unknown as Json,
-  });
-}
-
-export async function markInboxError(
-  workspaceId: string,
-  id: string,
-  conteudo?: string,
-): Promise<InboxItem> {
-  return updateInboxItem(workspaceId, id, {
-    status: "erro",
-    ...(conteudo ? { conteudo_raw: conteudo } : {}),
-  });
-}
-
 export async function discardInboxItem(
   workspaceId: string,
   id: string,
@@ -130,25 +97,6 @@ export async function deleteInboxItem(workspaceId: string, id: string): Promise<
     .eq("workspace_id", workspaceId)
     .eq("id", id);
   if (error) throw error;
-}
-
-/* ─────────── Áudio ─────────── */
-
-export async function uploadCaptureAudio(
-  userId: string,
-  blob: Blob,
-): Promise<string> {
-  const path = `${userId}/${crypto.randomUUID()}.wav`;
-  const { error } = await supabase.storage
-    .from(AUDIO_BUCKET)
-    .upload(path, blob, { contentType: "audio/wav", upsert: false });
-  if (error) throw error;
-  return path;
-}
-
-export async function getAudioUrl(path: string): Promise<string | null> {
-  const { data } = await supabase.storage.from(AUDIO_BUCKET).createSignedUrl(path, 3600);
-  return data?.signedUrl ?? null;
 }
 
 /* ─────────── Conversão do Rascunho Inteligente ─────────── */

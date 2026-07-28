@@ -68,7 +68,7 @@ export function DraftReviewSheet({
 
   if (!item) return null;
 
-  /** Guarda o que o usuário mudou em relação à sugestão da IA (aprendizado futuro). */
+  /** Guarda o que o usuário mudou em relação ao rascunho original. */
   function diffCorrecoes() {
     if (!item) return {};
     const diff: Record<string, unknown> = {};
@@ -118,7 +118,7 @@ export function DraftReviewSheet({
         <SheetHeader>
           <SheetTitle>Revisar rascunho</SheetTitle>
           <SheetDescription>
-            Ajuste a sugestão da IA antes de converter. Nada é criado sem sua confirmação.
+            Ajuste os dados antes de converter. Nada é criado sem sua confirmação.
           </SheetDescription>
         </SheetHeader>
 

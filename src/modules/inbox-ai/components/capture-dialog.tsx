@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Loader2, Mic, Square, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,19 +11,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { useCurrentUserId, useCurrentWorkspaceId } from "@/lib/workspace";
-import { classifyDraft, transcribeCapture } from "@/lib/inbox-ai.functions";
+import {
+  TASK_PRIORIDADE_LABEL,
+  TASK_PRIORIDADES,
+  type TaskPrioridade,
+} from "@/modules/central/types/central.types";
 
 import { useCreateCapture } from "../hooks/use-inbox";
-import { applySuggestion, markInboxError, uploadCaptureAudio } from "../services/inbox.service";
-import { blobToBase64, startRecording, type Recorder } from "../services/wav-recorder";
-import type { InboxOrigem, InboxSuggestion } from "../types/inbox.types";
+import {
+  INBOX_TIPO_LABEL,
+  INBOX_TIPOS,
+  type InboxOrigem,
+  type InboxTipo,
+} from "../types/inbox.types";
 
-type Step = "idle" | "gravando" | "transcrevendo" | "classificando";
-
+/**
+ * Captura rápida 100% manual (sem IA e sem custo).
+ * Tudo entra na Inbox como rascunho; a conversão em tarefa é feita na revisão.
+ */
 export function CaptureDialog({
   open,
   onOpenChange,
@@ -31,120 +47,48 @@ export function CaptureDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const workspaceId = useCurrentWorkspaceId();
-  const userId = useCurrentUserId();
   const createCapture = useCreateCapture();
 
-  const [tab, setTab] = useState<InboxOrigem>("voz");
+  const [tab, setTab] = useState<InboxOrigem>("texto");
   const [texto, setTexto] = useState("");
   const [colado, setColado] = useState("");
   const [origemDetalhe, setOrigemDetalhe] = useState("");
-  const [step, setStep] = useState<Step>("idle");
-  const [segundos, setSegundos] = useState(0);
-  const recorderRef = useRef<Recorder | null>(null);
-
-  useEffect(() => {
-    if (step !== "gravando") return;
-    const id = window.setInterval(() => setSegundos((s) => s + 1), 1000);
-    return () => window.clearInterval(id);
-  }, [step]);
+  const [tipo, setTipo] = useState<InboxTipo>("tarefa");
+  const [prioridade, setPrioridade] = useState<TaskPrioridade>("media");
 
   useEffect(() => {
     if (!open) {
-      recorderRef.current?.cancel();
-      recorderRef.current = null;
-      setStep("idle");
-      setSegundos(0);
       setTexto("");
       setColado("");
       setOrigemDetalhe("");
+      setTipo("tarefa");
+      setPrioridade("media");
+      setTab("texto");
     }
   }, [open]);
 
-  const busy = step === "transcrevendo" || step === "classificando";
+  const busy = createCapture.isPending;
 
-  /** Cria o rascunho, classifica com IA e mantém o item pendente na Inbox. */
-  async function processar(
-    origem: InboxOrigem,
-    conteudo: string,
-    extra?: { audio_path?: string | null; duracao_seg?: number | null },
-  ) {
-    const item = await createCapture.mutateAsync({
-      origem,
-      origem_detalhe: origemDetalhe.trim() || null,
-      conteudo_raw: conteudo,
-      audio_path: extra?.audio_path ?? null,
-      duracao_seg: extra?.duracao_seg ?? null,
-    });
-
-    setStep("classificando");
+  async function handleSubmit(origem: InboxOrigem, conteudo: string) {
+    const valor = conteudo.trim();
+    if (!valor) return;
     try {
-      const suggestion = (await classifyDraft({
-        data: { workspaceId, texto: conteudo, inboxId: item.id },
-      })) as unknown as InboxSuggestion;
-      await applySuggestion(workspaceId, item.id, suggestion);
-      toast.success("Rascunho criado", {
-        description: "A IA sugeriu uma classificação. Revise na Inbox IA.",
+      await createCapture.mutateAsync({
+        origem,
+        origem_detalhe: origemDetalhe.trim() || null,
+        conteudo_raw: valor,
+        tipo_sugerido: tipo,
+        titulo: valor.split("\n")[0].slice(0, 80),
+        prioridade,
       });
-    } catch (error) {
-      await markInboxError(workspaceId, item.id);
-      toast.error("Não foi possível classificar", {
-        description: describeError(error),
+      toast.success("Capturado na Inbox", {
+        description: "Revise quando quiser para converter em tarefa.",
       });
-    }
-    onOpenChange(false);
-  }
-
-  async function handleStartRecording() {
-    try {
-      recorderRef.current = await startRecording();
-      setSegundos(0);
-      setStep("gravando");
-    } catch {
-      toast.error("Microfone indisponível", {
-        description: "Autorize o acesso ao microfone para capturar por voz.",
+      onOpenChange(false);
+    } catch (error) {
+      toast.error("Falha ao capturar", {
+        description: error instanceof Error ? error.message : String(error),
       });
-    }
-  }
-
-  async function handleStopRecording() {
-    const recorder = recorderRef.current;
-    if (!recorder) return;
-    recorderRef.current = null;
-    setStep("transcrevendo");
-    try {
-      const { blob, duracaoSeg } = await recorder.stop();
-      if (blob.size < 2048) {
-        setStep("idle");
-        toast.error("Gravação vazia", { description: "Grave novamente falando mais perto." });
-        return;
-      }
-      const audioPath = await uploadCaptureAudio(userId, blob);
-      const audioBase64 = await blobToBase64(blob);
-      const { texto: transcrito } = (await transcribeCapture({
-        data: { workspaceId, audioBase64, duracaoSeg },
-      })) as unknown as { texto: string };
-
-      if (!transcrito.trim()) {
-        setStep("idle");
-        toast.error("Não entendi o áudio", { description: "Tente gravar novamente." });
-        return;
-      }
-      await processar("voz", transcrito, { audio_path: audioPath, duracao_seg: duracaoSeg });
-    } catch (error) {
-      setStep("idle");
-      toast.error("Falha na captura por voz", { description: describeError(error) });
-    }
-  }
-
-  async function handleSubmitTexto(origem: InboxOrigem, conteudo: string) {
-    if (!conteudo.trim()) return;
-    setStep("classificando");
-    try {
-      await processar(origem, conteudo.trim());
-    } catch (error) {
-      setStep("idle");
-      toast.error("Falha ao criar rascunho", { description: describeError(error) });
     }
   }
 
@@ -153,88 +97,41 @@ export function CaptureDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" aria-hidden />
+            <Zap className="size-4 text-primary" aria-hidden />
             Captura rápida
           </DialogTitle>
           <DialogDescription>
-            Tudo entra como rascunho na Inbox IA. Você decide depois o que vira tarefa,
-            projeto, lembrete ou nota.
+            Anote a ideia agora e organize depois. Nada vira tarefa sem a sua confirmação.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as InboxOrigem)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="voz" disabled={busy}>
-              Voz
-            </TabsTrigger>
-            <TabsTrigger value="texto" disabled={busy || step === "gravando"}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="texto" disabled={busy}>
               Texto
             </TabsTrigger>
-            <TabsTrigger value="colado" disabled={busy || step === "gravando"}>
+            <TabsTrigger value="colado" disabled={busy}>
               Colar
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="voz" className="pt-4">
-            <div className="flex flex-col items-center gap-4 py-6">
-              <button
-                type="button"
-                onClick={step === "gravando" ? handleStopRecording : handleStartRecording}
-                disabled={busy}
-                aria-label={step === "gravando" ? "Parar gravação" : "Iniciar gravação"}
-                className={cn(
-                  "flex size-20 items-center justify-center rounded-full transition",
-                  step === "gravando"
-                    ? "bg-destructive text-destructive-foreground animate-pulse"
-                    : "bg-primary text-primary-foreground hover:opacity-90",
-                  busy && "opacity-60",
-                )}
-              >
-                {busy ? (
-                  <Loader2 className="size-7 animate-spin" aria-hidden />
-                ) : step === "gravando" ? (
-                  <Square className="size-7" aria-hidden />
-                ) : (
-                  <Mic className="size-7" aria-hidden />
-                )}
-              </button>
-              <p className="text-sm text-muted-foreground">
-                {step === "gravando"
-                  ? `Gravando… ${formatDuration(segundos)}`
-                  : step === "transcrevendo"
-                    ? "Transcrevendo o áudio…"
-                    : step === "classificando"
-                      ? "A IA está organizando sua captura…"
-                      : "Toque para gravar e fale livremente"}
-              </p>
-            </div>
-          </TabsContent>
 
           <TabsContent value="texto" className="space-y-3 pt-4">
             <Textarea
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
-              placeholder="Ex.: ligar para a Prosperar amanhã de manhã e enviar a proposta revisada"
+              placeholder="Ex.: ligar para a Prosperar amanhã e enviar a proposta revisada"
               rows={6}
               disabled={busy}
+              autoFocus
             />
-            <Button
-              onClick={() => handleSubmitTexto("texto", texto)}
-              disabled={busy || !texto.trim()}
-              className="w-full"
-            >
-              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-              Criar rascunho
-            </Button>
           </TabsContent>
 
           <TabsContent value="colado" className="space-y-3 pt-4">
-            <input
+            <Input
               value={origemDetalhe}
               onChange={(e) => setOrigemDetalhe(e.target.value)}
               placeholder="Origem (ex.: WhatsApp do cliente, e-mail)"
               disabled={busy}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
             />
             <Textarea
               value={colado}
@@ -243,36 +140,60 @@ export function CaptureDialog({
               rows={6}
               disabled={busy}
             />
-            <Button
-              onClick={() => handleSubmitTexto("colado", colado)}
-              disabled={busy || !colado.trim()}
-              className="w-full"
-            >
-              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-              Criar rascunho
-            </Button>
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="sm:justify-start">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label>Tipo</Label>
+            <Select value={tipo} onValueChange={(v) => setTipo(v as InboxTipo)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {INBOX_TIPOS.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {INBOX_TIPO_LABEL[t]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Prioridade</Label>
+            <Select
+              value={prioridade}
+              onValueChange={(v) => setPrioridade(v as TaskPrioridade)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TASK_PRIORIDADES.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {TASK_PRIORIDADE_LABEL[p]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            Nenhuma tarefa é criada automaticamente — a conversão é sempre sua.
+            Captura manual — sem IA e sem consumo de créditos.
           </p>
+          <Button
+            onClick={() =>
+              handleSubmit(tab, tab === "texto" ? texto : colado)
+            }
+            disabled={busy || !(tab === "texto" ? texto.trim() : colado.trim())}
+          >
+            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+            Salvar na Inbox
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
-
-function formatDuration(total: number): string {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
-function describeError(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  if (message.includes("429")) return "Limite de uso da IA atingido. Tente em instantes.";
-  if (message.includes("402")) return "Créditos de IA esgotados no workspace.";
-  return message.slice(0, 180);
 }

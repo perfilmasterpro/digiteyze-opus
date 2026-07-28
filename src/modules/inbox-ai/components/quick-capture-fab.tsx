@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mic } from "lucide-react";
+import { Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { CaptureDialog } from "@/modules/inbox-ai/components/capture-dialog";
@@ -37,7 +37,7 @@ export function QuickCaptureFab() {
         aria-label="Captura rápida (tecla C)"
         className="fixed bottom-6 right-6 z-40 size-14 rounded-full shadow-lg"
       >
-        <Mic className="size-6" aria-hidden />
+        <Zap className="size-6" aria-hidden />
       </Button>
       <CaptureDialog open={open} onOpenChange={setOpen} />
     </>

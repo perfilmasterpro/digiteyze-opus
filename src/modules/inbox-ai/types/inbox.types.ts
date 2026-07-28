@@ -1,6 +1,6 @@
 /**
- * Tipos do módulo Inbox IA — capturas rápidas (voz, texto, colagem)
- * que entram como "Rascunho Inteligente" antes de virarem tarefa/nota.
+ * Tipos do módulo Inbox — capturas rápidas (texto ou colagem)
+ * que entram como rascunho antes de virarem tarefa/nota.
  */
 
 import type { Tables } from "@/integrations/supabase/types";
@@ -8,10 +8,9 @@ import type { TaskCategoria, TaskPrioridade } from "@/modules/central/types/cent
 
 export type InboxRow = Tables<"inbox_ai">;
 
-export const INBOX_ORIGENS = ["voz", "texto", "colado"] as const;
+export const INBOX_ORIGENS = ["texto", "colado"] as const;
 export type InboxOrigem = (typeof INBOX_ORIGENS)[number];
 export const INBOX_ORIGEM_LABEL: Record<InboxOrigem, string> = {
-  voz: "Voz",
   texto: "Texto",
   colado: "Colado",
 };
@@ -85,28 +84,15 @@ export interface InboxItem {
   updated_at: string;
 }
 
-/** Sugestão devolvida pela IA (Rascunho Inteligente). */
-export interface InboxSuggestion {
-  tipo: InboxTipo;
-  titulo: string;
-  descricao: string;
-  categoria: TaskCategoria;
-  prioridade: TaskPrioridade;
-  prazo: string | null;
-  projeto: string | null;
-  empresa: string | null;
-  lead: string | null;
-  proximas_acoes: string[];
-  confianca: number;
-}
-
 export interface InboxCaptureInput {
   origem: InboxOrigem;
   origem_detalhe?: string | null;
   conteudo_raw: string;
-  audio_path?: string | null;
-  duracao_seg?: number | null;
+  tipo_sugerido?: InboxTipo | null;
+  titulo?: string | null;
+  prioridade?: TaskPrioridade | null;
 }
+
 
 export function rowToInboxItem(row: InboxRow): InboxItem {
   const acoes = Array.isArray(row.proximas_acoes)

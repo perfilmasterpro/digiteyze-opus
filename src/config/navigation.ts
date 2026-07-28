@@ -39,11 +39,11 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     key: "ia",
-    label: "Inbox IA",
+    label: "Inbox",
     to: "/inbox",
     icon: Sparkles,
     group: "operacao",
-    description: "Captura rápida por voz, texto ou colagem",
+    description: "Captura rápida de ideias e tarefas",
   },
   {
     key: "central",
