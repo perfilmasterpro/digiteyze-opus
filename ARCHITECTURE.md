@@ -3,6 +3,7 @@
 > Documento de referência obrigatório para todas as implementações do projeto.
 > Versão: 1.0.0
 > Última atualização: Fase 0 — Fundação
+> Teste de sincronização com GitHub Sync — 2026-07-28
 
 ---
 
