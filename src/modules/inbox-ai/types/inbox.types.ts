@@ -8,10 +8,9 @@ import type { TaskCategoria, TaskPrioridade } from "@/modules/central/types/cent
 
 export type InboxRow = Tables<"inbox_ai">;
 
-export const INBOX_ORIGENS = ["voz", "texto", "colado"] as const;
+export const INBOX_ORIGENS = ["texto", "colado"] as const;
 export type InboxOrigem = (typeof INBOX_ORIGENS)[number];
 export const INBOX_ORIGEM_LABEL: Record<InboxOrigem, string> = {
-  voz: "Voz",
   texto: "Texto",
   colado: "Colado",
 };
@@ -83,21 +82,6 @@ export interface InboxItem {
   convertido_em_id: string | null;
   created_at: string;
   updated_at: string;
-}
-
-/** Sugestão devolvida pela IA (Rascunho Inteligente). */
-export interface InboxSuggestion {
-  tipo: InboxTipo;
-  titulo: string;
-  descricao: string;
-  categoria: TaskCategoria;
-  prioridade: TaskPrioridade;
-  prazo: string | null;
-  projeto: string | null;
-  empresa: string | null;
-  lead: string | null;
-  proximas_acoes: string[];
-  confianca: number;
 }
 
 export interface InboxCaptureInput {
