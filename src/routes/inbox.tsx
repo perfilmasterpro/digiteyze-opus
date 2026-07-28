@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Inbox, Sparkles, Trash2, X } from "lucide-react";
+import { Inbox, Trash2, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -32,17 +32,17 @@ export const Route = createFileRoute("/inbox")({
   component: InboxPage,
   head: () => ({
     meta: [
-      { title: "Inbox IA — Growth OS" },
+      { title: "Inbox — Growth OS" },
       {
         name: "description",
         content:
-          "Capture ideias e tarefas por voz, texto ou colagem e deixe a IA organizar rascunhos antes de virarem trabalho.",
+          "Capture ideias e tarefas por texto ou colagem e converta em tarefas da Central quando quiser.",
       },
-      { property: "og:title", content: "Inbox IA — Growth OS" },
+      { property: "og:title", content: "Inbox — Growth OS" },
       {
         property: "og:description",
         content:
-          "Captura rápida por voz, texto ou colagem com classificação inteligente no Growth OS.",
+          "Captura rápida de ideias e tarefas por texto ou colagem no Growth OS.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -72,11 +72,11 @@ function InboxPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Inbox IA"
-        description="Tudo que você captura vira um rascunho inteligente. Você decide o que vira trabalho."
+        title="Inbox"
+        description="Tudo que você captura vira um rascunho. Você decide o que vira trabalho."
         actions={
           <Button onClick={() => setCaptureOpen(true)}>
-            <Sparkles className="size-4" aria-hidden />
+            <Zap className="size-4" aria-hidden />
             Nova captura
           </Button>
         }
@@ -99,10 +99,10 @@ function InboxPage() {
         <EmptyState
           icon={<Inbox className="h-5 w-5" aria-hidden />}
           title="Nada por aqui"
-          description="Capture uma ideia por voz, texto ou colando um conteúdo externo."
+          description="Capture uma ideia digitando ou colando um conteúdo externo."
           action={
             <Button onClick={() => setCaptureOpen(true)}>
-              <Sparkles className="size-4" aria-hidden />
+              <Zap className="size-4" aria-hidden />
               Nova captura
             </Button>
           }
@@ -139,11 +139,6 @@ function InboxPage() {
                     <p className="line-clamp-2 text-sm text-muted-foreground">
                       {item.descricao ?? item.conteudo_raw}
                     </p>
-                    {item.confianca !== null ? (
-                      <p className="text-xs text-muted-foreground">
-                        Confiança da IA: {Math.round(item.confianca * 100)}%
-                      </p>
-                    ) : null}
                   </div>
 
                   <div className="flex shrink-0 gap-2">

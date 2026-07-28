@@ -1,6 +1,6 @@
 /**
- * Tipos do módulo Inbox IA — capturas rápidas (voz, texto, colagem)
- * que entram como "Rascunho Inteligente" antes de virarem tarefa/nota.
+ * Tipos do módulo Inbox — capturas rápidas (texto ou colagem)
+ * que entram como rascunho antes de virarem tarefa/nota.
  */
 
 import type { Tables } from "@/integrations/supabase/types";
