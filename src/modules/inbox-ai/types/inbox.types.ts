@@ -104,9 +104,11 @@ export interface InboxCaptureInput {
   origem: InboxOrigem;
   origem_detalhe?: string | null;
   conteudo_raw: string;
-  audio_path?: string | null;
-  duracao_seg?: number | null;
+  tipo_sugerido?: InboxTipo | null;
+  titulo?: string | null;
+  prioridade?: TaskPrioridade | null;
 }
+
 
 export function rowToInboxItem(row: InboxRow): InboxItem {
   const acoes = Array.isArray(row.proximas_acoes)
