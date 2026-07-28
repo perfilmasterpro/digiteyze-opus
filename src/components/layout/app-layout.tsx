@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { QuickCaptureFab } from "@/modules/inbox-ai/components/quick-capture-fab";
 
 import { AppHeader } from "./app-header";
 import { AppSidebar } from "./app-sidebar";
@@ -16,7 +17,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="mx-auto w-full max-w-7xl">{children}</div>
           </main>
         </SidebarInset>
+        <QuickCaptureFab />
       </div>
     </SidebarProvider>
   );
 }
+

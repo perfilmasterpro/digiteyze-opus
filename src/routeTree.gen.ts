@@ -17,6 +17,7 @@ import { Route as ProspeccaoRouteImport } from './routes/prospeccao'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as MarketingRouteImport } from './routes/marketing'
+import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IaRouteImport } from './routes/ia'
 import { Route as GrowthRouteImport } from './routes/growth'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
@@ -94,6 +95,11 @@ const MensagensRoute = MensagensRouteImport.update({
 const MarketingRoute = MarketingRouteImport.update({
   id: '/marketing',
   path: '/marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IaRoute = IaRouteImport.update({
@@ -299,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof FinanceiroRoute
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
+  '/inbox': typeof InboxRoute
   '/marketing': typeof MarketingRoute
   '/mensagens': typeof MensagensRoute
   '/projetos': typeof ProjetosRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof FinanceiroRoute
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
+  '/inbox': typeof InboxRoute
   '/marketing': typeof MarketingRoute
   '/mensagens': typeof MensagensRoute
   '/projetos': typeof ProjetosRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/financeiro': typeof FinanceiroRoute
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
+  '/inbox': typeof InboxRoute
   '/marketing': typeof MarketingRoute
   '/mensagens': typeof MensagensRoute
   '/projetos': typeof ProjetosRoute
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/growth'
     | '/ia'
+    | '/inbox'
     | '/marketing'
     | '/mensagens'
     | '/projetos'
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/growth'
     | '/ia'
+    | '/inbox'
     | '/marketing'
     | '/mensagens'
     | '/projetos'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/growth'
     | '/ia'
+    | '/inbox'
     | '/marketing'
     | '/mensagens'
     | '/projetos'
@@ -581,6 +593,7 @@ export interface RootRouteChildren {
   FinanceiroRoute: typeof FinanceiroRoute
   GrowthRoute: typeof GrowthRouteWithChildren
   IaRoute: typeof IaRoute
+  InboxRoute: typeof InboxRoute
   MarketingRoute: typeof MarketingRoute
   MensagensRoute: typeof MensagensRoute
   ProjetosRoute: typeof ProjetosRoute
@@ -647,6 +660,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing'
       fullPath: '/marketing'
       preLoaderRoute: typeof MarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ia': {
@@ -1060,6 +1080,7 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceiroRoute: FinanceiroRoute,
   GrowthRoute: GrowthRouteWithChildren,
   IaRoute: IaRoute,
+  InboxRoute: InboxRoute,
   MarketingRoute: MarketingRoute,
   MensagensRoute: MensagensRoute,
   ProjetosRoute: ProjetosRoute,
@@ -1072,13 +1093,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
