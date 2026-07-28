@@ -55,6 +55,116 @@ export type Database = {
           },
         ]
       }
+      ai_daily_digests: {
+        Row: {
+          ai_payload: Json | null
+          created_at: string
+          data: string
+          destaques: Json
+          id: string
+          resumo: string
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          ai_payload?: Json | null
+          created_at?: string
+          data?: string
+          destaques?: Json
+          id?: string
+          resumo?: string
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          ai_payload?: Json | null
+          created_at?: string
+          data?: string
+          destaques?: Json
+          id?: string
+          resumo?: string
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_daily_digests_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_processing_logs: {
+        Row: {
+          audio_seg: number | null
+          created_at: string
+          custo_estimado: number | null
+          erro: string | null
+          etapa: string
+          id: string
+          inbox_id: string | null
+          latencia_ms: number | null
+          modelo: string | null
+          status: string
+          tokens_input: number | null
+          tokens_output: number | null
+          user_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          audio_seg?: number | null
+          created_at?: string
+          custo_estimado?: number | null
+          erro?: string | null
+          etapa: string
+          id?: string
+          inbox_id?: string | null
+          latencia_ms?: number | null
+          modelo?: string | null
+          status?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          audio_seg?: number | null
+          created_at?: string
+          custo_estimado?: number | null
+          erro?: string | null
+          etapa?: string
+          id?: string
+          inbox_id?: string | null
+          latencia_ms?: number | null
+          modelo?: string | null
+          status?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_processing_logs_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_ai"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_processing_logs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cadence_steps: {
         Row: {
           cadence_id: string
@@ -342,6 +452,121 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "empresas_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_ai: {
+        Row: {
+          ai_payload: Json | null
+          audio_path: string | null
+          categoria: Database["public"]["Enums"]["task_categoria"] | null
+          confianca: number | null
+          conteudo_editado: string | null
+          conteudo_raw: string
+          convertido_em_id: string | null
+          convertido_em_tipo: string | null
+          correcoes: Json
+          created_at: string
+          criado_por: string
+          descricao: string | null
+          duracao_seg: number | null
+          empresa_id: string | null
+          id: string
+          lead_id: string | null
+          origem: Database["public"]["Enums"]["inbox_origem"]
+          origem_detalhe: string | null
+          prazo_sugerido: string | null
+          prioridade: Database["public"]["Enums"]["task_prioridade"] | null
+          projeto_sugerido: string | null
+          proximas_acoes: Json
+          status: Database["public"]["Enums"]["inbox_status"]
+          tipo_confirmado: Database["public"]["Enums"]["inbox_tipo"] | null
+          tipo_sugerido: Database["public"]["Enums"]["inbox_tipo"] | null
+          titulo: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          ai_payload?: Json | null
+          audio_path?: string | null
+          categoria?: Database["public"]["Enums"]["task_categoria"] | null
+          confianca?: number | null
+          conteudo_editado?: string | null
+          conteudo_raw?: string
+          convertido_em_id?: string | null
+          convertido_em_tipo?: string | null
+          correcoes?: Json
+          created_at?: string
+          criado_por?: string
+          descricao?: string | null
+          duracao_seg?: number | null
+          empresa_id?: string | null
+          id?: string
+          lead_id?: string | null
+          origem?: Database["public"]["Enums"]["inbox_origem"]
+          origem_detalhe?: string | null
+          prazo_sugerido?: string | null
+          prioridade?: Database["public"]["Enums"]["task_prioridade"] | null
+          projeto_sugerido?: string | null
+          proximas_acoes?: Json
+          status?: Database["public"]["Enums"]["inbox_status"]
+          tipo_confirmado?: Database["public"]["Enums"]["inbox_tipo"] | null
+          tipo_sugerido?: Database["public"]["Enums"]["inbox_tipo"] | null
+          titulo?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          ai_payload?: Json | null
+          audio_path?: string | null
+          categoria?: Database["public"]["Enums"]["task_categoria"] | null
+          confianca?: number | null
+          conteudo_editado?: string | null
+          conteudo_raw?: string
+          convertido_em_id?: string | null
+          convertido_em_tipo?: string | null
+          correcoes?: Json
+          created_at?: string
+          criado_por?: string
+          descricao?: string | null
+          duracao_seg?: number | null
+          empresa_id?: string | null
+          id?: string
+          lead_id?: string | null
+          origem?: Database["public"]["Enums"]["inbox_origem"]
+          origem_detalhe?: string | null
+          prazo_sugerido?: string | null
+          prioridade?: Database["public"]["Enums"]["task_prioridade"] | null
+          projeto_sugerido?: string | null
+          proximas_acoes?: Json
+          status?: Database["public"]["Enums"]["inbox_status"]
+          tipo_confirmado?: Database["public"]["Enums"]["inbox_tipo"] | null
+          tipo_sugerido?: Database["public"]["Enums"]["inbox_tipo"] | null
+          titulo?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_ai_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_ai_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_ai_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -1324,6 +1549,15 @@ export type Database = {
         | "desenvolvimento"
         | "suporte"
       calendar_event_tipo: "reuniao" | "pessoal" | "externo" | "outro"
+      inbox_origem: "voz" | "texto" | "colado"
+      inbox_status:
+        | "capturado"
+        | "processando"
+        | "sugerido"
+        | "aprovado"
+        | "descartado"
+        | "erro"
+      inbox_tipo: "ideia" | "tarefa" | "projeto" | "lembrete" | "nota"
       task_categoria:
         | "comercial"
         | "desenvolvimento"
@@ -1334,7 +1568,14 @@ export type Database = {
         | "conteudo"
         | "videoaula"
         | "projeto"
-      task_origem: "manual" | "lead" | "crm" | "projeto" | "ia" | "sistema"
+      task_origem:
+        | "manual"
+        | "lead"
+        | "crm"
+        | "projeto"
+        | "ia"
+        | "sistema"
+        | "inbox_ia"
       task_prioridade: "baixa" | "media" | "alta" | "urgente"
       task_status:
         | "pendente"
@@ -1481,6 +1722,16 @@ export const Constants = {
         "suporte",
       ],
       calendar_event_tipo: ["reuniao", "pessoal", "externo", "outro"],
+      inbox_origem: ["voz", "texto", "colado"],
+      inbox_status: [
+        "capturado",
+        "processando",
+        "sugerido",
+        "aprovado",
+        "descartado",
+        "erro",
+      ],
+      inbox_tipo: ["ideia", "tarefa", "projeto", "lembrete", "nota"],
       task_categoria: [
         "comercial",
         "desenvolvimento",
@@ -1492,7 +1743,15 @@ export const Constants = {
         "videoaula",
         "projeto",
       ],
-      task_origem: ["manual", "lead", "crm", "projeto", "ia", "sistema"],
+      task_origem: [
+        "manual",
+        "lead",
+        "crm",
+        "projeto",
+        "ia",
+        "sistema",
+        "inbox_ia",
+      ],
       task_prioridade: ["baixa", "media", "alta", "urgente"],
       task_status: [
         "pendente",
