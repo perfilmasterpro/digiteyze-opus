@@ -58,9 +58,11 @@ export async function createCapture(
       origem: input.origem,
       origem_detalhe: input.origem_detalhe ?? null,
       conteudo_raw: input.conteudo_raw,
-      audio_path: input.audio_path ?? null,
-      duracao_seg: input.duracao_seg ?? null,
-      status: "processando" as InboxStatus,
+      tipo_sugerido: input.tipo_sugerido ?? null,
+      titulo: input.titulo ?? null,
+      prioridade: input.prioridade ?? null,
+      status: "capturado" as InboxStatus,
+
     })
     .select("*")
     .single();
