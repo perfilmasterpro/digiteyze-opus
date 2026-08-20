@@ -23,6 +23,7 @@ const TABS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/super-admin/workspaces", label: "Workspaces" },
   { to: "/super-admin/usuarios", label: "Usuários" },
   { to: "/super-admin/logs", label: "Logs" },
+  { to: "/super-admin/webhooks", label: "Webhooks" },
   { to: "/super-admin/configuracoes", label: "Configurações" },
 ];
 

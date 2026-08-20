@@ -1438,6 +1438,65 @@ export type Database = {
           },
         ]
       }
+      webhook_logs: {
+        Row: {
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          external_id: string | null
+          id: string
+          instance_id: string | null
+          message_text: string | null
+          payload: Json
+          processed_at: string | null
+          provider: string
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          external_id?: string | null
+          id?: string
+          instance_id?: string | null
+          message_text?: string | null
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          external_id?: string | null
+          id?: string
+          instance_id?: string | null
+          message_text?: string | null
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
