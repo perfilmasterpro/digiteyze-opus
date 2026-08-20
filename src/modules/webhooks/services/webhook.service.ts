@@ -46,7 +46,7 @@ export class WebhookService {
           contact_phone: contactPhone,
           contact_name: contactName,
           message_text: messageText,
-          payload: payload,
+          payload: payload as any,
           status: 'pending'
         })
         .select()

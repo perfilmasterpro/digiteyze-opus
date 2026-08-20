@@ -56,6 +56,7 @@ import { Route as EmpresasIdComercialRouteImport } from './routes/empresas.$id.c
 import { Route as CrmIdTimelineRouteImport } from './routes/crm.$id.timeline'
 import { Route as CrmIdPropostasRouteImport } from './routes/crm.$id.propostas'
 import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
+import { Route as ApiWebhooksZapzapRouteImport } from './routes/api/webhooks/zapzap'
 
 const TarefasRoute = TarefasRouteImport.update({
   id: '/tarefas',
@@ -293,6 +294,11 @@ const CrmIdContratosRoute = CrmIdContratosRouteImport.update({
   path: '/contratos',
   getParentRoute: () => CrmIdRoute,
 } as any)
+const ApiWebhooksZapzapRoute = ApiWebhooksZapzapRouteImport.update({
+  id: '/api/webhooks/zapzap',
+  path: '/api/webhooks/zapzap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -326,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -370,6 +377,7 @@ export interface FileRoutesByTo {
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao': typeof ProspeccaoIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
+  '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
   '/crm/$id/timeline': typeof CrmIdTimelineRoute
@@ -471,6 +480,7 @@ export interface FileRouteTypes {
     | '/super-admin/workspaces'
     | '/prospeccao/'
     | '/super-admin/'
+    | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/super-admin/workspaces'
     | '/prospeccao'
     | '/super-admin'
+    | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/super-admin/workspaces'
     | '/prospeccao/'
     | '/super-admin/'
+    | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
     | '/crm/$id/timeline'
@@ -602,6 +614,7 @@ export interface RootRouteChildren {
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   SuporteRoute: typeof SuporteRoute
   TarefasRoute: typeof TarefasRoute
+  ApiWebhooksZapzapRoute: typeof ApiWebhooksZapzapRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -935,6 +948,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmIdContratosRouteImport
       parentRoute: typeof CrmIdRoute
     }
+    '/api/webhooks/zapzap': {
+      id: '/api/webhooks/zapzap'
+      path: '/api/webhooks/zapzap'
+      fullPath: '/api/webhooks/zapzap'
+      preLoaderRoute: typeof ApiWebhooksZapzapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1089,6 +1109,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuperAdminRoute: SuperAdminRouteWithChildren,
   SuporteRoute: SuporteRoute,
   TarefasRoute: TarefasRoute,
+  ApiWebhooksZapzapRoute: ApiWebhooksZapzapRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
