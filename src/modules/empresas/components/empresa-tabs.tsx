@@ -34,7 +34,7 @@ export function EmpresaTabs({ empresaId }: { empresaId: string }) {
         {tabs.map((t) => {
           const params = { id: empresaId };
           const matched = matchRoute({ to: t.to, params });
-          const active = t.exact ? matched : !!matched;
+          const active = !!matched;
 
           return (
             <Link
@@ -42,7 +42,7 @@ export function EmpresaTabs({ empresaId }: { empresaId: string }) {
               to={t.to}
               params={params}
               role="tab"
-              aria-selected={active}
+              aria-selected={active ? "true" : "false"}
               className={cn(
                 "shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
                 active

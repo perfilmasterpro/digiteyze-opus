@@ -26,14 +26,14 @@ export function OpportunityTabs({ opportunityId }: { opportunityId: string }) {
         {tabs.map((t) => {
           const params = { id: opportunityId };
           const matched = matchRoute({ to: t.to, params });
-          const active = t.exact ? matched : !!matched;
+          const active = !!matched;
           return (
             <Link
               key={t.to}
               to={t.to}
               params={params}
               role="tab"
-              aria-selected={active}
+              aria-selected={active ? "true" : "false"}
               className={cn(
                 "shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
                 active
