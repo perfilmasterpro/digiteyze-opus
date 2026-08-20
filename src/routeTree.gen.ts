@@ -31,6 +31,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
 import { Route as ProspeccaoIndexRouteImport } from './routes/prospeccao.index'
 import { Route as SuperAdminWorkspacesRouteImport } from './routes/super-admin.workspaces'
+import { Route as SuperAdminWebhooksRouteImport } from './routes/super-admin.webhooks'
 import { Route as SuperAdminUsuariosRouteImport } from './routes/super-admin.usuarios'
 import { Route as SuperAdminLogsRouteImport } from './routes/super-admin.logs'
 import { Route as SuperAdminConfiguracoesRouteImport } from './routes/super-admin.configuracoes'
@@ -166,6 +167,11 @@ const ProspeccaoIndexRoute = ProspeccaoIndexRouteImport.update({
 const SuperAdminWorkspacesRoute = SuperAdminWorkspacesRouteImport.update({
   id: '/workspaces',
   path: '/workspaces',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminWebhooksRoute = SuperAdminWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
   getParentRoute: () => SuperAdminRoute,
 } as any)
 const SuperAdminUsuariosRoute = SuperAdminUsuariosRouteImport.update({
@@ -329,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
   '/super-admin/logs': typeof SuperAdminLogsRoute
   '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
+  '/super-admin/webhooks': typeof SuperAdminWebhooksRoute
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByTo {
   '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
   '/super-admin/logs': typeof SuperAdminLogsRoute
   '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
+  '/super-admin/webhooks': typeof SuperAdminWebhooksRoute
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao': typeof ProspeccaoIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
@@ -425,6 +433,7 @@ export interface FileRoutesById {
   '/super-admin/configuracoes': typeof SuperAdminConfiguracoesRoute
   '/super-admin/logs': typeof SuperAdminLogsRoute
   '/super-admin/usuarios': typeof SuperAdminUsuariosRoute
+  '/super-admin/webhooks': typeof SuperAdminWebhooksRoute
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
@@ -477,6 +486,7 @@ export interface FileRouteTypes {
     | '/super-admin/configuracoes'
     | '/super-admin/logs'
     | '/super-admin/usuarios'
+    | '/super-admin/webhooks'
     | '/super-admin/workspaces'
     | '/prospeccao/'
     | '/super-admin/'
@@ -522,6 +532,7 @@ export interface FileRouteTypes {
     | '/super-admin/configuracoes'
     | '/super-admin/logs'
     | '/super-admin/usuarios'
+    | '/super-admin/webhooks'
     | '/super-admin/workspaces'
     | '/prospeccao'
     | '/super-admin'
@@ -572,6 +583,7 @@ export interface FileRouteTypes {
     | '/super-admin/configuracoes'
     | '/super-admin/logs'
     | '/super-admin/usuarios'
+    | '/super-admin/webhooks'
     | '/super-admin/workspaces'
     | '/prospeccao/'
     | '/super-admin/'
@@ -771,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/workspaces'
       fullPath: '/super-admin/workspaces'
       preLoaderRoute: typeof SuperAdminWorkspacesRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/webhooks': {
+      id: '/super-admin/webhooks'
+      path: '/webhooks'
+      fullPath: '/super-admin/webhooks'
+      preLoaderRoute: typeof SuperAdminWebhooksRouteImport
       parentRoute: typeof SuperAdminRoute
     }
     '/super-admin/usuarios': {
@@ -1073,6 +1092,7 @@ interface SuperAdminRouteChildren {
   SuperAdminConfiguracoesRoute: typeof SuperAdminConfiguracoesRoute
   SuperAdminLogsRoute: typeof SuperAdminLogsRoute
   SuperAdminUsuariosRoute: typeof SuperAdminUsuariosRoute
+  SuperAdminWebhooksRoute: typeof SuperAdminWebhooksRoute
   SuperAdminWorkspacesRoute: typeof SuperAdminWorkspacesRoute
   SuperAdminIndexRoute: typeof SuperAdminIndexRoute
 }
@@ -1081,6 +1101,7 @@ const SuperAdminRouteChildren: SuperAdminRouteChildren = {
   SuperAdminConfiguracoesRoute: SuperAdminConfiguracoesRoute,
   SuperAdminLogsRoute: SuperAdminLogsRoute,
   SuperAdminUsuariosRoute: SuperAdminUsuariosRoute,
+  SuperAdminWebhooksRoute: SuperAdminWebhooksRoute,
   SuperAdminWorkspacesRoute: SuperAdminWorkspacesRoute,
   SuperAdminIndexRoute: SuperAdminIndexRoute,
 }
