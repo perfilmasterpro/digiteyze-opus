@@ -76,55 +76,58 @@ export class WebhookService {
   }
 
   /**
-   * Identifica e associa um Lead ao evento do webhook com base no telefone.
+   * Identifica e associa um Lead ao evento do webhook de forma segura usando o LeadMatcher.
+   */
+  private static async identifyLeadSecurely(event: WebhookLog) {
+    if (event.lead_match_status === 'matched' && event.lead_id) {
+      return; // Idempotência: Já identificado
+    }
+
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      
+      // Determinar o telefone do interlocutor com base na direção
+      // Regra 3B: INBOUND -> sender_phone, OUTBOUND -> receiver_phone
+      const isInbound = event.event === 'messages.upsert' || event.event.includes('inbound'); 
+      const phoneToMatch = isInbound ? event.sender_phone : event.receiver_phone;
+
+      if (!phoneToMatch) {
+        await supabaseAdmin
+          .from('zapzap_webhook_events')
+          .update({
+            lead_match_status: 'unmatched'
+          })
+          .eq('id', event.id);
+        return;
+      }
+
+      const matchResult = await LeadMatcherService.matchLead(event.workspace_id, phoneToMatch);
+
+      // Mapear status 'not_found' do matcher para 'unmatched' da tabela se necessário
+      const tableStatus = matchResult.status === 'not_found' ? 'unmatched' : matchResult.status;
+
+      await supabaseAdmin
+        .from('zapzap_webhook_events')
+        .update({
+          lead_id: matchResult.leadId,
+          lead_match_status: tableStatus
+        })
+        .eq('id', event.id);
+
+    } catch (err) {
+      console.error('[Webhook] Secure lead identification failed:', err);
+    }
+  }
+
+  /**
+   * @deprecated Usar identifyLeadSecurely
    */
   private static async identifyLead(
     workspaceId: string, 
     eventId: string, 
     rawPhone?: string
   ) {
-    if (!rawPhone) return;
-
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const normalizedPhone = normalizePhone(rawPhone);
-
-      // Busca por leads que possuam o telefone ou whatsapp normalizado correspondente no workspace
-      const { data: leads, error } = await supabaseAdmin
-        .from('leads')
-        .select('id, data')
-        .eq('workspace_id', workspaceId);
-
-      if (error || !leads) return;
-
-      const matches = leads.filter((lead: any) => {
-        const leadData = lead.data as any;
-        const leadTel = normalizePhone(leadData?.telefone || leadData?.phone);
-        const leadWpp = normalizePhone(leadData?.whatsapp);
-        return leadTel === normalizedPhone || leadWpp === normalizedPhone;
-      });
-
-      let status: 'matched' | 'unmatched' | 'ambiguous' = 'unmatched';
-      let leadId: string | null = null;
-
-      if (matches.length === 1) {
-        status = 'matched';
-        leadId = matches[0].id;
-      } else if (matches.length > 1) {
-        status = 'ambiguous';
-      }
-
-      await supabaseAdmin
-        .from('zapzap_webhook_events')
-        .update({
-          lead_id: leadId,
-          lead_match_status: status
-        })
-        .eq('id', eventId);
-
-    } catch (err) {
-      console.error('[Webhook] Lead identification failed:', err);
-    }
+    // Mantido apenas para compatibilidade de assinatura se necessário, mas não utilizado.
   }
 
 
