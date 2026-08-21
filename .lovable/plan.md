@@ -1,39 +1,41 @@
-# Plano de Correção e Validação da Integração ZapZap → Growth OS
+# Plano de Implementação — Fase 5: Persistência no Supabase e Idempotência
 
-A auditoria técnica identificou que a integração atual está funcional, mas não atende aos requisitos de nomenclatura, segurança (bypass RLS) e persistência total exigidos para a Fase 3. Este plano visa corrigir essas deficiências para obter o status **APROVADA**.
+Este plano detalha a migração da persistência de interações e eventos do Lead do `localStorage` para o Supabase, garantindo a idempotência de mensagens do WhatsApp.
 
-## Mudanças Técnicas
+## 1. Banco de Dados — Idempotência
+Criar um índice único parcial na tabela `lead_interactions` para evitar duplicidade de mensagens de WhatsApp.
+- **Coluna**: `workspace_id` + `(data->>'message_id')`.
+- **Condição**: Apenas onde `data->>'tipo' = 'whatsapp'`.
+- **Validação prévia**: Já realizada (0 conflitos encontrados).
 
-### 1. Refatoração do Banco de Dados
-- Criar migração para renomear `webhook_logs` para `zapzap_webhook_events` (ou criar a nova e migrar dados).
-- Adicionar colunas faltantes:
-  - `sender_phone`: Telefone do remetente (já existe como `contact_phone`, manteremos consistência).
-  - `receiver_phone`: Número da instância que recebeu a mensagem.
-  - `chat_id`: ID da conversa/grupo.
-  - `message_id`: ID único da mensagem (mapeado para `external_id`).
-- Adicionar restrição `UNIQUE` em `(provider, external_id, workspace_id)` para evitar duplicatas reais no banco.
-- Ajustar RLS para permitir `INSERT` apenas via `service_role`.
+## 2. Atualização de Tipagem
+Refatorar `src/modules/prospeccao/types/entities.types.ts` para alinhar com a estrutura JSONB do banco.
+- Definir `LeadInteractionType` (estendendo os existentes).
+- Criar `LeadInteractionPayload` para tipar o conteúdo do campo `data`.
+- Ajustar `LeadInteraction` para usar o novo payload.
+- Manter compatibilidade com eventos sistêmicos em `LeadEvent`.
 
-### 2. Atualização dos Serviços e Tipos
-- Atualizar `webhook.types.ts` com a nova estrutura.
-- Refatorar `webhook.service.ts` para apontar para a nova tabela.
-- Implementar extração de dados mais robusta para os novos campos.
+## 3. Refatoração de Serviços
+### `lead-interactions.service.ts`
+- Migrar `listLeadInteractions` para consulta no Supabase filtrando por `workspace_id` e `lead_id`.
+- Migrar `createLeadInteraction` para `upsert` ou `insert` com tratamento de conflito.
+- Implementar fallback de leitura do `localStorage` (unificando com os dados da nuvem se necessário, sem gravar duplicado).
+- Remover `writeAll` e funções que alteram o `localStorage` para novas interações.
 
-### 3. Ajuste do Endpoint (Segurança e Persistência)
-- Alterar `src/routes/api/webhooks/zapzap.ts` para importar e usar o `supabaseAdmin` (bypass RLS).
-- Garantir que erros de banco de dados sejam logados no servidor, mas o endpoint retorne `200` para o ZapZap após aceitar o payload.
-- Adicionar validação de `workspace_id` verificando se ele existe na tabela `workspaces`.
+### `lead-events.service.ts`
+- Migrar `listLeadEvents` para consulta no Supabase.
+- Migrar `recordLeadEvent` para inserção no Supabase.
+- Manter separação rigorosa: eventos sistêmicos ≠ interações.
 
-### 4. Interface Administrativa
-- Atualizar `WebhookLogsList` e a rota `super-admin.webhooks.tsx` para refletir os novos nomes de tabela e colunas.
-- Melhorar a exibição dos novos campos na lista (ex: Telefone Destino, Chat ID).
+## 4. Segurança e RLS
+- Validar as políticas existentes de `lead_interactions` e `lead_events`.
+- Garantir que `workspace_id` seja sempre injetado nas operações de escrita para respeitar o isolamento.
 
-## Checklist de Validação
-- [ ] Tabela `zapzap_webhook_events` criada e com RLS.
-- [ ] Endpoint aceitando payloads e persistindo via `supabaseAdmin`.
-- [ ] Proteção contra duplicidade via `UNIQUE constraint`.
-- [ ] Visualização administrativa atualizada.
-- [ ] Teste final com `curl` resultando em persistência real no banco.
+## 5. Testes e Validação
+- Testar criação manual de interação (Nota).
+- Testar simulação de entrada de WhatsApp (com e sem `message_id`).
+- Validar ordem cronológica e isolamento de workspace.
 
----
-**Nota:** Esta intervenção foca exclusivamente na Fase 3 (Recebimento e Registro), sem implementar automações ou IA, conforme as restrições do projeto.
+## Aspectos Técnicos
+- Utilizar `supabase` (client) para operações autenticadas.
+- Mapear corretamente o campo `data` (JSONB) do banco para o campo correspondente no TypeScript para evitar colisões de nome.
