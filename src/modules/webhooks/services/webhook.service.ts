@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { WebhookLog, ZapZapPayload } from "../types/webhook.types";
 import { normalizePhone } from "@/lib/utils";
+import { LeadMatcherService } from "@/modules/prospeccao/services/lead-matcher.service";
 
 
 export class WebhookService {
