@@ -1582,6 +1582,68 @@ export type Database = {
         }
         Relationships: []
       }
+      zapzap_webhook_events: {
+        Row: {
+          chat_id: string | null
+          created_at: string
+          error_message: string | null
+          event: string
+          external_id: string | null
+          id: string
+          instance_id: string | null
+          message_id: string | null
+          payload: Json
+          processed_at: string | null
+          provider: string
+          receiver_phone: string | null
+          sender_phone: string | null
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          chat_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event: string
+          external_id?: string | null
+          id?: string
+          instance_id?: string | null
+          message_id?: string | null
+          payload: Json
+          processed_at?: string | null
+          provider?: string
+          receiver_phone?: string | null
+          sender_phone?: string | null
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          chat_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event?: string
+          external_id?: string | null
+          id?: string
+          instance_id?: string | null
+          message_id?: string | null
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          receiver_phone?: string | null
+          sender_phone?: string | null
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapzap_webhook_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
