@@ -11,6 +11,8 @@ import { leadSchema } from "../schemas/leads.schema";
 import { type Lead, type LeadInput, type LeadOrigem } from "../types/leads.types";
 import { detectCsvProfile, type CsvProfile } from "./csv-profiles";
 import { isIgnored } from "./csv-profiles/types";
+import { normalizePhone } from "@/lib/utils";
+
 
 export type ImportRowStatus = "novo" | "duplicado" | "invalido" | "ignorado";
 export type DuplicateField = "cnpj" | "dominio" | "telefone";
@@ -82,9 +84,6 @@ function parseCsv(text: string): string[][] {
   return rows.filter((r) => r.length > 1 || (r[0] ?? "").trim() !== "");
 }
 
-function normalizePhone(v?: string): string {
-  return (v ?? "").replace(/\D+/g, "");
-}
 
 function normalizeDomain(url?: string): string {
   if (!url) return "";

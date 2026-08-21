@@ -51,19 +51,22 @@ export function WebhookLogsList() {
               <TableHead>Data</TableHead>
               <TableHead>Evento</TableHead>
               <TableHead>Telefone</TableHead>
+              <TableHead>Lead Match</TableHead>
               <TableHead>Instância</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
+
           </TableHeader>
           <TableBody>
             {logs?.data?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Nenhum evento recebido ainda.
                 </TableCell>
               </TableRow>
             )}
+
             {logs?.data?.map((log) => (
               <TableRow key={log.id}>
                 <TableCell className="whitespace-nowrap">
@@ -81,8 +84,34 @@ export function WebhookLogsList() {
                   </div>
                 </TableCell>
                 <TableCell>
+                  {log.lead_match_status ? (
+                    <div className="flex flex-col gap-1">
+                      <Badge 
+                        variant={
+                          log.lead_match_status === 'matched' ? 'default' : 
+                          log.lead_match_status === 'ambiguous' ? 'outline' : 
+                          'secondary'
+                        }
+                        className={
+                          log.lead_match_status === 'ambiguous' ? 'border-amber-500 text-amber-600' : ''
+                        }
+                      >
+                        {log.lead_match_status}
+                      </Badge>
+                      {log.lead_id && (
+                        <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[100px]">
+                          {log.lead_id}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
                   <span className="text-sm font-mono text-muted-foreground">{log.instance_id}</span>
                 </TableCell>
+
                 <TableCell>
                   <Badge 
                     variant={log.status === 'pending' ? 'secondary' : log.status === 'processed' ? 'default' : 'destructive'}

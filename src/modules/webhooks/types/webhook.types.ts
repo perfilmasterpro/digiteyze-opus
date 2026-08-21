@@ -30,8 +30,11 @@ export interface WebhookLog {
   chat_id?: string;
   message_id?: string;
   payload: any;
-  status: 'pending' | 'processed' | 'error';
+  status: 'pending' | 'processed' | 'error' | 'duplicate';
+  lead_id?: string;
+  lead_match_status?: 'matched' | 'unmatched' | 'ambiguous';
   error_message?: string;
   processed_at?: string;
+
   created_at: string;
 }
