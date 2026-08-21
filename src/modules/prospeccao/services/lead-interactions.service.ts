@@ -65,9 +65,7 @@ export async function listLeadInteractions(
     data: row.created_at, // Fallback para compatibilidade
     descricao: (row.data as any)?.mensagem || "", // Fallback para compatibilidade
     data_json: row.data as LeadInteractionPayload,
-    // responsavel_id não está na tabela física ainda, mas pode vir no JSONB se necessário
-    // ou adicionaremos na tabela em uma migration futura.
-    responsavel_id: undefined, 
+    responsavel_id: (row.data as any)?.responsavel_id,
     created_at: row.created_at,
   }));
 
@@ -86,6 +84,7 @@ export async function createLeadInteraction(
   const payload: LeadInteractionPayload = {
     tipo: input.tipo,
     mensagem: input.descricao,
+    responsavel_id: input.responsavel_id,
     ...(input.payload || {}),
   };
 
@@ -121,7 +120,7 @@ export async function createLeadInteraction(
           data: existing.created_at,
           descricao: (existing.data as any).mensagem,
           data_json: existing.data as LeadInteractionPayload,
-          responsavel_id: undefined,
+          responsavel_id: (existing.data as any).responsavel_id,
           created_at: existing.created_at,
         };
       }
@@ -138,7 +137,7 @@ export async function createLeadInteraction(
     data: data.created_at,
     descricao: (data.data as any).mensagem,
     data_json: data.data as LeadInteractionPayload,
-    responsavel_id: undefined,
+    responsavel_id: (data.data as any).responsavel_id,
     created_at: data.created_at,
   };
 }
