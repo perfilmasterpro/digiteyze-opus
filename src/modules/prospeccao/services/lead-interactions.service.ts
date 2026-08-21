@@ -80,7 +80,12 @@ export async function createLeadInteraction(
   workspaceId: string,
   leadId: string,
   input: LeadInteractionInput,
+  useAdmin = false,
 ): Promise<LeadInteraction> {
+  const client = useAdmin 
+    ? (await import("@/integrations/supabase/client.server")).supabaseAdmin 
+    : supabase;
+
   const payload: LeadInteractionPayload = {
     tipo: input.tipo,
     mensagem: input.descricao,
@@ -88,7 +93,7 @@ export async function createLeadInteraction(
     ...(input.payload || {}),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("lead_interactions")
     .insert({
       workspace_id: workspaceId,
@@ -104,7 +109,7 @@ export async function createLeadInteraction(
       console.warn(`Interação WhatsApp duplicada ignorada: ${payload.message_id}`);
       
       // Busca a interação existente para retornar um resultado consistente
-      const { data: existing } = await supabase
+      const { data: existing } = await client
         .from("lead_interactions")
         .select("*")
         .eq("workspace_id", workspaceId)
