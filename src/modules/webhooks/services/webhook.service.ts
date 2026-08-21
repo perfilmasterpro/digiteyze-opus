@@ -64,8 +64,8 @@ export class WebhookService {
       }
 
       if (data) {
-        // Fase 4: Identificação do Lead (Executada de forma síncrona para garantir persistência)
-        await this.identifyLead(workspaceId, data.id, senderPhone);
+        // Fase 5: Identificação Segura do Lead via LeadMatcher
+        await this.identifyLeadSecurely(data);
       }
 
       return { data, error };
