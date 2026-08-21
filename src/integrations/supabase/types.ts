@@ -1591,6 +1591,10 @@ export type Database = {
           external_id: string | null
           id: string
           instance_id: string | null
+          lead_id: string | null
+          lead_match_status:
+            | Database["public"]["Enums"]["lead_match_status"]
+            | null
           message_id: string | null
           payload: Json
           processed_at: string | null
@@ -1608,6 +1612,10 @@ export type Database = {
           external_id?: string | null
           id?: string
           instance_id?: string | null
+          lead_id?: string | null
+          lead_match_status?:
+            | Database["public"]["Enums"]["lead_match_status"]
+            | null
           message_id?: string | null
           payload: Json
           processed_at?: string | null
@@ -1625,6 +1633,10 @@ export type Database = {
           external_id?: string | null
           id?: string
           instance_id?: string | null
+          lead_id?: string | null
+          lead_match_status?:
+            | Database["public"]["Enums"]["lead_match_status"]
+            | null
           message_id?: string | null
           payload?: Json
           processed_at?: string | null
@@ -1635,6 +1647,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "zapzap_webhook_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "zapzap_webhook_events_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -1679,6 +1698,7 @@ export type Database = {
         | "descartado"
         | "erro"
       inbox_tipo: "ideia" | "tarefa" | "projeto" | "lembrete" | "nota"
+      lead_match_status: "matched" | "unmatched" | "ambiguous"
       task_categoria:
         | "comercial"
         | "desenvolvimento"
@@ -1853,6 +1873,7 @@ export const Constants = {
         "erro",
       ],
       inbox_tipo: ["ideia", "tarefa", "projeto", "lembrete", "nota"],
+      lead_match_status: ["matched", "unmatched", "ambiguous"],
       task_categoria: [
         "comercial",
         "desenvolvimento",
