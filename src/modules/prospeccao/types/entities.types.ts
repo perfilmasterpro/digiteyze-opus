@@ -62,21 +62,47 @@ export const LEAD_INTERACTION_TYPE_LABEL: Record<LeadInteractionType, string> = 
   nota: "Nota",
 };
 
+/**
+ * Payload JSONB para Lead Interactions.
+ * Centraliza os dados específicos de diferentes tipos de interação.
+ */
+export interface LeadInteractionPayload {
+  tipo: LeadInteractionType;
+  direcao?: "incoming" | "outgoing";
+  message_id?: string;
+  external_id?: string;
+  chat_id?: string;
+  sender_phone?: string;
+  receiver_phone?: string;
+  instance_id?: string;
+  provider?: string;
+  mensagem: string;
+  timestamp_whatsapp?: string;
+  metadata?: Record<string, any>;
+  [key: string]: any; // Flexibilidade para outros campos legados ou futuros
+}
+
 export interface LeadInteraction {
   id: string;
   workspace_id: string;
   lead_id: string;
   tipo: LeadInteractionType;
-  data: string; // ISO
+  /** @deprecated Usar interaction.created_at para timestamp de sistema ou payload.timestamp_whatsapp para o original */
+  data: string;
+  /** @deprecated Usar payload.mensagem */
   descricao: string;
+  data_json: LeadInteractionPayload;
   responsavel_id?: string;
   created_at: string;
 }
 
-export type LeadInteractionInput = Omit<
-  LeadInteraction,
-  "id" | "workspace_id" | "lead_id" | "created_at"
->;
+export type LeadInteractionInput = {
+  tipo: LeadInteractionType;
+  data?: string; // ISO
+  descricao: string;
+  responsavel_id?: string;
+  payload?: Partial<LeadInteractionPayload>;
+};
 
 /* ─────────── Lead Tasks (próximas ações) ─────────── */
 
