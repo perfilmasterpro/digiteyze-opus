@@ -147,10 +147,10 @@ export class WebhookService {
 
       // Extrair conteúdo (texto, legenda ou fallback)
       const content = messageData?.text || messageData?.caption || 
-                     (messageData?.message?.conversation) ||
-                     (messageData?.message?.extendedTextMessage?.text) ||
-                     (messageData?.message?.imageMessage?.caption) ||
-                     (messageData?.message?.videoMessage?.caption) || 
+                     (messageData?.message as any)?.conversation ||
+                     (messageData?.message as any)?.extendedTextMessage?.text ||
+                     (messageData?.message as any)?.imageMessage?.caption ||
+                     (messageData?.message as any)?.videoMessage?.caption || 
                      '';
 
       await createLeadInteraction(
@@ -162,16 +162,16 @@ export class WebhookService {
           payload: {
             tipo: 'whatsapp',
             direcao: direction,
-            message_id: event.message_id || messageData?.id,
-            external_id: event.external_id,
-            chat_id: event.chat_id,
-            sender_phone: event.sender_phone,
-            receiver_phone: event.receiver_phone,
-            instance_id: event.instance_id,
+            message_id: (event.message_id || messageData?.id) as string | undefined,
+            external_id: event.external_id as string | undefined,
+            chat_id: event.chat_id as string | undefined,
+            sender_phone: event.sender_phone as string | undefined,
+            receiver_phone: event.receiver_phone as string | undefined,
+            instance_id: event.instance_id as string | undefined,
             provider: event.provider,
             mensagem: content,
-            timestamp_whatsapp: messageData?.messageTimestamp || messageData?.t?.toString(),
-            message_type: messageData?.messageType || (messageData?.message ? Object.keys(messageData.message)[0] : 'text'),
+            timestamp_whatsapp: (messageData?.messageTimestamp || messageData?.t?.toString()) as string | undefined,
+            message_type: (messageData?.messageType || (messageData?.message ? Object.keys(messageData.message)[0] : 'text')) as string | undefined,
             metadata: {
               raw_event: event.event,
               pushName: messageData?.pushName
