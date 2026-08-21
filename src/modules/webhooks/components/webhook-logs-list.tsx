@@ -39,7 +39,7 @@ export function WebhookLogsList() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Logs de Webhooks (ZapZap)</CardTitle>
+        <CardTitle>Eventos de Webhook (ZapZap)</CardTitle>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           Atualizar
         </Button>
@@ -50,7 +50,8 @@ export function WebhookLogsList() {
             <TableRow>
               <TableHead>Data</TableHead>
               <TableHead>Evento</TableHead>
-              <TableHead>Contato</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Instância</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
@@ -58,8 +59,8 @@ export function WebhookLogsList() {
           <TableBody>
             {logs?.data?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  Nenhum webhook recebido ainda.
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Nenhum evento recebido ainda.
                 </TableCell>
               </TableRow>
             )}
@@ -69,13 +70,18 @@ export function WebhookLogsList() {
                   {format(new Date(log.created_at), "dd/MM HH:mm:ss", { locale: ptBR })}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{log.event_type}</Badge>
+                  <Badge variant="outline">{log.event}</Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col">
-                    <span className="font-medium">{log.contact_name || 'Desconhecido'}</span>
-                    <span className="text-xs text-muted-foreground">{log.contact_phone}</span>
+                    <span className="font-medium">{log.sender_phone || 'N/A'}</span>
+                    {log.receiver_phone && (
+                      <span className="text-xs text-muted-foreground">Para: {log.receiver_phone}</span>
+                    )}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm font-mono text-muted-foreground">{log.instance_id}</span>
                 </TableCell>
                 <TableCell>
                   <Badge 
@@ -93,7 +99,7 @@ export function WebhookLogsList() {
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>Payload do Evento: {log.event_type}</DialogTitle>
+                        <DialogTitle>Evento: {log.event} ({log.external_id || log.id})</DialogTitle>
                       </DialogHeader>
                       <pre className="bg-slate-950 text-slate-50 p-4 rounded-md overflow-x-auto text-xs">
                         {JSON.stringify(log.payload, null, 2)}
