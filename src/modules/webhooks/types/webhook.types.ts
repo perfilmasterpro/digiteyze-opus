@@ -21,20 +21,20 @@ export type ZapZapPayload = z.infer<typeof ZapZapPayloadSchema>;
 export interface WebhookLog {
   id: string;
   workspace_id: string;
-  external_id?: string;
+  external_id?: string | null;
   provider: string;
-  instance_id?: string;
+  instance_id?: string | null;
   event: string;
-  sender_phone?: string;
-  receiver_phone?: string;
-  chat_id?: string;
-  message_id?: string;
+  sender_phone?: string | null;
+  receiver_phone?: string | null;
+  chat_id?: string | null;
+  message_id?: string | null;
   payload: any;
   status: 'pending' | 'processed' | 'error' | 'duplicate';
-  lead_id?: string;
-  lead_match_status?: 'matched' | 'unmatched' | 'ambiguous';
-  error_message?: string;
-  processed_at?: string;
+  lead_id?: string | null;
+  lead_match_status?: 'matched' | 'unmatched' | 'ambiguous' | null;
+  error_message?: string | null;
+  processed_at?: string | null;
 
   created_at: string;
 }
