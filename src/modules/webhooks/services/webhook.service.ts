@@ -114,8 +114,76 @@ export class WebhookService {
         })
         .eq('id', event.id);
 
+      // Prompt 3C: Criar interação se for matched
+      if (matchResult.status === 'matched' && matchResult.leadId) {
+        await this.createInteractionFromEvent({
+          ...event,
+          lead_id: matchResult.leadId,
+          lead_match_status: tableStatus
+        });
+      }
+
     } catch (err) {
       console.error('[Webhook] Secure lead identification failed:', err);
+    }
+  }
+
+  /**
+   * Mapeia o evento do webhook para uma interação de lead e persiste no banco.
+   * Regra 3C: matched + lead_id válido -> criar interação
+   */
+  private static async createInteractionFromEvent(event: WebhookLog) {
+    if (!event.lead_id || event.lead_match_status !== 'matched') return;
+
+    try {
+      const { createLeadInteraction } = await import("@/modules/prospeccao/services/lead-interactions.service");
+      
+      const payload = event.payload as ZapZapPayload;
+      const messageData = payload.data;
+      
+      // Determinar direção
+      const isInbound = event.event === 'messages.upsert' || event.event.includes('inbound');
+      const direction = isInbound ? 'incoming' : 'outgoing';
+
+      // Extrair conteúdo (texto, legenda ou fallback)
+      const content = messageData?.text || messageData?.caption || 
+                     (messageData?.message as any)?.conversation ||
+                     (messageData?.message as any)?.extendedTextMessage?.text ||
+                     (messageData?.message as any)?.imageMessage?.caption ||
+                     (messageData?.message as any)?.videoMessage?.caption || 
+                     '';
+
+      await createLeadInteraction(
+        event.workspace_id,
+        event.lead_id,
+        {
+          tipo: 'whatsapp',
+          descricao: content,
+          payload: {
+            tipo: 'whatsapp',
+            direcao: direction,
+            message_id: (event.message_id || messageData?.id) as string | undefined,
+            external_id: event.external_id as string | undefined,
+            chat_id: event.chat_id as string | undefined,
+            sender_phone: event.sender_phone as string | undefined,
+            receiver_phone: event.receiver_phone as string | undefined,
+            instance_id: event.instance_id as string | undefined,
+            provider: event.provider,
+            mensagem: content,
+            timestamp_whatsapp: (messageData?.messageTimestamp || messageData?.t?.toString()) as string | undefined,
+            message_type: (messageData?.messageType || (messageData?.message ? Object.keys(messageData.message)[0] : 'text')) as string | undefined,
+            metadata: {
+              raw_event: event.event,
+              pushName: messageData?.pushName
+            }
+          }
+        },
+        true // useAdmin = true para processamento de webhook
+      );
+
+      console.log(`[Webhook] Interação criada para o lead ${event.lead_id} (Msg: ${event.message_id})`);
+    } catch (err) {
+      console.error('[Webhook] Failed to create lead interaction:', err);
     }
   }
 
