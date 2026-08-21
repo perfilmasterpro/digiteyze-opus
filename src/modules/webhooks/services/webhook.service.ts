@@ -96,7 +96,7 @@ export class WebhookService {
 
       if (error || !leads) return;
 
-      const matches = leads.filter(lead => {
+      const matches = leads.filter((lead: any) => {
         const leadData = lead.data as any;
         const leadTel = normalizePhone(leadData?.telefone || leadData?.phone);
         const leadWpp = normalizePhone(leadData?.whatsapp);
