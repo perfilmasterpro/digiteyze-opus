@@ -11,6 +11,8 @@ export const ZapZapPayloadSchema = z.object({
     body: z.string().optional(),
     type: z.string().optional(),
     timestamp: z.union([z.number(), z.string()]).optional(),
+    chatId: z.string().optional(),
+    messageId: z.string().optional(),
   }).passthrough().optional(),
 }).passthrough();
 
@@ -22,10 +24,11 @@ export interface WebhookLog {
   external_id?: string;
   provider: string;
   instance_id?: string;
-  event_type: string;
-  contact_phone?: string;
-  contact_name?: string;
-  message_text?: string;
+  event: string;
+  sender_phone?: string;
+  receiver_phone?: string;
+  chat_id?: string;
+  message_id?: string;
   payload: any;
   status: 'pending' | 'processed' | 'error';
   error_message?: string;
