@@ -65,7 +65,7 @@ export class WebhookService {
 
       if (data) {
         // Fase 5: Identificação Segura do Lead via LeadMatcher
-        await this.identifyLeadSecurely(data);
+        await this.identifyLeadSecurely(data as WebhookLog);
       }
 
       return { data, error };
