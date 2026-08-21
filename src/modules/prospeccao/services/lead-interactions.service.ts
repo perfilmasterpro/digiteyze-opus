@@ -65,14 +65,12 @@ export async function listLeadInteractions(
     data: row.created_at, // Fallback para compatibilidade
     descricao: (row.data as any)?.mensagem || "", // Fallback para compatibilidade
     data_json: row.data as LeadInteractionPayload,
-    responsavel_id: row.responsavel_id,
+    // responsavel_id não está na tabela física ainda, mas pode vir no JSONB se necessário
+    // ou adicionaremos na tabela em uma migration futura.
+    responsavel_id: undefined, 
     created_at: row.created_at,
   }));
 
-  // Opcional: Merge com localStorage para transição suave
-  // Por enquanto, priorizamos o banco. Se o usuário quiser ver tudo, 
-  // poderíamos concatenar e remover duplicatas, mas o plano pede para evitar fusão automática sem estratégia.
-  
   return interactions;
 }
 
@@ -97,7 +95,6 @@ export async function createLeadInteraction(
       workspace_id: workspaceId,
       lead_id: leadId,
       data: payload as any,
-      responsavel_id: input.responsavel_id,
     })
     .select()
     .single();
@@ -124,7 +121,7 @@ export async function createLeadInteraction(
           data: existing.created_at,
           descricao: (existing.data as any).mensagem,
           data_json: existing.data as LeadInteractionPayload,
-          responsavel_id: existing.responsavel_id,
+          responsavel_id: undefined,
           created_at: existing.created_at,
         };
       }
@@ -141,7 +138,7 @@ export async function createLeadInteraction(
     data: data.created_at,
     descricao: (data.data as any).mensagem,
     data_json: data.data as LeadInteractionPayload,
-    responsavel_id: data.responsavel_id,
+    responsavel_id: undefined,
     created_at: data.created_at,
   };
 }
