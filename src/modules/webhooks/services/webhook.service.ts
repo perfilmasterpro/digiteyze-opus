@@ -4,8 +4,7 @@ import { WebhookLog, ZapZapPayload } from "../types/webhook.types";
 export class WebhookService {
   /**
    * Registra um novo webhook no banco de dados.
-   * Usa o cliente administrativo (ou anon com grants) para persistir o log.
-   * Implementa proteção básica contra duplicidade via external_id.
+   * EXCLUSIVAMENTE para a Fase 3: Recebimento e Persistência Segura.
    */
   static async logWebhook(
     workspaceId: string,
@@ -13,44 +12,53 @@ export class WebhookService {
     payload: ZapZapPayload
   ): Promise<{ data: any; error: any }> {
     try {
-      // Extração de dados comuns baseada na estrutura do ZapZap
-      const eventType = payload.event;
-      const instanceId = payload.instance_id;
-      const externalId = payload.data?.id; // ID único da mensagem/evento
-      const contactPhone = payload.data?.from || payload.data?.to;
-      const contactName = payload.data?.pushName;
-      const messageText = payload.data?.body;
+      // Carregar cliente admin para bypass RLS no servidor
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-      // Verificação de duplicidade (se externalId existir)
-      if (externalId) {
-        const { data: existing } = await supabase
-          .from('webhook_logs')
-          .select('id')
-          .eq('external_id', externalId)
-          .eq('provider', provider)
-          .maybeSingle();
+      // 1. Validar Workspace
+      const { data: workspace, error: wsError } = await supabaseAdmin
+        .from('workspaces')
+        .select('id')
+        .eq('id', workspaceId)
+        .maybeSingle();
 
-        if (existing) {
-          return { data: existing, error: null }; // Já registrado
-        }
+      if (wsError || !workspace) {
+        return { data: null, error: new Error('Workspace inválido ou não encontrado') };
       }
 
-      const { data, error } = await supabase
-        .from('webhook_logs')
+      // Extração de dados da Fase 3
+      const event = payload.event;
+      const instanceId = payload.instance_id;
+      const externalId = payload.data?.id; 
+      const messageId = payload.data?.messageId || externalId;
+      const senderPhone = payload.data?.from;
+      const receiverPhone = payload.data?.to;
+      const chatId = payload.data?.chatId;
+
+      // Persistência Idempotente via Postgres Unique Constraint
+      const { data, error } = await supabaseAdmin
+        .from('zapzap_webhook_events')
         .insert({
           workspace_id: workspaceId,
           provider,
           external_id: externalId,
+          event,
           instance_id: instanceId,
-          event_type: eventType,
-          contact_phone: contactPhone,
-          contact_name: contactName,
-          message_text: messageText,
+          sender_phone: senderPhone,
+          receiver_phone: receiverPhone,
+          chat_id: chatId,
+          message_id: messageId,
           payload: payload as any,
           status: 'pending'
         })
         .select()
         .single();
+
+      // Se for erro de duplicidade (23505), retornamos sucesso (idempotência)
+      if (error && (error as any).code === '23505') {
+        console.log(`[Webhook] Evento duplicado ignorado: ${externalId}`);
+        return { data: { status: 'duplicate' }, error: null };
+      }
 
       return { data, error };
     } catch (err) {
@@ -61,7 +69,7 @@ export class WebhookService {
 
   static async listLogs(workspaceId: string) {
     const { data, error } = await supabase
-      .from('webhook_logs')
+      .from('zapzap_webhook_events')
       .select('*')
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: false });
