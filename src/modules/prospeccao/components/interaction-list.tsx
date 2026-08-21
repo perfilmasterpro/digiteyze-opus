@@ -47,10 +47,12 @@ export function InteractionList({ items }: { items: LeadInteraction[] }) {
                     <span className="text-sm font-medium text-foreground">
                       {LEAD_INTERACTION_TYPE_LABEL[i.tipo]}
                     </span>
-                    <span className="text-xs text-muted-foreground">{fmt(i.data)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {fmt(i.data_json?.timestamp_whatsapp || i.created_at)}
+                    </span>
                   </div>
                   <p className="mt-0.5 whitespace-pre-wrap text-sm text-muted-foreground">
-                    {i.descricao}
+                    {i.data_json?.mensagem || i.descricao}
                   </p>
                 </div>
               </li>
