@@ -232,7 +232,7 @@ export const Route = createFileRoute("/api/agent/chat")({
               user_id: userId,
               role: "assistant",
               content,
-              tool_calls: toolCalls,
+              tool_calls: JSON.parse(JSON.stringify(toolCalls)),
             });
             if (error) console.error("[agente] falha ao salvar resposta", error);
 
