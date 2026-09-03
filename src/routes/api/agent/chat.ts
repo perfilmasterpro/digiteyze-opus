@@ -31,8 +31,10 @@ type ChatBody = {
   conversationId?: string;
 };
 
+type JsonSchemaInput = Parameters<typeof jsonSchema>[0];
+
 /** A Responses API roda tools em modo estrito: tudo obrigatório e anulável. */
-function toStrictSchema(parameters: Record<string, unknown>) {
+function toStrictSchema(parameters: Record<string, unknown>): JsonSchemaInput {
   const properties = (parameters.properties ?? {}) as Record<
     string,
     Record<string, unknown>
@@ -50,7 +52,7 @@ function toStrictSchema(parameters: Record<string, unknown>) {
     properties: strictProps,
     required: Object.keys(strictProps),
     additionalProperties: false,
-  };
+  } as JsonSchemaInput;
 }
 
 function textOf(message: UIMessage): string {
