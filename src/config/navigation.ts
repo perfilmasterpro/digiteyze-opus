@@ -141,6 +141,14 @@ export const NAV_ITEMS: NavItem[] = [
     group: "producao",
   },
   {
+    key: "ia",
+    label: "Meu Agente",
+    to: "/agente",
+    icon: Bot,
+    group: "producao",
+    description: "Assistente de IA para projetos, tarefas e empresas",
+  },
+  {
     key: "base-conhecimento",
     label: "Base de Conhecimento",
     to: "/base-conhecimento",

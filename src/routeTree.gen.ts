@@ -27,6 +27,7 @@ import { Route as ConteudoRouteImport } from './routes/conteudo'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AgenteRouteImport } from './routes/agente'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
 import { Route as ProspeccaoIndexRouteImport } from './routes/prospeccao.index'
@@ -148,6 +149,11 @@ const BaseConhecimentoRoute = BaseConhecimentoRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgenteRoute = AgenteRouteImport.update({
+  id: '/agente',
+  path: '/agente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -314,6 +320,7 @@ const ApiAgentChatRoute = ApiAgentChatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agente': typeof AgenteRoute
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
   '/configuracoes': typeof ConfiguracoesRoute
@@ -366,6 +373,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agente': typeof AgenteRoute
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
   '/configuracoes': typeof ConfiguracoesRoute
@@ -414,6 +422,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agente': typeof AgenteRoute
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
   '/configuracoes': typeof ConfiguracoesRoute
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agente'
     | '/auth'
     | '/base-conhecimento'
     | '/configuracoes'
@@ -520,6 +530,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agente'
     | '/auth'
     | '/base-conhecimento'
     | '/configuracoes'
@@ -567,6 +578,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/agente'
     | '/auth'
     | '/base-conhecimento'
     | '/configuracoes'
@@ -620,6 +632,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgenteRoute: typeof AgenteRoute
   AuthRoute: typeof AuthRoute
   BaseConhecimentoRoute: typeof BaseConhecimentoRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
@@ -768,6 +781,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agente': {
+      id: '/agente'
+      path: '/agente'
+      fullPath: '/agente'
+      preLoaderRoute: typeof AgenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -1132,6 +1152,7 @@ const SuperAdminRouteWithChildren = SuperAdminRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgenteRoute: AgenteRoute,
   AuthRoute: AuthRoute,
   BaseConhecimentoRoute: BaseConhecimentoRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
