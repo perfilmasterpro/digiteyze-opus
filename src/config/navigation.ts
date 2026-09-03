@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Bot,
   Building2,
   Contact,
   FileStack,
@@ -139,6 +140,14 @@ export const NAV_ITEMS: NavItem[] = [
     to: "/ia",
     icon: Sparkles,
     group: "producao",
+  },
+  {
+    key: "ia",
+    label: "Meu Agente",
+    to: "/agente",
+    icon: Bot,
+    group: "producao",
+    description: "Assistente de IA para projetos, tarefas e empresas",
   },
   {
     key: "base-conhecimento",

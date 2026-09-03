@@ -69,7 +69,7 @@ export function AppSidebar() {
                   const Icon = item.icon;
                   const active = isActive(current, item.to);
                   return (
-                    <SidebarMenuItem key={item.key}>
+                    <SidebarMenuItem key={item.to}>
                       <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
                         <Link to={item.to} className="flex items-center gap-2">
                           <Icon className="h-4 w-4 shrink-0" />
