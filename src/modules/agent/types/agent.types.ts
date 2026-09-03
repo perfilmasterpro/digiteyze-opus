@@ -19,11 +19,19 @@ export interface AgentConversation {
   updated_at: string;
 }
 
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
 export interface AgentToolCall {
   name: string;
-  arguments: Record<string, unknown>;
+  arguments: Record<string, JsonValue>;
   ok: boolean;
-  resumo?: string;
+  resumo?: string | null;
 }
 
 export interface AgentMessage {

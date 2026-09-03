@@ -58,6 +58,7 @@ import { Route as CrmIdTimelineRouteImport } from './routes/crm.$id.timeline'
 import { Route as CrmIdPropostasRouteImport } from './routes/crm.$id.propostas'
 import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 import { Route as ApiWebhooksZapzapRouteImport } from './routes/api/webhooks/zapzap'
+import { Route as ApiAgentChatRouteImport } from './routes/api/agent/chat'
 
 const TarefasRoute = TarefasRouteImport.update({
   id: '/tarefas',
@@ -305,6 +306,11 @@ const ApiWebhooksZapzapRoute = ApiWebhooksZapzapRouteImport.update({
   path: '/api/webhooks/zapzap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgentChatRoute = ApiAgentChatRouteImport.update({
+  id: '/api/agent/chat',
+  path: '/api/agent/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -339,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -385,6 +392,7 @@ export interface FileRoutesByTo {
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao': typeof ProspeccaoIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
+  '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -437,6 +445,7 @@ export interface FileRoutesById {
   '/super-admin/workspaces': typeof SuperAdminWorkspacesRoute
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -490,6 +499,7 @@ export interface FileRouteTypes {
     | '/super-admin/workspaces'
     | '/prospeccao/'
     | '/super-admin/'
+    | '/api/agent/chat'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -536,6 +546,7 @@ export interface FileRouteTypes {
     | '/super-admin/workspaces'
     | '/prospeccao'
     | '/super-admin'
+    | '/api/agent/chat'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -587,6 +598,7 @@ export interface FileRouteTypes {
     | '/super-admin/workspaces'
     | '/prospeccao/'
     | '/super-admin/'
+    | '/api/agent/chat'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -626,6 +638,7 @@ export interface RootRouteChildren {
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   SuporteRoute: typeof SuporteRoute
   TarefasRoute: typeof TarefasRoute
+  ApiAgentChatRoute: typeof ApiAgentChatRoute
   ApiWebhooksZapzapRoute: typeof ApiWebhooksZapzapRoute
 }
 
@@ -974,6 +987,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksZapzapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agent/chat': {
+      id: '/api/agent/chat'
+      path: '/api/agent/chat'
+      fullPath: '/api/agent/chat'
+      preLoaderRoute: typeof ApiAgentChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1130,6 +1150,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuperAdminRoute: SuperAdminRouteWithChildren,
   SuporteRoute: SuporteRoute,
   TarefasRoute: TarefasRoute,
+  ApiAgentChatRoute: ApiAgentChatRoute,
   ApiWebhooksZapzapRoute: ApiWebhooksZapzapRoute,
 }
 export const routeTree = rootRouteImport
