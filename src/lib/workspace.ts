@@ -6,6 +6,8 @@
  * services existentes enquanto a migração para Supabase não é concluída.
  */
 
+import { useSyncExternalStore } from "react";
+
 import type { Role } from "@/config/rbac";
 
 type WorkspaceStore = {
@@ -39,12 +41,40 @@ function requireStore(): WorkspaceStore {
   return currentStore;
 }
 
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot(): WorkspaceStore | null {
+  return currentStore;
+}
+
+function getServerSnapshot(): WorkspaceStore | null {
+  return null;
+}
+
+/** Store reativo (pode ser null enquanto a sessão carrega). */
+export function useWorkspaceStore(): WorkspaceStore | null {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+function useRequireStore(): WorkspaceStore {
+  const store = useWorkspaceStore();
+  if (!store) {
+    throw new Error(
+      "Workspace context indisponível: usuário não autenticado ou sessão ainda carregando.",
+    );
+  }
+  return store;
+}
+
 export function getCurrentWorkspaceId(): string {
   return requireStore().workspaceId;
 }
 
 export function useCurrentWorkspaceId(): string {
-  return getCurrentWorkspaceId();
+  return useRequireStore().workspaceId;
 }
 
 export function getCurrentUserId(): string {
@@ -52,7 +82,7 @@ export function getCurrentUserId(): string {
 }
 
 export function useCurrentUserId(): string {
-  return getCurrentUserId();
+  return useRequireStore().userId;
 }
 
 export function getCurrentUserName(): string {
