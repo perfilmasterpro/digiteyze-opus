@@ -171,7 +171,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  if (status === "loading") {
+  if (status === "loading" || (status === "authenticated" && !workspaceStore)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-md space-y-3">
