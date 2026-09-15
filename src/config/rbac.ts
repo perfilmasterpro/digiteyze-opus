@@ -167,7 +167,8 @@ export const DEFAULT_ROLE_MODULES: Record<Role, ModuleKey[] | "all"> = {
 };
 
 
-export function canAccessModule(role: Role, module: ModuleKey): boolean {
+export function canAccessModule(role: Role | null, module: ModuleKey): boolean {
+  if (!role) return false;
   const allowed = DEFAULT_ROLE_MODULES[role];
   if (allowed === "all") return true;
   return allowed.includes(module);
@@ -207,7 +208,8 @@ const ROLE_ACTION_OVERRIDES: Partial<Record<Role, Partial<Record<ModuleKey, Acti
 };
 
 
-export function can(role: Role, permission: Permission): boolean {
+export function can(role: Role | null, permission: Permission): boolean {
+  if (!role) return false;
   // Sub-namespace: crm:proposal:<action>
   if (permission.startsWith("crm:proposal:")) {
     if (!canAccessModule(role, "crm")) return false;

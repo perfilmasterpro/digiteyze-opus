@@ -1,10 +1,11 @@
 import type { Role } from "@/config/rbac";
-import { getCurrentRole } from "@/lib/workspace";
+import { useWorkspaceStore } from "@/lib/workspace";
 
 /**
  * Papel do usuário logado no workspace ativo.
- * Backed pelo AuthProvider — lança se chamado sem sessão.
+ * Retorna null durante a hidratação/encerramento da sessão para que gates de
+ * permissão neguem acesso sem derrubar a árvore React.
  */
-export function useCurrentRole(): Role {
-  return getCurrentRole();
+export function useCurrentRole(): Role | null {
+  return useWorkspaceStore()?.role ?? null;
 }
