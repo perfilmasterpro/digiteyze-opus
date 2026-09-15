@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { authenticateRequest } from "@/lib/supabase-request-auth.server";
 import { searchGooglePlaces } from "~/modules/prospeccao/services/google-places.service";
 
 const bodySchema = z.object({
@@ -11,6 +12,9 @@ export const Route = createFileRoute("/api/prospeccao/google-places")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const auth = await authenticateRequest(request);
+        if (!auth) return Response.json({ error: "Não autenticado." }, { status: 401 });
+
         try {
           const body = bodySchema.parse(await request.json());
           const places = await searchGooglePlaces(body);
