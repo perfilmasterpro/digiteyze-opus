@@ -52,6 +52,7 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
   const [nextPageToken, setNextPageToken] = useState<string | undefined>();
   const [selected, setSelected] = useState<string[]>([]);
   const [enrichment, setEnrichment] = useState<Record<string, Enrichment>>({});
+  const [enrichingIds, setEnrichingIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -75,28 +76,6 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
     return body;
   }
 
-  async function search() {
-    setLoading(true);
-    try {
-      const body = await requestPlaces();
-      setPlaces(body.places ?? []); setNextPageToken(body.nextPageToken); setSelected([]); setEnrichment({});
-      if (!(body.places?.length ?? 0)) toast.info("Nenhum estabelecimento encontrado para essa busca.");
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Erro ao pesquisar."); } finally { setLoading(false); }
-  }
-
-  async function loadMore() {
-    if (!nextPageToken || loadingMore || loading || adding) return;
-    setLoadingMore(true);
-    try {
-      const body = await requestPlaces(nextPageToken);
-      const existingIds = new Set(places.map((place) => place.placeId));
-      const newPlaces = (body.places ?? []).filter((place) => !existingIds.has(place.placeId));
-      setPlaces((current) => [...current, ...newPlaces]);
-      setNextPageToken(body.nextPageToken);
-      if (!newPlaces.length && !body.nextPageToken) toast.info("Não há mais resultados para essa busca.");
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Erro ao carregar mais resultados."); } finally { setLoadingMore(false); }
-  }
-
   async function enrich(place: GooglePlace): Promise<Enrichment> {
     const website = normalizeUrl(place.website); if (!website) return {};
     try {
@@ -109,15 +88,55 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
     } catch { return {}; }
   }
 
+  async function enrichVisiblePlaces(targetPlaces: GooglePlace[]) {
+    const candidates = targetPlaces.filter((place) => !duplicateIds.has(place.placeId) && place.website && !enrichment[place.placeId]);
+    if (!candidates.length) return;
+    const ids = candidates.map((place) => place.placeId);
+    setEnrichingIds((current) => Array.from(new Set([...current, ...ids])));
+    try {
+      const results = await mapWithConcurrency(candidates, 4, async (place) => [place.placeId, await enrich(place)] as const);
+      const found: Record<string, Enrichment> = Object.fromEntries(results);
+      setEnrichment((current) => ({ ...current, ...found }));
+    } finally {
+      setEnrichingIds((current) => current.filter((id) => !ids.includes(id)));
+    }
+  }
+
+  async function search() {
+    setLoading(true);
+    try {
+      const body = await requestPlaces();
+      const newPlaces = body.places ?? [];
+      setPlaces(newPlaces); setNextPageToken(body.nextPageToken); setSelected([]); setEnrichment({});
+      if (!newPlaces.length) toast.info("Nenhum estabelecimento encontrado para essa busca.");
+      else void enrichVisiblePlaces(newPlaces);
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Erro ao pesquisar."); } finally { setLoading(false); }
+  }
+
+  async function loadMore() {
+    if (!nextPageToken || loadingMore || loading || adding) return;
+    setLoadingMore(true);
+    try {
+      const body = await requestPlaces(nextPageToken);
+      const existingIds = new Set(places.map((place) => place.placeId));
+      const newPlaces = (body.places ?? []).filter((place) => !existingIds.has(place.placeId));
+      setPlaces((current) => [...current, ...newPlaces]);
+      setNextPageToken(body.nextPageToken);
+      if (newPlaces.length) void enrichVisiblePlaces(newPlaces);
+      else if (!body.nextPageToken) toast.info("Não há mais resultados para essa busca.");
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Erro ao carregar mais resultados."); } finally { setLoadingMore(false); }
+  }
+
   async function addSelected() {
     const chosen = places.filter((place) => selected.includes(place.placeId) && !duplicateIds.has(place.placeId));
     if (!chosen.length || adding) return;
     setAdding(true); let created = 0; let failed = 0; let enrichedCount = 0; let skippedAfterEnrichment = 0;
     try {
-      const results = await mapWithConcurrency(chosen, 4, async (place) => [place.placeId, await enrich(place)] as const);
-      const found: Record<string, Enrichment> = Object.fromEntries(results);
-      setEnrichment((current) => ({ ...current, ...found }));
-      enrichedCount = Object.values(found).filter((item) => item.whatsapp || item.instagram || item.phone).length;
+      const missing = chosen.filter((place) => place.website && !enrichment[place.placeId]);
+      const results = missing.length ? await mapWithConcurrency(missing, 4, async (place) => [place.placeId, await enrich(place)] as const) : [];
+      const found: Record<string, Enrichment> = { ...enrichment, ...Object.fromEntries(results) };
+      setEnrichment(found);
+      enrichedCount = chosen.filter((place) => { const item = found[place.placeId]; return Boolean(item?.whatsapp || item?.instagram || item?.phone); }).length;
 
       const pending: Array<{ place: GooglePlace; contacts: Enrichment }> = [];
       for (const place of chosen) {
@@ -145,10 +164,10 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
   }
 
   const allSelected = availablePlaces.length > 0 && availablePlaces.every((place) => selected.includes(place.placeId));
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden"><DialogHeader><DialogTitle>Encontrar prospects no Google Maps</DialogTitle><DialogDescription>Pesquise empresas por segmento e localização. Ao adicionar, o Growth procura WhatsApp, Instagram e telefone públicos no site.</DialogDescription></DialogHeader>
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden"><DialogHeader><DialogTitle>Encontrar prospects no Google Maps</DialogTitle><DialogDescription>Pesquise empresas por segmento e localização. O Growth analisa automaticamente o site público para encontrar WhatsApp, Instagram e telefone antes de você cadastrar o prospect.</DialogDescription></DialogHeader>
     <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"><div className="space-y-2"><Label htmlFor="google-category">Categoria</Label><Input id="google-category" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Ex.: hotéis e pousadas" /></div><div className="space-y-2"><Label htmlFor="google-location">Cidade ou região</Label><Input id="google-location" value={location} onChange={(e) => setLocation(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void search(); }} placeholder="Ex.: Guarapari - ES" /></div><Button onClick={() => void search()} disabled={loading || loadingMore || adding} className="gap-2">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}Buscar</Button></div>
-    {places.length > 0 ? <div className="min-h-0 overflow-y-auto rounded-md border"><div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-3"><label className="flex items-center gap-3 text-sm font-medium"><Checkbox checked={allSelected} onCheckedChange={(checked) => setSelected(checked ? availablePlaces.map((p) => p.placeId) : [])} />Selecionar disponíveis</label><div className="flex items-center gap-2"><Badge variant="secondary">{selected.length} selecionado{selected.length === 1 ? "" : "s"}</Badge>{duplicateIds.size ? <Badge variant="outline">{duplicateIds.size} já cadastrado{duplicateIds.size === 1 ? "" : "s"}</Badge> : null}</div></div>
-      <div className="divide-y">{places.map((place) => { const duplicate = duplicateIds.has(place.placeId); const checked = selected.includes(place.placeId); const contacts = enrichment[place.placeId] ?? {}; const displayPhone = place.phone || contacts.phone; return <div key={place.placeId} className={`flex gap-3 px-4 py-3 ${duplicate ? "opacity-60" : ""}`}><Checkbox className="mt-1" checked={checked} disabled={duplicate || adding} onCheckedChange={() => toggle(place.placeId)} /><div className="min-w-0 flex-1 space-y-1"><div className="flex flex-wrap items-center gap-2"><button type="button" className="text-left font-medium hover:underline" onClick={() => toggle(place.placeId)} disabled={duplicate || adding}>{place.name}</button>{place.rating ? <Badge variant="outline">★ {place.rating.toFixed(1)}{place.userRatingCount ? ` · ${place.userRatingCount}` : ""}</Badge> : null}{duplicate ? <Badge variant="secondary">Já cadastrado</Badge> : null}</div>{place.address ? <div className="flex items-start gap-1 text-sm text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{place.address}</div> : null}<div className="flex flex-wrap gap-3 text-sm">{displayPhone ? <a className="hover:underline" href={`tel:${normalizeContact(displayPhone)}`}>{displayPhone}</a> : null}{contacts.whatsapp ? <a className="font-medium text-primary hover:underline" href={contacts.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a> : null}{contacts.instagram ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={contacts.instagram} target="_blank" rel="noreferrer"><Instagram className="h-3 w-3" />Instagram</a> : null}{place.website ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={normalizeUrl(place.website)} target="_blank" rel="noreferrer">Site <ExternalLink className="h-3 w-3" /></a> : null}{place.googleMapsUrl ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={place.googleMapsUrl} target="_blank" rel="noreferrer">Maps <ExternalLink className="h-3 w-3" /></a> : null}</div></div></div>; })}</div>
+    {places.length > 0 ? <div className="min-h-0 overflow-y-auto rounded-md border"><div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-3"><label className="flex items-center gap-3 text-sm font-medium"><Checkbox checked={allSelected} onCheckedChange={(checked) => setSelected(checked ? availablePlaces.map((p) => p.placeId) : [])} />Selecionar disponíveis</label><div className="flex items-center gap-2"><Badge variant="secondary">{selected.length} selecionado{selected.length === 1 ? "" : "s"}</Badge>{enrichingIds.length ? <Badge variant="outline" className="gap-1"><Loader2 className="h-3 w-3 animate-spin" />Analisando {enrichingIds.length} site{enrichingIds.length === 1 ? "" : "s"}</Badge> : null}{duplicateIds.size ? <Badge variant="outline">{duplicateIds.size} já cadastrado{duplicateIds.size === 1 ? "" : "s"}</Badge> : null}</div></div>
+      <div className="divide-y">{places.map((place) => { const duplicate = duplicateIds.has(place.placeId); const checked = selected.includes(place.placeId); const contacts = enrichment[place.placeId] ?? {}; const displayPhone = place.phone || contacts.phone; const enriching = enrichingIds.includes(place.placeId); return <div key={place.placeId} className={`flex gap-3 px-4 py-3 ${duplicate ? "opacity-60" : ""}`}><Checkbox className="mt-1" checked={checked} disabled={duplicate || adding} onCheckedChange={() => toggle(place.placeId)} /><div className="min-w-0 flex-1 space-y-1"><div className="flex flex-wrap items-center gap-2"><button type="button" className="text-left font-medium hover:underline" onClick={() => toggle(place.placeId)} disabled={duplicate || adding}>{place.name}</button>{place.rating ? <Badge variant="outline">★ {place.rating.toFixed(1)}{place.userRatingCount ? ` · ${place.userRatingCount}` : ""}</Badge> : null}{duplicate ? <Badge variant="secondary">Já cadastrado</Badge> : null}</div>{place.address ? <div className="flex items-start gap-1 text-sm text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{place.address}</div> : null}<div className="flex flex-wrap items-center gap-3 text-sm">{displayPhone ? <a className="hover:underline" href={`tel:${normalizeContact(displayPhone)}`}>{displayPhone}{contacts.phone && !place.phone ? " · site" : ""}</a> : null}{contacts.whatsapp ? <a className="font-medium text-primary hover:underline" href={contacts.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a> : null}{contacts.instagram ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={contacts.instagram} target="_blank" rel="noreferrer"><Instagram className="h-3 w-3" />Instagram</a> : null}{enriching ? <span className="inline-flex items-center gap-1 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />analisando contatos</span> : null}{place.website ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={normalizeUrl(place.website)} target="_blank" rel="noreferrer">Site <ExternalLink className="h-3 w-3" /></a> : null}{place.googleMapsUrl ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={place.googleMapsUrl} target="_blank" rel="noreferrer">Maps <ExternalLink className="h-3 w-3" /></a> : null}</div></div></div>; })}</div>
       {nextPageToken ? <div className="flex justify-center border-t p-3"><Button variant="outline" onClick={() => void loadMore()} disabled={loadingMore || adding} className="gap-2">{loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{loadingMore ? "Carregando..." : "Carregar mais resultados"}</Button></div> : null}
     </div> : null}
     <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)} disabled={adding || loadingMore}>Cancelar</Button><Button onClick={() => void addSelected()} disabled={selected.length === 0 || adding || loadingMore} className="gap-2">{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}Adicionar selecionados ({selected.length})</Button></DialogFooter></DialogContent></Dialog>;
