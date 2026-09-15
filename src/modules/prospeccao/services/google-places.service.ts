@@ -34,6 +34,12 @@ export type GooglePlaceProspect = {
 export type SearchGooglePlacesInput = {
   textQuery: string;
   pageSize?: number;
+  pageToken?: string;
+};
+
+export type SearchGooglePlacesResult = {
+  places: GooglePlaceProspect[];
+  nextPageToken?: string;
 };
 
 const ENDPOINT = "https://places.googleapis.com/v1/places:searchText";
@@ -48,6 +54,7 @@ const FIELD_MASK = [
   "places.rating",
   "places.userRatingCount",
   "places.types",
+  "nextPageToken",
 ].join(",");
 
 function getApiKey() {
@@ -58,9 +65,16 @@ function getApiKey() {
 
 export async function searchGooglePlaces(
   input: SearchGooglePlacesInput,
-): Promise<GooglePlaceProspect[]> {
+): Promise<SearchGooglePlacesResult> {
   const textQuery = input.textQuery.trim();
   if (!textQuery) throw new Error("textQuery é obrigatório.");
+
+  const body: Record<string, unknown> = {
+    textQuery,
+    pageSize: Math.min(Math.max(input.pageSize ?? 20, 1), 20),
+    languageCode: "pt-BR",
+  };
+  if (input.pageToken?.trim()) body.pageToken = input.pageToken.trim();
 
   const response = await fetch(ENDPOINT, {
     method: "POST",
@@ -69,11 +83,7 @@ export async function searchGooglePlaces(
       "X-Goog-Api-Key": getApiKey(),
       "X-Goog-FieldMask": FIELD_MASK,
     },
-    body: JSON.stringify({
-      textQuery,
-      pageSize: Math.min(Math.max(input.pageSize ?? 20, 1), 20),
-      languageCode: "pt-BR",
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -83,17 +93,20 @@ export async function searchGooglePlaces(
 
   const parsed = responseSchema.parse(await response.json());
 
-  return parsed.places
-    .map((place) => ({
-      placeId: place.id ?? place.name?.replace(/^places\//, "") ?? "",
-      name: place.displayName?.text ?? "",
-      address: place.formattedAddress,
-      phone: place.nationalPhoneNumber ?? place.internationalPhoneNumber,
-      website: place.websiteUri,
-      googleMapsUrl: place.googleMapsUri,
-      rating: place.rating,
-      userRatingCount: place.userRatingCount,
-      types: place.types ?? [],
-    }))
-    .filter((place) => Boolean(place.placeId && place.name));
+  return {
+    places: parsed.places
+      .map((place) => ({
+        placeId: place.id ?? place.name?.replace(/^places\//, "") ?? "",
+        name: place.displayName?.text ?? "",
+        address: place.formattedAddress,
+        phone: place.nationalPhoneNumber ?? place.internationalPhoneNumber,
+        website: place.websiteUri,
+        googleMapsUrl: place.googleMapsUri,
+        rating: place.rating,
+        userRatingCount: place.userRatingCount,
+        types: place.types ?? [],
+      }))
+      .filter((place) => Boolean(place.placeId && place.name)),
+    nextPageToken: parsed.nextPageToken,
+  };
 }
