@@ -32,6 +32,16 @@ function leadMatches(place: GooglePlace, contacts: Enrichment, lead: Lead) {
   return Boolean((phone && leadPhone && phone === leadPhone) || (whatsapp && leadPhone && whatsapp === leadPhone));
 }
 function isDuplicate(place: GooglePlace, leads: Lead[]) { return leads.some((lead) => leadMatches(place, {}, lead)); }
+function placesMatch(a: GooglePlace, aContacts: Enrichment, b: GooglePlace, bContacts: Enrichment) {
+  if (a.placeId && a.placeId === b.placeId) return true;
+  const domainA = domainOf(a.website); if (domainA && domainA === domainOf(b.website)) return true;
+  const phoneA = normalizeContact(a.phone || aContacts.phone || aContacts.whatsapp);
+  const phoneB = normalizeContact(b.phone || bContacts.phone || bContacts.whatsapp);
+  return Boolean(phoneA && phoneA === phoneB);
+}
+const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"] as const;
+type Uf = (typeof UFS)[number];
+function asUf(value?: string): Uf | undefined { const upper = (value ?? "").trim().toUpperCase(); return (UFS as readonly string[]).includes(upper) ? (upper as Uf) : undefined; }
 
 async function mapWithConcurrency<T, R>(items: T[], limit: number, mapper: (item: T) => Promise<R>) {
   const results: R[] = new Array(items.length); let cursor = 0;
@@ -63,7 +73,7 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
 
   function toggle(placeId: string) { if (duplicateIds.has(placeId)) return; setSelected((current) => current.includes(placeId) ? current.filter((id) => id !== placeId) : [...current, placeId]); }
   async function requestPlaces(pageToken?: string) {
-    const target = location.trim(); const segment = category.trim(); if (!target) return toast.error("Informe a cidade ou região."); if (!segment) return toast.error("Informe o segmento que deseja pesquisar.");
+    const target = location.trim(); const segment = category.trim(); if (!target) throw new Error("Informe a cidade ou região."); if (!segment) throw new Error("Informe o segmento que deseja pesquisar.");
     const { data: sessionData } = await supabase.auth.getSession(); const token = sessionData.session?.access_token; if (!token) throw new Error("Sua sessão expirou. Entre novamente no Growth OS.");
     const response = await fetch("/api/prospeccao/google-places", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ textQuery: `${segment} em ${target}`, pageSize: 20, ...(pageToken ? { pageToken } : {}) }) });
     const body = (await response.json()) as PlacesResponse; if (!response.ok) throw new Error(body.error ?? "Não foi possível pesquisar no Google Maps."); return body;
@@ -95,8 +105,8 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
     const chosen = places.filter((place) => selected.includes(place.placeId) && !duplicateIds.has(place.placeId)); if (!chosen.length || adding) return; setAdding(true); let created = 0; let failed = 0; let enrichedCount = 0; let skippedAfterEnrichment = 0;
     try { const missing = chosen.filter((place) => place.website && !enrichment[place.placeId]); const results = missing.length ? await mapWithConcurrency(missing, 4, async (place) => [place.placeId, await enrich(place)] as const) : []; const found: Record<string, Enrichment> = { ...enrichment, ...Object.fromEntries(results) }; setEnrichment(found);
       enrichedCount = chosen.filter((place) => { const item = found[place.placeId]; return Boolean(item?.whatsapp || item?.instagram || item?.phone); }).length; const pending: Array<{ place: GooglePlace; contacts: Enrichment }> = [];
-      for (const place of chosen) { const contacts = found[place.placeId] ?? {}; const duplicateAfterEnrichment = leads.some((lead) => leadMatches(place, contacts, lead)) || pending.some((item) => leadMatches(place, contacts, item.place)); if (duplicateAfterEnrichment) { skippedAfterEnrichment += 1; continue; } pending.push({ place, contacts }); }
-      for (const { place, contacts } of pending) { const website = normalizeUrl(place.website); const qualification = qualifyProspect({ website, phone: place.phone || contacts.phone, whatsapp: contacts.whatsapp, instagram: contacts.instagram, rating: place.rating, userRatingCount: place.userRatingCount }); const input: LeadInput = { nome_empresa: place.name, status: "novo_lead", origem: "google_maps", responsavel: "", telefone: place.phone || contacts.phone, whatsapp: contacts.whatsapp, instagram: contacts.instagram, site: website, observacoes: place.address, segmento: category.trim() || "Hotel e Pousada", cidade: place.city, estado: place.state, custom_fields: { google_place_id: place.placeId, google_maps_url: place.googleMapsUrl ?? "", google_rating: place.rating?.toString() ?? "", google_reviews: place.userRatingCount?.toString() ?? "", google_types: place.types.join(", "), google_website_domain: domainOf(website), phone_enriched_from_website: Boolean(contacts.phone && !place.phone), prospeccao_score: qualification.score, prospeccao_prioridade: qualification.label, prospeccao_score_motivos: qualification.reasons.join(" · ") } };
+      for (const place of chosen) { const contacts = found[place.placeId] ?? {}; const duplicateAfterEnrichment = leads.some((lead) => leadMatches(place, contacts, lead)) || pending.some((item) => placesMatch(place, contacts, item.place, item.contacts)); if (duplicateAfterEnrichment) { skippedAfterEnrichment += 1; continue; } pending.push({ place, contacts }); }
+      for (const { place, contacts } of pending) { const website = normalizeUrl(place.website); const qualification = qualifyProspect({ website, phone: place.phone || contacts.phone, whatsapp: contacts.whatsapp, instagram: contacts.instagram, rating: place.rating, userRatingCount: place.userRatingCount }); const input: LeadInput = { nome_empresa: place.name, status: "novo_lead", origem: "google_maps", responsavel: "", telefone: place.phone || contacts.phone, whatsapp: contacts.whatsapp, instagram: contacts.instagram, site: website, observacoes: place.address, segmento: category.trim() || "Hotel e Pousada", cidade: place.city, estado: asUf(place.state), custom_fields: { google_place_id: place.placeId, google_maps_url: place.googleMapsUrl ?? "", google_rating: place.rating?.toString() ?? "", google_reviews: place.userRatingCount?.toString() ?? "", google_types: place.types.join(", "), google_website_domain: domainOf(website), phone_enriched_from_website: String(Boolean(contacts.phone && !place.phone)), prospeccao_score: String(qualification.score), prospeccao_prioridade: qualification.label, prospeccao_score_motivos: qualification.reasons.join(" · ") } };
         try { await createLead.mutateAsync(input); created += 1; } catch { failed += 1; }
       }
     } finally { setAdding(false); }

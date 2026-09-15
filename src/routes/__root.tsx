@@ -19,6 +19,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useWorkspaceStore } from "@/lib/workspace";
 
 function NotFoundComponent() {
   return (
@@ -155,6 +156,7 @@ const PUBLIC_ROUTES = new Set(["/auth", "/reset-password"]);
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { status } = useAuth();
+  const workspaceStore = useWorkspaceStore();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isPublic = PUBLIC_ROUTES.has(pathname);
@@ -169,7 +171,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  if (status === "loading") {
+  if (status === "loading" || (status === "authenticated" && !workspaceStore)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-md space-y-3">

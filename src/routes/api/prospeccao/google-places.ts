@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { authenticateRequest } from "@/lib/supabase-request-auth.server";
-import { searchGooglePlaces } from "~/modules/prospeccao/services/google-places.service";
+import { searchGooglePlaces } from "@/modules/prospeccao/services/google-places.service";
 
 const bodySchema = z.object({
   textQuery: z.string().trim().min(2).max(200),
