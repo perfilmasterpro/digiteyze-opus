@@ -155,6 +155,7 @@ const PUBLIC_ROUTES = new Set(["/auth", "/reset-password"]);
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { status } = useAuth();
+  const workspaceStore = useWorkspaceStore();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isPublic = PUBLIC_ROUTES.has(pathname);
