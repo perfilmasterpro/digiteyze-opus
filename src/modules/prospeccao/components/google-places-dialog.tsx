@@ -19,7 +19,31 @@ function normalizeUrl(value?: string) { if (!value) return undefined; return /^h
 function domainOf(value?: string) { try { return value ? new URL(normalizeUrl(value)!).hostname.replace(/^www\./, "").toLowerCase() : ""; } catch { return ""; } }
 function normalizeContact(value?: string) { return (value ?? "").replace(/\D/g, ""); }
 function existingPlaceId(lead: Lead) { const fields = lead.custom_fields; return typeof fields?.google_place_id === "string" ? fields.google_place_id : ""; }
-function isDuplicate(place: GooglePlace, leads: Lead[]) { const placeId = place.placeId; const domain = domainOf(place.website); const phone = normalizeContact(place.phone); return leads.some((lead) => { if (placeId && existingPlaceId(lead) === placeId) return true; if (domain && domainOf(lead.site) === domain) return true; const leadPhone = normalizeContact(lead.whatsapp || lead.telefone); return Boolean(phone && leadPhone && phone === leadPhone); }); }
+function leadMatches(place: GooglePlace, contacts: Enrichment, lead: Lead) {
+  const placeId = place.placeId;
+  const domain = domainOf(place.website);
+  const phone = normalizeContact(place.phone);
+  const whatsapp = normalizeContact(contacts.whatsapp);
+  if (placeId && existingPlaceId(lead) === placeId) return true;
+  if (domain && domainOf(lead.site) === domain) return true;
+  const leadPhone = normalizeContact(lead.whatsapp || lead.telefone);
+  return Boolean((phone && leadPhone && phone === leadPhone) || (whatsapp && leadPhone && whatsapp === leadPhone));
+}
+function isDuplicate(place: GooglePlace, leads: Lead[]) { return leads.some((lead) => leadMatches(place, {}, lead)); }
+
+async function mapWithConcurrency<T, R>(items: T[], limit: number, mapper: (item: T) => Promise<R>) {
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+  async function worker() {
+    while (true) {
+      const index = cursor++;
+      if (index >= items.length) return;
+      results[index] = await mapper(items[index]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
 
 export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [category, setCategory] = useState("hotéis e pousadas");
@@ -68,26 +92,45 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
   async function addSelected() {
     const chosen = places.filter((place) => selected.includes(place.placeId) && !duplicateIds.has(place.placeId));
     if (!chosen.length || adding) return;
-    setAdding(true); let created = 0; let failed = 0; let enrichedCount = 0;
+    setAdding(true); let created = 0; let failed = 0; let enrichedCount = 0; let skippedAfterEnrichment = 0;
     try {
-      const results = await Promise.all(chosen.map(async (place) => [place.placeId, await enrich(place)] as const));
+      const results = await mapWithConcurrency(chosen, 4, async (place) => [place.placeId, await enrich(place)] as const);
       const found: Record<string, Enrichment> = Object.fromEntries(results);
       setEnrichment((current) => ({ ...current, ...found }));
       enrichedCount = Object.values(found).filter((item) => item.whatsapp || item.instagram).length;
+
+      const pending: Lead[] = [];
       for (const place of chosen) {
-        const website = normalizeUrl(place.website); const contacts = found[place.placeId] ?? {};
-        const input: LeadInput = {
-          nome_empresa: place.name, status: "novo_lead", origem: "google_maps", responsavel: "", telefone: place.phone,
-          whatsapp: contacts.whatsapp, instagram: contacts.instagram, site: website, observacoes: place.address,
+        const contacts = found[place.placeId] ?? {};
+        const duplicateAfterEnrichment = leads.some((lead) => leadMatches(place, contacts, lead)) || pending.some((lead) => leadMatches(place, contacts, lead));
+        if (duplicateAfterEnrichment) { skippedAfterEnrichment += 1; continue; }
+        const website = normalizeUrl(place.website);
+        pending.push({
+          id: place.placeId,
+          workspace_id: "",
+          nome_empresa: place.name,
+          status: "novo_lead",
+          origem: "google_maps",
+          responsavel: "",
+          telefone: place.phone,
+          whatsapp: contacts.whatsapp,
+          instagram: contacts.instagram,
+          site: website,
+          observacoes: place.address,
           segmento: category.trim() || "Hotel e Pousada",
           custom_fields: { google_place_id: place.placeId, google_maps_url: place.googleMapsUrl ?? "", google_rating: place.rating?.toString() ?? "", google_reviews: place.userRatingCount?.toString() ?? "", google_types: place.types.join(", "), google_website_domain: domainOf(website) },
-        };
+        } as Lead);
+      }
+
+      for (const lead of pending) {
+        const input = lead as unknown as LeadInput;
         try { await createLead.mutateAsync(input); created += 1; } catch { failed += 1; }
       }
     } finally { setAdding(false); }
     if (created) toast.success(`${created} prospect${created === 1 ? " foi adicionado" : "s foram adicionados"} ao Growth${enrichedCount ? ` · ${enrichedCount} com contato social/WhatsApp` : ""}.`);
+    if (skippedAfterEnrichment) toast.info(`${skippedAfterEnrichment} prospect${skippedAfterEnrichment === 1 ? " foi ignorado" : "s foram ignorados"} por duplicidade encontrada no enriquecimento.`);
     if (failed) toast.warning(`${failed} prospect${failed === 1 ? " não pôde ser adicionado" : "s não puderam ser adicionados"}.`);
-    if (created === chosen.length) { setSelected([]); onOpenChange(false); }
+    if (created === chosen.length - skippedAfterEnrichment) { setSelected([]); onOpenChange(false); }
   }
 
   const allSelected = availablePlaces.length > 0 && selected.length === availablePlaces.length;
