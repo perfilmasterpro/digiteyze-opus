@@ -1,4 +1,4 @@
-export type ContactEnrichment = { whatsapp?: string; instagram?: string };
+export type ContactEnrichment = { whatsapp?: string; instagram?: string; phone?: string };
 
 const TIMEOUT_MS = 6000;
 const MAX_HTML = 1_000_000;
@@ -19,6 +19,21 @@ function safeUrl(value: string) {
 
 function extract(html: string, pattern: RegExp) {
   return html.match(pattern)?.[0];
+}
+
+function cleanUrl(value?: string) {
+  return value?.replace(/[)&,.;]+$/, "");
+}
+
+function cleanInstagram(value?: string) {
+  return cleanUrl(value)?.split("?")[0];
+}
+
+function cleanPhone(value?: string) {
+  if (!value) return undefined;
+  const decoded = value.replace(/&(?:amp|quot);/gi, "");
+  const digits = decoded.replace(/\D/g, "");
+  return digits.length >= 8 && digits.length <= 15 ? decoded.replace(/[\"'<>]/g, "").trim() : undefined;
 }
 
 async function fetchHtml(url: URL, signal: AbortSignal, redirectsLeft: number): Promise<string | null> {
@@ -54,11 +69,16 @@ export async function enrichWebsiteContacts(website: string): Promise<ContactEnr
   try {
     const html = await fetchHtml(url, controller.signal, MAX_REDIRECTS);
     if (!html) return {};
+
     const whatsapp = extract(html, /https?:\/\/(?:wa\.me|api\.whatsapp\.com)\/[^\"'<>\s]+/i);
     const instagram = extract(html, /https?:\/\/(?:www\.)?instagram\.com\/[^\"'<>\s]+/i);
+    const telHref = extract(html, /(?:href\s*=\s*[\"'])tel:\s*[^\"'<>]+/i);
+    const phone = telHref?.replace(/^href\s*=\s*[\"']tel:\s*/i, "");
+
     return {
-      whatsapp: whatsapp?.replace(/[)&,.;]+$/, ""),
-      instagram: instagram?.replace(/[)&,.;]+$/, "").split("?")[0],
+      whatsapp: cleanUrl(whatsapp),
+      instagram: cleanInstagram(instagram),
+      phone: cleanPhone(phone),
     };
   } catch {
     return {};
