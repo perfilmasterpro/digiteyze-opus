@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ExternalLink, Loader2, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useCreateLead } from "../hooks/use-leads";
-import type { LeadInput } from "../types/leads.types";
+import { useCreateLead, useLeads } from "../hooks/use-leads";
+import type { Lead, LeadInput } from "../types/leads.types";
 
 type GooglePlace = {
   placeId: string;
@@ -37,6 +37,28 @@ function domainOf(value?: string) {
   }
 }
 
+function normalizeContact(value?: string) {
+  return (value ?? "").replace(/\D/g, "");
+}
+
+function existingPlaceId(lead: Lead) {
+  const fields = lead.custom_fields;
+  return typeof fields?.google_place_id === "string" ? fields.google_place_id : "";
+}
+
+function isDuplicate(place: GooglePlace, leads: Lead[]) {
+  const placeId = place.placeId;
+  const domain = domainOf(place.website);
+  const phone = normalizeContact(place.phone);
+
+  return leads.some((lead) => {
+    if (placeId && existingPlaceId(lead) === placeId) return true;
+    if (domain && domainOf(lead.site) === domain) return true;
+    const leadPhone = normalizeContact(lead.whatsapp || lead.telefone);
+    return Boolean(phone && leadPhone && phone === leadPhone);
+  });
+}
+
 export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [category, setCategory] = useState("hotéis e pousadas");
   const [location, setLocation] = useState("");
@@ -44,9 +66,14 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
+  const { data: leads = [] } = useLeads();
   const createLead = useCreateLead();
 
+  const duplicateIds = useMemo(() => new Set(places.filter((place) => isDuplicate(place, leads)).map((place) => place.placeId)), [places, leads]);
+  const availablePlaces = useMemo(() => places.filter((place) => !duplicateIds.has(place.placeId)), [places, duplicateIds]);
+
   function toggle(placeId: string) {
+    if (duplicateIds.has(placeId)) return;
     setSelected((current) => current.includes(placeId) ? current.filter((id) => id !== placeId) : [...current, placeId]);
   }
 
@@ -79,7 +106,7 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
   }
 
   async function addSelected() {
-    const chosen = places.filter((place) => selected.includes(place.placeId));
+    const chosen = places.filter((place) => selected.includes(place.placeId) && !duplicateIds.has(place.placeId));
     if (!chosen.length || adding) return;
     setAdding(true);
     let created = 0;
@@ -96,7 +123,7 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
           telefone: place.phone,
           site: website,
           observacoes: place.address,
-          segmento: "Hotel e Pousada",
+          segmento: category.trim() || "Hotel e Pousada",
           custom_fields: {
             google_place_id: place.placeId,
             google_maps_url: place.googleMapsUrl ?? "",
@@ -125,7 +152,7 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
     }
   }
 
-  const allSelected = places.length > 0 && selected.length === places.length;
+  const allSelected = availablePlaces.length > 0 && selected.length === availablePlaces.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,18 +171,19 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
         {places.length > 0 ? (
           <div className="min-h-0 overflow-y-auto rounded-md border">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-3">
-              <label className="flex items-center gap-3 text-sm font-medium"><Checkbox checked={allSelected} onCheckedChange={(checked) => setSelected(checked ? places.map((p) => p.placeId) : [])} />Selecionar todos</label>
-              <Badge variant="secondary">{selected.length} selecionado{selected.length === 1 ? "" : "s"}</Badge>
+              <label className="flex items-center gap-3 text-sm font-medium"><Checkbox checked={allSelected} onCheckedChange={(checked) => setSelected(checked ? availablePlaces.map((p) => p.placeId) : [])} />Selecionar disponíveis</label>
+              <div className="flex items-center gap-2"><Badge variant="secondary">{selected.length} selecionado{selected.length === 1 ? "" : "s"}</Badge>{duplicateIds.size ? <Badge variant="outline">{duplicateIds.size} já cadastrado{duplicateIds.size === 1 ? "" : "s"}</Badge> : null}</div>
             </div>
             <div className="divide-y">
               {places.map((place) => {
+                const duplicate = duplicateIds.has(place.placeId);
                 const checked = selected.includes(place.placeId);
-                return <div key={place.placeId} className="flex gap-3 px-4 py-3">
-                  <Checkbox className="mt-1" checked={checked} onCheckedChange={() => toggle(place.placeId)} />
+                return <div key={place.placeId} className={`flex gap-3 px-4 py-3 ${duplicate ? "opacity-60" : ""}`}>
+                  <Checkbox className="mt-1" checked={checked} disabled={duplicate} onCheckedChange={() => toggle(place.placeId)} />
                   <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2"><button type="button" className="text-left font-medium hover:underline" onClick={() => toggle(place.placeId)}>{place.name}</button>{place.rating ? <Badge variant="outline">★ {place.rating.toFixed(1)}{place.userRatingCount ? ` · ${place.userRatingCount}` : ""}</Badge> : null}</div>
+                    <div className="flex flex-wrap items-center gap-2"><button type="button" className="text-left font-medium hover:underline" onClick={() => toggle(place.placeId)} disabled={duplicate}>{place.name}</button>{place.rating ? <Badge variant="outline">★ {place.rating.toFixed(1)}{place.userRatingCount ? ` · ${place.userRatingCount}` : ""}</Badge> : null}{duplicate ? <Badge variant="secondary">Já cadastrado</Badge> : null}</div>
                     {place.address ? <div className="flex items-start gap-1 text-sm text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0" />{place.address}</div> : null}
-                    <div className="flex flex-wrap gap-3 text-sm">{place.phone ? <span>{place.phone}</span> : null}{place.website ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={normalizeUrl(place.website)} target="_blank" rel="noreferrer">Site <ExternalLink className="h-3 w-3" /></a> : null}{place.googleMapsUrl ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={place.googleMapsUrl} target="_blank" rel="noreferrer">Maps <ExternalLink className="h-3 w-3" /></a> : null}</div>
+                    <div className="flex flex-wrap gap-3 text-sm">{place.phone ? <a className="hover:underline" href={`tel:${normalizeContact(place.phone)}`}>{place.phone}</a> : null}{place.website ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={normalizeUrl(place.website)} target="_blank" rel="noreferrer">Site <ExternalLink className="h-3 w-3" /></a> : null}{place.googleMapsUrl ? <a className="inline-flex items-center gap-1 text-primary hover:underline" href={place.googleMapsUrl} target="_blank" rel="noreferrer">Maps <ExternalLink className="h-3 w-3" /></a> : null}</div>
                   </div>
                 </div>;
               })}
