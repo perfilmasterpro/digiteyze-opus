@@ -6,6 +6,7 @@ import { searchGooglePlaces } from "~/modules/prospeccao/services/google-places.
 const bodySchema = z.object({
   textQuery: z.string().trim().min(2).max(200),
   pageSize: z.number().int().min(1).max(20).optional(),
+  pageToken: z.string().trim().min(1).max(2048).optional(),
 });
 
 export const Route = createFileRoute("/api/prospeccao/google-places")({
@@ -17,8 +18,8 @@ export const Route = createFileRoute("/api/prospeccao/google-places")({
 
         try {
           const body = bodySchema.parse(await request.json());
-          const places = await searchGooglePlaces(body);
-          return Response.json({ places });
+          const result = await searchGooglePlaces(body);
+          return Response.json(result);
         } catch (error) {
           const message = error instanceof Error ? error.message : "Erro ao consultar o Google Places.";
           const status = message.includes("não configurada") ? 503 : 400;
