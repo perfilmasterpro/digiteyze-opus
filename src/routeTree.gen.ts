@@ -59,6 +59,8 @@ import { Route as CrmIdTimelineRouteImport } from './routes/crm.$id.timeline'
 import { Route as CrmIdPropostasRouteImport } from './routes/crm.$id.propostas'
 import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 import { Route as ApiWebhooksZapzapRouteImport } from './routes/api/webhooks/zapzap'
+import { Route as ApiProspeccaoGooglePlacesRouteImport } from './routes/api/prospeccao/google-places'
+import { Route as ApiProspeccaoEnrichWebsiteRouteImport } from './routes/api/prospeccao/enrich-website'
 import { Route as ApiAgentChatRouteImport } from './routes/api/agent/chat'
 
 const TarefasRoute = TarefasRouteImport.update({
@@ -312,6 +314,18 @@ const ApiWebhooksZapzapRoute = ApiWebhooksZapzapRouteImport.update({
   path: '/api/webhooks/zapzap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProspeccaoGooglePlacesRoute =
+  ApiProspeccaoGooglePlacesRouteImport.update({
+    id: '/api/prospeccao/google-places',
+    path: '/api/prospeccao/google-places',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiProspeccaoEnrichWebsiteRoute =
+  ApiProspeccaoEnrichWebsiteRouteImport.update({
+    id: '/api/prospeccao/enrich-website',
+    path: '/api/prospeccao/enrich-website',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAgentChatRoute = ApiAgentChatRouteImport.update({
   id: '/api/agent/chat',
   path: '/api/agent/chat',
@@ -353,6 +367,8 @@ export interface FileRoutesByFullPath {
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/api/agent/chat': typeof ApiAgentChatRoute
+  '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
+  '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -401,6 +417,8 @@ export interface FileRoutesByTo {
   '/prospeccao': typeof ProspeccaoIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
   '/api/agent/chat': typeof ApiAgentChatRoute
+  '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
+  '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -455,6 +473,8 @@ export interface FileRoutesById {
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/api/agent/chat': typeof ApiAgentChatRoute
+  '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
+  '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -510,6 +530,8 @@ export interface FileRouteTypes {
     | '/prospeccao/'
     | '/super-admin/'
     | '/api/agent/chat'
+    | '/api/prospeccao/enrich-website'
+    | '/api/prospeccao/google-places'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -558,6 +580,8 @@ export interface FileRouteTypes {
     | '/prospeccao'
     | '/super-admin'
     | '/api/agent/chat'
+    | '/api/prospeccao/enrich-website'
+    | '/api/prospeccao/google-places'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -611,6 +635,8 @@ export interface FileRouteTypes {
     | '/prospeccao/'
     | '/super-admin/'
     | '/api/agent/chat'
+    | '/api/prospeccao/enrich-website'
+    | '/api/prospeccao/google-places'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -652,6 +678,8 @@ export interface RootRouteChildren {
   SuporteRoute: typeof SuporteRoute
   TarefasRoute: typeof TarefasRoute
   ApiAgentChatRoute: typeof ApiAgentChatRoute
+  ApiProspeccaoEnrichWebsiteRoute: typeof ApiProspeccaoEnrichWebsiteRoute
+  ApiProspeccaoGooglePlacesRoute: typeof ApiProspeccaoGooglePlacesRoute
   ApiWebhooksZapzapRoute: typeof ApiWebhooksZapzapRoute
 }
 
@@ -1007,6 +1035,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksZapzapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/prospeccao/google-places': {
+      id: '/api/prospeccao/google-places'
+      path: '/api/prospeccao/google-places'
+      fullPath: '/api/prospeccao/google-places'
+      preLoaderRoute: typeof ApiProspeccaoGooglePlacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/prospeccao/enrich-website': {
+      id: '/api/prospeccao/enrich-website'
+      path: '/api/prospeccao/enrich-website'
+      fullPath: '/api/prospeccao/enrich-website'
+      preLoaderRoute: typeof ApiProspeccaoEnrichWebsiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/agent/chat': {
       id: '/api/agent/chat'
       path: '/api/agent/chat'
@@ -1172,6 +1214,8 @@ const rootRouteChildren: RootRouteChildren = {
   SuporteRoute: SuporteRoute,
   TarefasRoute: TarefasRoute,
   ApiAgentChatRoute: ApiAgentChatRoute,
+  ApiProspeccaoEnrichWebsiteRoute: ApiProspeccaoEnrichWebsiteRoute,
+  ApiProspeccaoGooglePlacesRoute: ApiProspeccaoGooglePlacesRoute,
   ApiWebhooksZapzapRoute: ApiWebhooksZapzapRoute,
 }
 export const routeTree = rootRouteImport
