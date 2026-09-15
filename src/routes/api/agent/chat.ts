@@ -35,10 +35,7 @@ type JsonSchemaInput = Parameters<typeof jsonSchema>[0];
 
 /** A Responses API roda tools em modo estrito: tudo obrigatório e anulável. */
 function toStrictSchema(parameters: Record<string, unknown>): JsonSchemaInput {
-  const properties = (parameters.properties ?? {}) as Record<
-    string,
-    Record<string, unknown>
-  >;
+  const properties = (parameters.properties ?? {}) as Record<string, Record<string, unknown>>;
   const strictProps: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(properties)) {
     const type = value.type as string | string[] | undefined;
@@ -79,14 +76,11 @@ export const Route = createFileRoute("/api/agent/chat")({
         const messages = body.messages;
         const conversationId = body.conversationId;
         if (!Array.isArray(messages) || !conversationId) {
-          return new Response("messages e conversationId são obrigatórios.", {
-            status: 400,
-          });
+          return new Response("messages e conversationId são obrigatórios.", { status: 400 });
         }
 
         const { supabase, userId } = auth;
 
-        // Conversa precisa pertencer ao usuário (RLS já garante, validamos o 404).
         const { data: conversa } = await supabase
           .from("agent_conversations")
           .select("id, workspace_id, titulo")
@@ -105,7 +99,6 @@ export const Route = createFileRoute("/api/agent/chat")({
 
         const ctx: ToolContext = { supabase, workspaceId, userId, userName };
 
-        // Memória de longo prazo (curada pelo próprio agente).
         const { data: memorias } = await supabase
           .from("agent_memories")
           .select("categoria, titulo, conteudo, projeto")
@@ -133,12 +126,25 @@ export const Route = createFileRoute("/api/agent/chat")({
           `Você ajuda ${userName} a administrar projetos, tarefas, empresas e atividades.`,
           `Data de hoje: ${hoje}.`,
           "",
-          "Regras:",
+          "Regras gerais:",
           "- Responda sempre em português do Brasil, direto ao ponto, em markdown quando ajudar.",
           "- Use as ferramentas para consultar dados reais antes de afirmar qualquer coisa sobre tarefas, projetos ou empresas. Nunca invente dados.",
           "- Para criar ou atualizar algo, use a ferramenta correspondente e confirme o resultado ao usuário.",
           "- Use salvar_memoria apenas para informações duradouras (decisões, preferências, contexto de projeto, próximos passos). Nunca salve conversa trivial.",
           "- Se faltar um identificador (id de tarefa ou empresa), busque antes com a ferramenta de listagem.",
+          "",
+          "Fluxo obrigatório para CRIAR UMA NOVA TAREFA:",
+          "- Quando o usuário disser algo como 'crie uma nova tarefa', 'nova tarefa' ou pedir para registrar uma tarefa, NÃO crie a tarefa imediatamente se faltarem dados.",
+          "- Primeiro obtenha a lista real de projetos com listar_projetos e use os nomes encontrados. Não invente nomes de projetos.",
+          "- Conduza a criação como uma coleta curta de informações, perguntando o que ainda estiver faltando, de preferência uma pergunta por vez para facilitar a resposta.",
+          "- Antes de chamar criar_tarefa, confirme que você tem: título da tarefa, projeto, categoria/classificação, prioridade, data de execução (se aplicável), prazo/data de conclusão e observação/descrição.",
+          "- Para prioridade, apresente as opções: baixa, média, alta ou urgente.",
+          "- Para categoria/classificação, use as categorias aceitas pela ferramenta: comercial, desenvolvimento, marketing, financeiro, suporte, administrativo, conteúdo, videoaula ou projeto.",
+          "- Se o usuário disser 'média', 'alta' ou equivalente, trate isso como prioridade, não como categoria.",
+          "- Se o usuário informar uma data relativa como 'amanhã', 'sexta' ou 'dia 20', converta para AAAA-MM-DD usando a data de hoje e, se houver ambiguidade real, pergunte antes de criar.",
+          "- Se o usuário não quiser preencher algum campo opcional, aceite isso e use null quando a ferramenta permitir. Não invente datas, prioridades, projetos ou observações.",
+          "- Depois que todos os dados estiverem definidos, crie a tarefa uma única vez e informe ao usuário projeto, prioridade e prazo cadastrados.",
+          "- Se o usuário já fornecer vários desses dados na primeira mensagem, não pergunte novamente: aproveite os dados já fornecidos e pergunte somente o que faltar.",
           "",
           "Memória de longo prazo do usuário:",
           memoriaBloco,
@@ -166,7 +172,6 @@ export const Route = createFileRoute("/api/agent/chat")({
           ]),
         );
 
-        // Persiste a última mensagem do usuário antes de gerar a resposta.
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         if (lastUser) {
           const content = textOf(lastUser);
@@ -203,6 +208,44 @@ export const Route = createFileRoute("/api/agent/chat")({
           stopWhen: stepCountIs(50),
           providerOptions: { openai: { store: false } },
           abortSignal: request.signal,
+        });
+
+        return result.toUIMessageStreamResponse({
+          originalMessages: messages,
+          onFinish: async ({ responseMessage }) => {
+            const content = textOf(responseMessage);
+            const toolCalls = responseMessage.parts
+              .filter((p) => p.type.startsWith("tool-") || p.type === "dynamic-tool")
+              .map((p) => {
+                const part = p as unknown as {
+                  type: string;
+                  toolName?: string;
+                  input?: unknown;
+                  output?: { ok?: boolean; resumo?: string };
+                };
+                return {
+                  name: part.toolName ?? part.type.replace(/^tool-/, ""),
+                  arguments: (part.input ?? {}) as Record<string, unknown>,
+                  ok: part.output?.ok ?? true,
+                  resumo: part.output?.resumo ?? null,
+                };
+              });
+
+            const { error } = await supabase.from("agent_messages").insert({
+              conversation_id: conversationId,
+              workspace_id: workspaceId,
+              user_id: userId,
+              role: "assistant",
+              content,
+              tool_calls: JSON.parse(JSON.stringify(toolCalls)),
+            });
+            if (error) console.error("[agente] falha ao salvar resposta", error);
+
+            await supabase
+              .from("agent_conversations")
+              .update({ updated_at: new Date().toISOString() })
+              .eq("id", conversationId);
+          },
         });
 
         return result.toUIMessageStreamResponse({
