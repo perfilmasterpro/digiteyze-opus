@@ -63,7 +63,7 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
 
   function toggle(placeId: string) { if (duplicateIds.has(placeId)) return; setSelected((current) => current.includes(placeId) ? current.filter((id) => id !== placeId) : [...current, placeId]); }
   async function requestPlaces(pageToken?: string) {
-    const target = location.trim(); const segment = category.trim(); if (!target) return toast.error("Informe a cidade ou região."); if (!segment) return toast.error("Informe o segmento que deseja pesquisar.");
+    const target = location.trim(); const segment = category.trim(); if (!target) throw new Error("Informe a cidade ou região."); if (!segment) throw new Error("Informe o segmento que deseja pesquisar.");
     const { data: sessionData } = await supabase.auth.getSession(); const token = sessionData.session?.access_token; if (!token) throw new Error("Sua sessão expirou. Entre novamente no Growth OS.");
     const response = await fetch("/api/prospeccao/google-places", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ textQuery: `${segment} em ${target}`, pageSize: 20, ...(pageToken ? { pageToken } : {}) }) });
     const body = (await response.json()) as PlacesResponse; if (!response.ok) throw new Error(body.error ?? "Não foi possível pesquisar no Google Maps."); return body;
