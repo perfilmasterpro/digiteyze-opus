@@ -48,14 +48,11 @@ const FIELD_MASK = [
   "places.rating",
   "places.userRatingCount",
   "places.types",
-  "nextPageToken",
 ].join(",");
 
 function getApiKey() {
   const key = process.env.GOOGLE_PLACES_API_KEY;
-  if (!key) {
-    throw new Error("GOOGLE_PLACES_API_KEY não configurada.");
-  }
+  if (!key) throw new Error("GOOGLE_PLACES_API_KEY não configurada.");
   return key;
 }
 
