@@ -20,11 +20,10 @@ function domainOf(value?: string) { try { return value ? new URL(normalizeUrl(va
 function normalizeContact(value?: string) { return (value ?? "").replace(/\D/g, ""); }
 function existingPlaceId(lead: Lead) { const fields = lead.custom_fields; return typeof fields?.google_place_id === "string" ? fields.google_place_id : ""; }
 function leadMatches(place: GooglePlace, contacts: Enrichment, lead: Lead) {
-  const placeId = place.placeId;
   const domain = domainOf(place.website);
   const phone = normalizeContact(place.phone);
   const whatsapp = normalizeContact(contacts.whatsapp);
-  if (placeId && existingPlaceId(lead) === placeId) return true;
+  if (place.placeId && existingPlaceId(lead) === place.placeId) return true;
   if (domain && domainOf(lead.site) === domain) return true;
   const leadPhone = normalizeContact(lead.whatsapp || lead.telefone);
   return Boolean((phone && leadPhone && phone === leadPhone) || (whatsapp && leadPhone && whatsapp === leadPhone));
@@ -99,31 +98,22 @@ export function GooglePlacesDialog({ open, onOpenChange }: { open: boolean; onOp
       setEnrichment((current) => ({ ...current, ...found }));
       enrichedCount = Object.values(found).filter((item) => item.whatsapp || item.instagram).length;
 
-      const pending: Lead[] = [];
+      const pending: Array<{ place: GooglePlace; contacts: Enrichment }> = [];
       for (const place of chosen) {
         const contacts = found[place.placeId] ?? {};
-        const duplicateAfterEnrichment = leads.some((lead) => leadMatches(place, contacts, lead)) || pending.some((lead) => leadMatches(place, contacts, lead));
+        const duplicateAfterEnrichment = leads.some((lead) => leadMatches(place, contacts, lead)) || pending.some((item) => leadMatches(place, contacts, item.place));
         if (duplicateAfterEnrichment) { skippedAfterEnrichment += 1; continue; }
-        const website = normalizeUrl(place.website);
-        pending.push({
-          id: place.placeId,
-          workspace_id: "",
-          nome_empresa: place.name,
-          status: "novo_lead",
-          origem: "google_maps",
-          responsavel: "",
-          telefone: place.phone,
-          whatsapp: contacts.whatsapp,
-          instagram: contacts.instagram,
-          site: website,
-          observacoes: place.address,
-          segmento: category.trim() || "Hotel e Pousada",
-          custom_fields: { google_place_id: place.placeId, google_maps_url: place.googleMapsUrl ?? "", google_rating: place.rating?.toString() ?? "", google_reviews: place.userRatingCount?.toString() ?? "", google_types: place.types.join(", "), google_website_domain: domainOf(website) },
-        } as Lead);
+        pending.push({ place, contacts });
       }
 
-      for (const lead of pending) {
-        const input = lead as unknown as LeadInput;
+      for (const { place, contacts } of pending) {
+        const website = normalizeUrl(place.website);
+        const input: LeadInput = {
+          nome_empresa: place.name, status: "novo_lead", origem: "google_maps", responsavel: "", telefone: place.phone,
+          whatsapp: contacts.whatsapp, instagram: contacts.instagram, site: website, observacoes: place.address,
+          segmento: category.trim() || "Hotel e Pousada",
+          custom_fields: { google_place_id: place.placeId, google_maps_url: place.googleMapsUrl ?? "", google_rating: place.rating?.toString() ?? "", google_reviews: place.userRatingCount?.toString() ?? "", google_types: place.types.join(", "), google_website_domain: domainOf(website) },
+        };
         try { await createLead.mutateAsync(input); created += 1; } catch { failed += 1; }
       }
     } finally { setAdding(false); }
