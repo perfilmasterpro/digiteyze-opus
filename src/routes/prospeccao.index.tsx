@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
+import { LayoutGrid, List, Map, Plus, Target, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ import {
 import { can } from "@/config/rbac";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import {
+  GooglePlacesDialog,
   LEAD_ORIGEM_LABEL,
   LeadFormDrawer,
   LeadImportDialog,
@@ -57,6 +58,7 @@ function ProspeccaoPage() {
   const [origemFilter, setOrigemFilter] = useState<LeadOrigem | "todos">("todos");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [googlePlacesOpen, setGooglePlacesOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -121,6 +123,17 @@ function ProspeccaoPage() {
               <List className="h-4 w-4" />
               Lista
             </Button>
+            {canCreate ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setGooglePlacesOpen(true)}
+              >
+                <Map className="h-4 w-4" />
+                Buscar no Google Maps
+              </Button>
+            ) : null}
             {canImport ? (
               <Button
                 variant="outline"
@@ -178,10 +191,16 @@ function ProspeccaoPage() {
           description="Cadastre o primeiro lead para iniciar o pipeline."
           action={
             canCreate ? (
-              <Button size="sm" className="gap-2" onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                Novo lead
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" className="gap-2" onClick={() => setGooglePlacesOpen(true)}>
+                  <Map className="h-4 w-4" />
+                  Buscar no Google Maps
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={openCreate}>
+                  <Plus className="h-4 w-4" />
+                  Novo lead
+                </Button>
+              </div>
             ) : undefined
           }
         />
@@ -201,6 +220,7 @@ function ProspeccaoPage() {
         lead={null}
       />
       <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <GooglePlacesDialog open={googlePlacesOpen} onOpenChange={setGooglePlacesOpen} />
     </div>
   );
 }
