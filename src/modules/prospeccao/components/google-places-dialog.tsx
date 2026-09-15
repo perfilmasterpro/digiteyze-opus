@@ -32,6 +32,16 @@ function leadMatches(place: GooglePlace, contacts: Enrichment, lead: Lead) {
   return Boolean((phone && leadPhone && phone === leadPhone) || (whatsapp && leadPhone && whatsapp === leadPhone));
 }
 function isDuplicate(place: GooglePlace, leads: Lead[]) { return leads.some((lead) => leadMatches(place, {}, lead)); }
+function placesMatch(a: GooglePlace, aContacts: Enrichment, b: GooglePlace, bContacts: Enrichment) {
+  if (a.placeId && a.placeId === b.placeId) return true;
+  const domainA = domainOf(a.website); if (domainA && domainA === domainOf(b.website)) return true;
+  const phoneA = normalizeContact(a.phone || aContacts.phone || aContacts.whatsapp);
+  const phoneB = normalizeContact(b.phone || bContacts.phone || bContacts.whatsapp);
+  return Boolean(phoneA && phoneA === phoneB);
+}
+const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"] as const;
+type Uf = (typeof UFS)[number];
+function asUf(value?: string): Uf | undefined { const upper = (value ?? "").trim().toUpperCase(); return (UFS as readonly string[]).includes(upper) ? (upper as Uf) : undefined; }
 
 async function mapWithConcurrency<T, R>(items: T[], limit: number, mapper: (item: T) => Promise<R>) {
   const results: R[] = new Array(items.length); let cursor = 0;
