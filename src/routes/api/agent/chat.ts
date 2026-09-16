@@ -233,7 +233,7 @@ export const Route = createFileRoute("/api/agent/chat")({
               });
 
             const { error } = await supabase.from("agent_messages").insert({
-              conversation_id: conversationId,
+              conversation_id: validatedConversationId,
               workspace_id: workspaceId,
               user_id: userId,
               role: "assistant",
@@ -245,7 +245,7 @@ export const Route = createFileRoute("/api/agent/chat")({
             await supabase
               .from("agent_conversations")
               .update({ updated_at: new Date().toISOString() })
-              .eq("id", conversationId);
+              .eq("id", validatedConversationId);
           },
         });
 
