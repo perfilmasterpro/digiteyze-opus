@@ -78,13 +78,14 @@ export const Route = createFileRoute("/api/agent/chat")({
         if (!Array.isArray(messages) || !conversationId) {
           return new Response("messages e conversationId são obrigatórios.", { status: 400 });
         }
+        const validatedConversationId = conversationId;
 
         const { supabase, userId } = auth;
 
         const { data: conversa } = await supabase
           .from("agent_conversations")
           .select("id, workspace_id, titulo")
-          .eq("id", conversationId)
+          .eq("id", validatedConversationId)
           .maybeSingle();
         if (!conversa) return new Response("Conversa não encontrada.", { status: 404 });
 
@@ -177,7 +178,7 @@ export const Route = createFileRoute("/api/agent/chat")({
           const content = textOf(lastUser);
           if (content) {
             const { error: insertError } = await supabase.from("agent_messages").insert({
-              conversation_id: conversationId,
+               conversation_id: validatedConversationId,
               workspace_id: workspaceId,
               user_id: userId,
               role: "user",
@@ -194,7 +195,7 @@ export const Route = createFileRoute("/api/agent/chat")({
             await supabase
               .from("agent_conversations")
               .update(patch)
-              .eq("id", conversationId);
+               .eq("id", validatedConversationId);
           }
         }
 
