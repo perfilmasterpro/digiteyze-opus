@@ -29,7 +29,9 @@ export function __setWorkspaceStore(next: WorkspaceStore): void {
 /** @internal — usado apenas pelo AuthProvider. */
 export function __clearWorkspaceStore(): void {
   currentStore = null;
-  listeners.forEach((l) => l());
+  // AuthProvider desmonta a área protegida ao marcar a sessão como encerrada.
+  // Não notifique os consumidores filhos neste intervalo: eles seriam
+  // renderizados uma última vez sem contexto antes de o AuthGate removê-los.
 }
 
 function requireStore(): WorkspaceStore {
