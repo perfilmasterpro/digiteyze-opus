@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
+import { CalendarClock, LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -103,26 +103,20 @@ function ProspeccaoListaPage() {
         icon={<Target className="h-5 w-5" />}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => navigate({ to: "/prospeccao" })}
-            >
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate({ to: "/prospeccao" })}>
               <LayoutGrid className="h-4 w-4" />
               Kanban
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate({ to: "/prospeccao/follow-up" })}>
+              <CalendarClock className="h-4 w-4" />
+              Follow-up
             </Button>
             <Button variant="secondary" size="sm" className="gap-2" disabled>
               <List className="h-4 w-4" />
               Lista
             </Button>
             {canImport ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setImportOpen(true)}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
                 <Upload className="h-4 w-4" />
                 Importar leads
               </Button>
@@ -138,96 +132,34 @@ function ProspeccaoListaPage() {
       />
 
       <FilterBar>
-        <SearchInput
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onClear={() => setSearch("")}
-          placeholder="Buscar empresa, contato, telefone, e-mail…"
-          containerClassName="w-full sm:w-80"
-        />
+        <SearchInput value={search} onChange={(e) => setSearch(e.target.value)} onClear={() => setSearch("")} placeholder="Buscar empresa, contato, telefone, e-mail…" containerClassName="w-full sm:w-80" />
         <Select value={origem} onValueChange={(v) => setOrigem(v as typeof origem)}>
           <SelectTrigger className="h-9 w-full sm:w-40"><SelectValue placeholder="Origem" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todas as origens</SelectItem>
-            {(Object.keys(LEAD_ORIGEM_LABEL) as LeadOrigem[]).map((o) => (
-              <SelectItem key={o} value={o}>{LEAD_ORIGEM_LABEL[o]}</SelectItem>
-            ))}
-          </SelectContent>
+          <SelectContent><SelectItem value="todos">Todas as origens</SelectItem>{(Object.keys(LEAD_ORIGEM_LABEL) as LeadOrigem[]).map((o) => <SelectItem key={o} value={o}>{LEAD_ORIGEM_LABEL[o]}</SelectItem>)}</SelectContent>
         </Select>
         <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
           <SelectTrigger className="h-9 w-full sm:w-44"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            {(Object.keys(LEAD_STATUS_LABEL) as LeadStatus[]).map((s) => (
-              <SelectItem key={s} value={s}>{LEAD_STATUS_LABEL[s]}</SelectItem>
-            ))}
-          </SelectContent>
+          <SelectContent><SelectItem value="todos">Todos os status</SelectItem>{(Object.keys(LEAD_STATUS_LABEL) as LeadStatus[]).map((s) => <SelectItem key={s} value={s}>{LEAD_STATUS_LABEL[s]}</SelectItem>)}</SelectContent>
         </Select>
         <Select value={uf} onValueChange={(v) => setUf(v as typeof uf)}>
           <SelectTrigger className="h-9 w-full sm:w-24"><SelectValue placeholder="UF" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">UF</SelectItem>
-            {UFS.map((u) => (
-              <SelectItem key={u} value={u}>{u}</SelectItem>
-            ))}
-          </SelectContent>
+          <SelectContent><SelectItem value="todos">UF</SelectItem>{UFS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
         </Select>
-        <SearchInput
-          value={cidade}
-          onChange={(e) => setCidade(e.target.value)}
-          onClear={() => setCidade("")}
-          placeholder="Cidade"
-          containerClassName="w-full sm:w-40"
-        />
+        <SearchInput value={cidade} onChange={(e) => setCidade(e.target.value)} onClear={() => setCidade("")} placeholder="Cidade" containerClassName="w-full sm:w-40" />
         <Select value={temperatura} onValueChange={(v) => setTemperatura(v as typeof temperatura)}>
           <SelectTrigger className="h-9 w-full sm:w-36"><SelectValue placeholder="Temperatura" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todas</SelectItem>
-            {LEAD_TEMPERATURAS.map((t) => (
-              <SelectItem key={t} value={t}>{LEAD_TEMPERATURA_LABEL[t]}</SelectItem>
-            ))}
-          </SelectContent>
+          <SelectContent><SelectItem value="todos">Todas</SelectItem>{LEAD_TEMPERATURAS.map((t) => <SelectItem key={t} value={t}>{LEAD_TEMPERATURA_LABEL[t]}</SelectItem>)}</SelectContent>
         </Select>
-        <SearchInput
-          value={responsavel}
-          onChange={(e) => setResponsavel(e.target.value)}
-          onClear={() => setResponsavel("")}
-          placeholder="Responsável"
-          containerClassName="w-full sm:w-44"
-        />
+        <SearchInput value={responsavel} onChange={(e) => setResponsavel(e.target.value)} onClear={() => setResponsavel("")} placeholder="Responsável" containerClassName="w-full sm:w-44" />
       </FilterBar>
 
-      {isLoading ? (
-        <LoadingState label="Carregando leads…" />
-      ) : isError ? (
-        <ErrorState onRetry={() => refetch()} />
-      ) : (data?.length ?? 0) === 0 ? (
-        <EmptyState
-          title="Nenhum lead cadastrado"
-          description="Cadastre ou importe leads para começar."
-          action={
-            canCreate ? (
-              <Button size="sm" className="gap-2" onClick={() => setDrawerOpen(true)}>
-                <Plus className="h-4 w-4" /> Novo lead
-              </Button>
-            ) : undefined
-          }
-        />
+      {isLoading ? <LoadingState label="Carregando leads…" /> : isError ? <ErrorState onRetry={() => refetch()} /> : (data?.length ?? 0) === 0 ? (
+        <EmptyState title="Nenhum lead cadastrado" description="Cadastre ou importe leads para começar." action={canCreate ? <Button size="sm" className="gap-2" onClick={() => setDrawerOpen(true)}><Plus className="h-4 w-4" /> Novo lead</Button> : undefined} />
       ) : (
-        <LeadsTable
-          leads={filtered}
-          onSelect={(l) => navigate({ to: "/prospeccao/$id", params: { id: l.id } })}
-        />
+        <LeadsTable leads={filtered} onSelect={(l) => navigate({ to: "/prospeccao/$id", params: { id: l.id } })} />
       )}
 
-      <LeadFormDrawer
-        open={drawerOpen}
-        onOpenChange={(v) => {
-          setDrawerOpen(v);
-          if (!v) setEditing(null);
-        }}
-        lead={editing}
-      />
+      <LeadFormDrawer open={drawerOpen} onOpenChange={(v) => { setDrawerOpen(v); if (!v) setEditing(null); }} lead={editing} />
       <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
