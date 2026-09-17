@@ -23,12 +23,7 @@ import { Input } from "@/components/ui/input";
 import { can } from "@/config/rbac";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import { useCurrentWorkspaceId } from "@/lib/workspace";
-import {
-  useCreateLeadTask,
-  useLeads,
-  type Lead,
-  type LeadStatus,
-} from "@/modules/prospeccao";
+import { useCreateLeadTask, useLeads, type Lead, type LeadStatus } from "@/modules/prospeccao";
 import { leadsKeys } from "@/modules/prospeccao/hooks/use-leads";
 import { updateLead } from "@/modules/prospeccao/services/leads.service";
 import { useQueryClient } from "@tanstack/react-query";
@@ -97,15 +92,7 @@ const bucketLabels: Record<Bucket, string> = {
   sem_data: "Sem próxima ação",
 };
 
-function FollowUpCard({
-  lead,
-  onOpen,
-  onSchedule,
-}: {
-  lead: Lead;
-  onOpen: () => void;
-  onSchedule: () => void;
-}) {
+function FollowUpCard({ lead, onOpen, onSchedule }: { lead: Lead; onOpen: () => void; onSchedule: () => void }) {
   const contact = lead.whatsapp || lead.telefone;
   return (
     <Card className="group transition-shadow hover:shadow-md">
@@ -130,20 +117,12 @@ function FollowUpCard({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {lead.whatsapp ? (
             <Button size="sm" variant="outline" className="gap-1.5" asChild>
-              <a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-              </a>
+              <a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"><MessageCircle className="h-3.5 w-3.5" /> WhatsApp</a>
             </Button>
           ) : contact ? (
-            <Button size="sm" variant="outline" className="gap-1.5" asChild>
-              <a href={`tel:${contact}`}>
-                <Phone className="h-3.5 w-3.5" /> Ligar
-              </a>
-            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" asChild><a href={`tel:${contact}`}><Phone className="h-3.5 w-3.5" /> Ligar</a></Button>
           ) : null}
-          <Button size="sm" variant="secondary" className="gap-1.5" onClick={onSchedule}>
-            <Plus className="h-3.5 w-3.5" /> Agendar
-          </Button>
+          <Button size="sm" variant="secondary" className="gap-1.5" onClick={onSchedule}><Plus className="h-3.5 w-3.5" /> Agendar</Button>
         </div>
       </CardContent>
     </Card>
@@ -159,7 +138,11 @@ function ScheduleInline({ lead, onDone }: { lead: Lead; onDone: () => void }) {
 
   async function save() {
     if (!action.trim() || !date || createTask.isPending) return;
-    const { id, workspace_id, created_at, updated_at, ...input } = lead;
+    const input = { ...lead };
+    delete input.id;
+    delete input.workspace_id;
+    delete input.created_at;
+    delete input.updated_at;
     await updateLead(workspaceId, lead.id, {
       ...input,
       proxima_acao: action.trim(),
@@ -174,9 +157,7 @@ function ScheduleInline({ lead, onDone }: { lead: Lead; onDone: () => void }) {
     <div className="mt-3 grid gap-2 rounded-lg border bg-background p-3 sm:grid-cols-[1fr_150px_auto]">
       <Input value={action} onChange={(e) => setAction(e.target.value)} placeholder="Próxima ação" />
       <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <Button size="sm" onClick={save} disabled={createTask.isPending || !action.trim()}>
-        {createTask.isPending ? "Salvando…" : "Salvar"}
-      </Button>
+      <Button size="sm" onClick={save} disabled={createTask.isPending || !action.trim()}>{createTask.isPending ? "Salvando…" : "Salvar"}</Button>
     </div>
   );
 }
@@ -190,21 +171,13 @@ function FollowUpPage() {
   const [search, setSearch] = useState("");
   const [scheduling, setScheduling] = useState<string | null>(null);
 
-  const activeLeads = useMemo(
-    () => (data ?? []).filter((lead) => ACTIVE_STATUSES.includes(lead.status)),
-    [data],
-  );
+  const activeLeads = useMemo(() => (data ?? []).filter((lead) => ACTIVE_STATUSES.includes(lead.status)), [data]);
 
   const grouped = useMemo(() => {
     const result: Record<Bucket, Lead[]> = { atrasados: [], hoje: [], proximos: [], sem_data: [] };
     const term = search.trim().toLowerCase();
     for (const lead of activeLeads) {
-      if (
-        term &&
-        !lead.nome_empresa.toLowerCase().includes(term) &&
-        !(lead.contato_nome?.toLowerCase().includes(term) ?? false) &&
-        !(lead.cidade?.toLowerCase().includes(term) ?? false)
-      ) continue;
+      if (term && !lead.nome_empresa.toLowerCase().includes(term) && !(lead.contato_nome?.toLowerCase().includes(term) ?? false) && !(lead.cidade?.toLowerCase().includes(term) ?? false)) continue;
       result[bucketFor(lead.data_proxima_acao)].push(lead);
     }
     for (const key of Object.keys(result) as Bucket[]) {
@@ -219,9 +192,7 @@ function FollowUpPage() {
     return base;
   }, [activeLeads]);
 
-  if (!canView) {
-    return <div className="mx-auto w-full max-w-[1400px] px-4 py-6"><ErrorState title="Sem permissão" description="Você não tem acesso ao módulo Prospecção." /></div>;
-  }
+  if (!canView) return <div className="mx-auto w-full max-w-[1400px] px-4 py-6"><ErrorState title="Sem permissão" description="Você não tem acesso ao módulo Prospecção." /></div>;
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-6 md:py-8">
@@ -260,9 +231,7 @@ function FollowUpPage() {
         </div>
       )}
 
-      <div className="mt-6 rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">
-        <strong className="text-foreground">Como usar:</strong> importe seus Leads por CSV, trabalhe a abordagem e sempre deixe uma próxima ação com data. O Follow-up organiza automaticamente os atrasados, os de hoje, os próximos e os que ainda estão sem data.
-      </div>
+      <div className="mt-6 rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground"><strong className="text-foreground">Como usar:</strong> importe seus Leads por CSV, trabalhe a abordagem e sempre deixe uma próxima ação com data. O Follow-up organiza automaticamente os atrasados, os de hoje, os próximos e os que ainda estão sem data.</div>
     </div>
   );
 }
