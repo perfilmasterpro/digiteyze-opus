@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Bot,
   Building2,
+  CalendarClock,
   Contact,
   FileStack,
   GraduationCap,
@@ -53,6 +54,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: FileStack,
     group: "operacao",
     description: "Lista, kanban, agenda e calendário",
+  },
+  {
+    key: "central",
+    label: "Follow-up",
+    to: "/follow-up",
+    icon: CalendarClock,
+    group: "operacao",
+    description: "Próximas ações e tarefas comerciais",
   },
 
   {
