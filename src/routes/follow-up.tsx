@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CalendarClock, Check, Clock3, ListTodo, Phone, Target } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { PageHeader } from "@/components/common/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -78,8 +78,7 @@ function FollowUpPage() {
           (task) =>
             task.status !== "concluida" &&
             task.status !== "cancelada" &&
-            (task.origem_ref_id === lead.id ||
-              (task.origem === "lead" && task.origem_ref_id === lead.id)),
+            task.origem_ref_id === lead.id,
         );
         const taskDates = leadTasks.map((task) => task.prazo ?? task.data).filter(Boolean) as string[];
         const actionDate = lead.data_proxima_acao ?? taskDates.sort()[0] ?? null;
@@ -159,7 +158,7 @@ function SummaryCard({
 }: {
   label: string;
   value: number;
-  icon: React.ReactNode;
+  icon: ReactNode;
   tone?: "neutral" | "destructive" | "primary";
 }) {
   return (
