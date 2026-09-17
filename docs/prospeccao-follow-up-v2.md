@@ -1,0 +1,1 @@
+Follow-up view organizes active leads by next action date and reuses existing Lead and Task structures. CSV remains the intake workflow.
