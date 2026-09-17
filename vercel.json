@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/prospeccao/cadence-runner",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
