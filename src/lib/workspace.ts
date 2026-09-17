@@ -61,14 +61,20 @@ export function useWorkspaceStore(): WorkspaceStore | null {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
-function useRequireStore(): WorkspaceStore {
-  const store = useWorkspaceStore();
-  if (!store) {
-    throw new Error(
-      "Workspace context indisponível: usuário não autenticado ou sessão ainda carregando.",
-    );
-  }
-  return store;
+/**
+ * Store para hooks de UI. Durante a hidratação/sign-out o contexto pode estar
+ * ausente por alguns frames — nesse caso devolvemos um store vazio em vez de
+ * lançar erro (que derrubava a árvore React e gerava tela branca).
+ */
+const EMPTY_STORE: WorkspaceStore = {
+  workspaceId: "",
+  userId: "",
+  userName: "",
+  role: "operacional" as Role,
+};
+
+function useStoreOrEmpty(): WorkspaceStore {
+  return useWorkspaceStore() ?? EMPTY_STORE;
 }
 
 export function getCurrentWorkspaceId(): string {
@@ -76,7 +82,7 @@ export function getCurrentWorkspaceId(): string {
 }
 
 export function useCurrentWorkspaceId(): string {
-  return useRequireStore().workspaceId;
+  return useStoreOrEmpty().workspaceId;
 }
 
 export function getCurrentUserId(): string {
@@ -84,7 +90,7 @@ export function getCurrentUserId(): string {
 }
 
 export function useCurrentUserId(): string {
-  return useRequireStore().userId;
+  return useStoreOrEmpty().userId;
 }
 
 export function getCurrentUserName(): string {
