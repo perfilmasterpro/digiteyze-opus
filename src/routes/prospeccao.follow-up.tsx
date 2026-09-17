@@ -20,19 +20,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useCurrentRole } from "@/hooks/use-current-role";
 import { can } from "@/config/rbac";
-import { getCurrentUserName, useCurrentUserId, useCurrentWorkspaceId } from "@/lib/workspace";
+import { useCurrentRole } from "@/hooks/use-current-role";
+import { useCurrentWorkspaceId } from "@/lib/workspace";
 import {
-  createLeadTask,
+  useCreateLeadTask,
   useLeads,
   type Lead,
   type LeadStatus,
 } from "@/modules/prospeccao";
-import { useQueryClient } from "@tanstack/react-query";
 import { leadsKeys } from "@/modules/prospeccao/hooks/use-leads";
 import { updateLead } from "@/modules/prospeccao/services/leads.service";
-import type { LeadTaskPrioridade } from "@/modules/prospeccao/types/entities.types";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/prospeccao/follow-up")({
   head: () => ({
@@ -105,7 +104,7 @@ function FollowUpCard({
 }: {
   lead: Lead;
   onOpen: () => void;
-  onSchedule: (lead: Lead) => void;
+  onSchedule: () => void;
 }) {
   const contact = lead.whatsapp || lead.telefone;
   return (
@@ -142,7 +141,7 @@ function FollowUpCard({
               </a>
             </Button>
           ) : null}
-          <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => onSchedule(lead)}>
+          <Button size="sm" variant="secondary" className="gap-1.5" onClick={onSchedule}>
             <Plus className="h-3.5 w-3.5" /> Agendar
           </Button>
         </div>
@@ -151,49 +150,32 @@ function FollowUpCard({
   );
 }
 
-function ScheduleInline({
-  lead,
-  onDone,
-}: {
-  lead: Lead;
-  onDone: () => void;
-}) {
+function ScheduleInline({ lead, onDone }: { lead: Lead; onDone: () => void }) {
   const workspaceId = useCurrentWorkspaceId();
-  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
+  const createTask = useCreateLeadTask(lead.id);
   const [action, setAction] = useState(lead.proxima_acao || "Fazer follow-up");
   const [date, setDate] = useState(lead.data_proxima_acao || addDaysIso(1));
-  const [saving, setSaving] = useState(false);
 
   async function save() {
-    if (!action.trim() || !date) return;
-    setSaving(true);
-    try {
-      const { id, workspace_id, created_at, updated_at, ...input } = lead;
-      await updateLead(workspaceId, lead.id, {
-        ...input,
-        proxima_acao: action.trim(),
-        data_proxima_acao: date,
-      });
-      await createLeadTask(workspaceId, lead.id, {
-        titulo: action.trim(),
-        data: date,
-        prioridade: "media" as LeadTaskPrioridade,
-        responsavel_id: userId,
-      });
-      await queryClient.invalidateQueries({ queryKey: leadsKeys.all(workspaceId) });
-      onDone();
-    } finally {
-      setSaving(false);
-    }
+    if (!action.trim() || !date || createTask.isPending) return;
+    const { id, workspace_id, created_at, updated_at, ...input } = lead;
+    await updateLead(workspaceId, lead.id, {
+      ...input,
+      proxima_acao: action.trim(),
+      data_proxima_acao: date,
+    });
+    await createTask.mutateAsync({ titulo: action.trim(), data: date, prioridade: "media" });
+    await queryClient.invalidateQueries({ queryKey: leadsKeys.all(workspaceId) });
+    onDone();
   }
 
   return (
     <div className="mt-3 grid gap-2 rounded-lg border bg-background p-3 sm:grid-cols-[1fr_150px_auto]">
       <Input value={action} onChange={(e) => setAction(e.target.value)} placeholder="Próxima ação" />
       <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <Button size="sm" onClick={save} disabled={saving || !action.trim()}>
-        {saving ? "Salvando…" : "Salvar"}
+      <Button size="sm" onClick={save} disabled={createTask.isPending || !action.trim()}>
+        {createTask.isPending ? "Salvando…" : "Salvar"}
       </Button>
     </div>
   );
@@ -214,12 +196,7 @@ function FollowUpPage() {
   );
 
   const grouped = useMemo(() => {
-    const result: Record<Bucket, Lead[]> = {
-      atrasados: [],
-      hoje: [],
-      proximos: [],
-      sem_data: [],
-    };
+    const result: Record<Bucket, Lead[]> = { atrasados: [], hoje: [], proximos: [], sem_data: [] };
     const term = search.trim().toLowerCase();
     for (const lead of activeLeads) {
       if (
@@ -252,25 +229,14 @@ function FollowUpPage() {
         title="Follow-up"
         description="Organize o próximo passo de cada Lead e não deixe oportunidades paradas."
         icon={<CalendarClock className="h-5 w-5" />}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate({ to: "/prospeccao/lista" })} className="gap-2">
-              <Users className="h-4 w-4" /> Leads
-            </Button>
-          </div>
-        }
+        actions={<Button variant="outline" size="sm" onClick={() => navigate({ to: "/prospeccao/lista" })} className="gap-2"><Users className="h-4 w-4" /> Leads</Button>}
       />
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {(["atrasados", "hoje", "proximos", "sem_data"] as Bucket[]).map((key) => (
           <button key={key} onClick={() => setBucket(key)} className="text-left">
             <Card className={bucket === key ? "ring-2 ring-primary" : "transition-shadow hover:shadow-sm"}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-medium"><BucketIcon bucket={key} /> {bucketLabels[key]}</div>
-                  <Badge variant={key === "atrasados" && counts[key] > 0 ? "destructive" : "secondary"}>{counts[key]}</Badge>
-                </div>
-              </CardContent>
+              <CardContent className="p-4"><div className="flex items-center justify-between"><div className="flex items-center gap-2 text-sm font-medium"><BucketIcon bucket={key} /> {bucketLabels[key]}</div><Badge variant={key === "atrasados" && counts[key] > 0 ? "destructive" : "secondary"}>{counts[key]}</Badge></div></CardContent>
             </Card>
           </button>
         ))}
