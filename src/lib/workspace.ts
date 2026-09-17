@@ -70,7 +70,7 @@ const EMPTY_STORE: WorkspaceStore = {
   workspaceId: "",
   userId: "",
   userName: "",
-  role: "colaborador" as Role,
+  role: "operacional" as Role,
 };
 
 function useStoreOrEmpty(): WorkspaceStore {
