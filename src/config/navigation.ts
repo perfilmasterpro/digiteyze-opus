@@ -130,15 +130,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     key: "growth",
-    label: "Growth",
-    to: "/growth",
-    icon: Sparkles,
-    group: "gestao",
-  },
-  {
-    key: "growth",
     label: "Cadências",
-    to: "/growth/cadencias",
+    to: "/cadencias",
     icon: Route,
     group: "gestao",
     description: "Sequências comerciais reutilizáveis",
