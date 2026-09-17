@@ -55,14 +55,6 @@ export const NAV_ITEMS: NavItem[] = [
     group: "operacao",
     description: "Lista, kanban, agenda e calendário",
   },
-  {
-    key: "central",
-    label: "Follow-up",
-    to: "/follow-up",
-    icon: CalendarClock,
-    group: "operacao",
-    description: "Próximas ações e tarefas comerciais",
-  },
 
   {
     key: "empresas",
@@ -84,6 +76,14 @@ export const NAV_ITEMS: NavItem[] = [
     to: "/prospeccao",
     icon: Target,
     group: "comercial",
+  },
+  {
+    key: "central",
+    label: "Follow-up",
+    to: "/follow-up",
+    icon: CalendarClock,
+    group: "comercial",
+    description: "Próximas ações e tarefas comerciais",
   },
   {
     key: "mensagens",
