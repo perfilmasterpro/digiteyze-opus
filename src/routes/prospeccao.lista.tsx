@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
+import { Globe, LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -26,6 +26,7 @@ import {
   LeadFormDrawer,
   LeadImportDialog,
   LeadsTable,
+  OpenPlacesDialog,
   UFS,
   useLeads,
   type Lead,
@@ -63,6 +64,7 @@ function ProspeccaoListaPage() {
   const [temperatura, setTemperatura] = useState<LeadTemperatura | "todos">("todos");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [openDataOpen, setOpenDataOpen] = useState(false);
   const [editing, setEditing] = useState<Lead | null>(null);
 
   const filtered = useMemo(() => {
@@ -125,6 +127,17 @@ function ProspeccaoListaPage() {
               >
                 <Upload className="h-4 w-4" />
                 Importar leads
+              </Button>
+            ) : null}
+            {canCreate ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setOpenDataOpen(true)}
+              >
+                <Globe className="h-4 w-4" />
+                Buscar empresas (grátis)
               </Button>
             ) : null}
             {canCreate ? (
@@ -229,6 +242,7 @@ function ProspeccaoListaPage() {
         lead={editing}
       />
       <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <OpenPlacesDialog open={openDataOpen} onOpenChange={setOpenDataOpen} />
     </div>
   );
 }

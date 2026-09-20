@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, List, Map, Plus, Target, Upload } from "lucide-react";
+import { Globe, LayoutGrid, List, Map, Plus, Target, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ import {
   LeadFormDrawer,
   LeadImportDialog,
   LeadsKanban,
+  OpenPlacesDialog,
   useLeads,
   useUpdateLeadStatus,
   type Lead,
@@ -58,6 +59,7 @@ function ProspeccaoPage() {
   const [origemFilter, setOrigemFilter] = useState<LeadOrigem | "todos">("todos");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [openDataOpen, setOpenDataOpen] = useState(false);
   const [googlePlacesOpen, setGooglePlacesOpen] = useState(false);
 
   const filtered = useMemo(() => {
@@ -132,6 +134,17 @@ function ProspeccaoPage() {
               >
                 <Map className="h-4 w-4" />
                 Buscar no Google Maps
+              </Button>
+            ) : null}
+            {canCreate ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setOpenDataOpen(true)}
+              >
+                <Globe className="h-4 w-4" />
+                Buscar empresas (grátis)
               </Button>
             ) : null}
             {canImport ? (
@@ -221,6 +234,7 @@ function ProspeccaoPage() {
       />
       <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
       <GooglePlacesDialog open={googlePlacesOpen} onOpenChange={setGooglePlacesOpen} />
+      <OpenPlacesDialog open={openDataOpen} onOpenChange={setOpenDataOpen} />
     </div>
   );
 }

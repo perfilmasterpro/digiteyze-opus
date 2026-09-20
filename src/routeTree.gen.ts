@@ -62,6 +62,8 @@ import { Route as CrmIdPropostasRouteImport } from './routes/crm.$id.propostas'
 import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 import { Route as ApiWebhooksZapzapRouteImport } from './routes/api/webhooks/zapzap'
 import { Route as ApiProspeccaoZapzapFlowRouteImport } from './routes/api/prospeccao/zapzap-flow'
+import { Route as ApiProspeccaoReceitaCnpjRouteImport } from './routes/api/prospeccao/receita-cnpj'
+import { Route as ApiProspeccaoOpenPlacesRouteImport } from './routes/api/prospeccao/open-places'
 import { Route as ApiProspeccaoGooglePlacesRouteImport } from './routes/api/prospeccao/google-places'
 import { Route as ApiProspeccaoEnrichWebsiteRouteImport } from './routes/api/prospeccao/enrich-website'
 import { Route as ApiAgentChatRouteImport } from './routes/api/agent/chat'
@@ -332,6 +334,17 @@ const ApiProspeccaoZapzapFlowRoute = ApiProspeccaoZapzapFlowRouteImport.update({
   path: '/api/prospeccao/zapzap-flow',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProspeccaoReceitaCnpjRoute =
+  ApiProspeccaoReceitaCnpjRouteImport.update({
+    id: '/api/prospeccao/receita-cnpj',
+    path: '/api/prospeccao/receita-cnpj',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiProspeccaoOpenPlacesRoute = ApiProspeccaoOpenPlacesRouteImport.update({
+  id: '/api/prospeccao/open-places',
+  path: '/api/prospeccao/open-places',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProspeccaoGooglePlacesRoute =
   ApiProspeccaoGooglePlacesRouteImport.update({
     id: '/api/prospeccao/google-places',
@@ -389,6 +402,8 @@ export interface FileRoutesByFullPath {
   '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
+  '/api/prospeccao/open-places': typeof ApiProspeccaoOpenPlacesRoute
+  '/api/prospeccao/receita-cnpj': typeof ApiProspeccaoReceitaCnpjRoute
   '/api/prospeccao/zapzap-flow': typeof ApiProspeccaoZapzapFlowRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
@@ -442,6 +457,8 @@ export interface FileRoutesByTo {
   '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
+  '/api/prospeccao/open-places': typeof ApiProspeccaoOpenPlacesRoute
+  '/api/prospeccao/receita-cnpj': typeof ApiProspeccaoReceitaCnpjRoute
   '/api/prospeccao/zapzap-flow': typeof ApiProspeccaoZapzapFlowRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
@@ -501,6 +518,8 @@ export interface FileRoutesById {
   '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
+  '/api/prospeccao/open-places': typeof ApiProspeccaoOpenPlacesRoute
+  '/api/prospeccao/receita-cnpj': typeof ApiProspeccaoReceitaCnpjRoute
   '/api/prospeccao/zapzap-flow': typeof ApiProspeccaoZapzapFlowRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
@@ -561,6 +580,8 @@ export interface FileRouteTypes {
     | '/api/agent/chat'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
+    | '/api/prospeccao/open-places'
+    | '/api/prospeccao/receita-cnpj'
     | '/api/prospeccao/zapzap-flow'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
@@ -614,6 +635,8 @@ export interface FileRouteTypes {
     | '/api/agent/chat'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
+    | '/api/prospeccao/open-places'
+    | '/api/prospeccao/receita-cnpj'
     | '/api/prospeccao/zapzap-flow'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
@@ -672,6 +695,8 @@ export interface FileRouteTypes {
     | '/api/agent/chat'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
+    | '/api/prospeccao/open-places'
+    | '/api/prospeccao/receita-cnpj'
     | '/api/prospeccao/zapzap-flow'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
@@ -718,6 +743,8 @@ export interface RootRouteChildren {
   ApiAgentChatRoute: typeof ApiAgentChatRoute
   ApiProspeccaoEnrichWebsiteRoute: typeof ApiProspeccaoEnrichWebsiteRoute
   ApiProspeccaoGooglePlacesRoute: typeof ApiProspeccaoGooglePlacesRoute
+  ApiProspeccaoOpenPlacesRoute: typeof ApiProspeccaoOpenPlacesRoute
+  ApiProspeccaoReceitaCnpjRoute: typeof ApiProspeccaoReceitaCnpjRoute
   ApiProspeccaoZapzapFlowRoute: typeof ApiProspeccaoZapzapFlowRoute
   ApiWebhooksZapzapRoute: typeof ApiWebhooksZapzapRoute
 }
@@ -1095,6 +1122,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProspeccaoZapzapFlowRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/prospeccao/receita-cnpj': {
+      id: '/api/prospeccao/receita-cnpj'
+      path: '/api/prospeccao/receita-cnpj'
+      fullPath: '/api/prospeccao/receita-cnpj'
+      preLoaderRoute: typeof ApiProspeccaoReceitaCnpjRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/prospeccao/open-places': {
+      id: '/api/prospeccao/open-places'
+      path: '/api/prospeccao/open-places'
+      fullPath: '/api/prospeccao/open-places'
+      preLoaderRoute: typeof ApiProspeccaoOpenPlacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/prospeccao/google-places': {
       id: '/api/prospeccao/google-places'
       path: '/api/prospeccao/google-places'
@@ -1278,6 +1319,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAgentChatRoute: ApiAgentChatRoute,
   ApiProspeccaoEnrichWebsiteRoute: ApiProspeccaoEnrichWebsiteRoute,
   ApiProspeccaoGooglePlacesRoute: ApiProspeccaoGooglePlacesRoute,
+  ApiProspeccaoOpenPlacesRoute: ApiProspeccaoOpenPlacesRoute,
+  ApiProspeccaoReceitaCnpjRoute: ApiProspeccaoReceitaCnpjRoute,
   ApiProspeccaoZapzapFlowRoute: ApiProspeccaoZapzapFlowRoute,
   ApiWebhooksZapzapRoute: ApiWebhooksZapzapRoute,
 }
