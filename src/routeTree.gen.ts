@@ -20,11 +20,13 @@ import { Route as MarketingRouteImport } from './routes/marketing'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IaRouteImport } from './routes/ia'
 import { Route as GrowthRouteImport } from './routes/growth'
+import { Route as FollowUpRouteImport } from './routes/follow-up'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as CrmRouteImport } from './routes/crm'
 import { Route as ConteudoRouteImport } from './routes/conteudo'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as CadenciasRouteImport } from './routes/cadencias'
 import { Route as BaseConhecimentoRouteImport } from './routes/base-conhecimento'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AgenteRouteImport } from './routes/agente'
@@ -59,6 +61,7 @@ import { Route as CrmIdTimelineRouteImport } from './routes/crm.$id.timeline'
 import { Route as CrmIdPropostasRouteImport } from './routes/crm.$id.propostas'
 import { Route as CrmIdContratosRouteImport } from './routes/crm.$id.contratos'
 import { Route as ApiWebhooksZapzapRouteImport } from './routes/api/webhooks/zapzap'
+import { Route as ApiProspeccaoZapzapFlowRouteImport } from './routes/api/prospeccao/zapzap-flow'
 import { Route as ApiProspeccaoGooglePlacesRouteImport } from './routes/api/prospeccao/google-places'
 import { Route as ApiProspeccaoEnrichWebsiteRouteImport } from './routes/api/prospeccao/enrich-website'
 import { Route as ApiAgentChatRouteImport } from './routes/api/agent/chat'
@@ -118,6 +121,11 @@ const GrowthRoute = GrowthRouteImport.update({
   path: '/growth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FollowUpRoute = FollowUpRouteImport.update({
+  id: '/follow-up',
+  path: '/follow-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FinanceiroRoute = FinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -141,6 +149,11 @@ const ConteudoRoute = ConteudoRouteImport.update({
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadenciasRoute = CadenciasRouteImport.update({
+  id: '/cadencias',
+  path: '/cadencias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BaseConhecimentoRoute = BaseConhecimentoRouteImport.update({
@@ -314,6 +327,11 @@ const ApiWebhooksZapzapRoute = ApiWebhooksZapzapRouteImport.update({
   path: '/api/webhooks/zapzap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProspeccaoZapzapFlowRoute = ApiProspeccaoZapzapFlowRouteImport.update({
+  id: '/api/prospeccao/zapzap-flow',
+  path: '/api/prospeccao/zapzap-flow',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProspeccaoGooglePlacesRoute =
   ApiProspeccaoGooglePlacesRouteImport.update({
     id: '/api/prospeccao/google-places',
@@ -337,11 +355,13 @@ export interface FileRoutesByFullPath {
   '/agente': typeof AgenteRoute
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
+  '/cadencias': typeof CadenciasRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
   '/crm': typeof CrmRouteWithChildren
   '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
+  '/follow-up': typeof FollowUpRoute
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/inbox': typeof InboxRoute
@@ -369,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
+  '/api/prospeccao/zapzap-flow': typeof ApiProspeccaoZapzapFlowRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -392,11 +413,13 @@ export interface FileRoutesByTo {
   '/agente': typeof AgenteRoute
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
+  '/cadencias': typeof CadenciasRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
   '/crm': typeof CrmRouteWithChildren
   '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
+  '/follow-up': typeof FollowUpRoute
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/inbox': typeof InboxRoute
@@ -419,6 +442,7 @@ export interface FileRoutesByTo {
   '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
+  '/api/prospeccao/zapzap-flow': typeof ApiProspeccaoZapzapFlowRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -443,11 +467,13 @@ export interface FileRoutesById {
   '/agente': typeof AgenteRoute
   '/auth': typeof AuthRoute
   '/base-conhecimento': typeof BaseConhecimentoRoute
+  '/cadencias': typeof CadenciasRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conteudo': typeof ConteudoRoute
   '/crm': typeof CrmRouteWithChildren
   '/empresas': typeof EmpresasRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
+  '/follow-up': typeof FollowUpRoute
   '/growth': typeof GrowthRouteWithChildren
   '/ia': typeof IaRoute
   '/inbox': typeof InboxRoute
@@ -475,6 +501,7 @@ export interface FileRoutesById {
   '/api/agent/chat': typeof ApiAgentChatRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
+  '/api/prospeccao/zapzap-flow': typeof ApiProspeccaoZapzapFlowRoute
   '/api/webhooks/zapzap': typeof ApiWebhooksZapzapRoute
   '/crm/$id/contratos': typeof CrmIdContratosRoute
   '/crm/$id/propostas': typeof CrmIdPropostasRoute
@@ -500,11 +527,13 @@ export interface FileRouteTypes {
     | '/agente'
     | '/auth'
     | '/base-conhecimento'
+    | '/cadencias'
     | '/configuracoes'
     | '/conteudo'
     | '/crm'
     | '/empresas'
     | '/financeiro'
+    | '/follow-up'
     | '/growth'
     | '/ia'
     | '/inbox'
@@ -532,6 +561,7 @@ export interface FileRouteTypes {
     | '/api/agent/chat'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
+    | '/api/prospeccao/zapzap-flow'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -555,11 +585,13 @@ export interface FileRouteTypes {
     | '/agente'
     | '/auth'
     | '/base-conhecimento'
+    | '/cadencias'
     | '/configuracoes'
     | '/conteudo'
     | '/crm'
     | '/empresas'
     | '/financeiro'
+    | '/follow-up'
     | '/growth'
     | '/ia'
     | '/inbox'
@@ -582,6 +614,7 @@ export interface FileRouteTypes {
     | '/api/agent/chat'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
+    | '/api/prospeccao/zapzap-flow'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -605,11 +638,13 @@ export interface FileRouteTypes {
     | '/agente'
     | '/auth'
     | '/base-conhecimento'
+    | '/cadencias'
     | '/configuracoes'
     | '/conteudo'
     | '/crm'
     | '/empresas'
     | '/financeiro'
+    | '/follow-up'
     | '/growth'
     | '/ia'
     | '/inbox'
@@ -637,6 +672,7 @@ export interface FileRouteTypes {
     | '/api/agent/chat'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
+    | '/api/prospeccao/zapzap-flow'
     | '/api/webhooks/zapzap'
     | '/crm/$id/contratos'
     | '/crm/$id/propostas'
@@ -661,11 +697,13 @@ export interface RootRouteChildren {
   AgenteRoute: typeof AgenteRoute
   AuthRoute: typeof AuthRoute
   BaseConhecimentoRoute: typeof BaseConhecimentoRoute
+  CadenciasRoute: typeof CadenciasRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ConteudoRoute: typeof ConteudoRoute
   CrmRoute: typeof CrmRouteWithChildren
   EmpresasRoute: typeof EmpresasRouteWithChildren
   FinanceiroRoute: typeof FinanceiroRoute
+  FollowUpRoute: typeof FollowUpRoute
   GrowthRoute: typeof GrowthRouteWithChildren
   IaRoute: typeof IaRoute
   InboxRoute: typeof InboxRoute
@@ -680,6 +718,7 @@ export interface RootRouteChildren {
   ApiAgentChatRoute: typeof ApiAgentChatRoute
   ApiProspeccaoEnrichWebsiteRoute: typeof ApiProspeccaoEnrichWebsiteRoute
   ApiProspeccaoGooglePlacesRoute: typeof ApiProspeccaoGooglePlacesRoute
+  ApiProspeccaoZapzapFlowRoute: typeof ApiProspeccaoZapzapFlowRoute
   ApiWebhooksZapzapRoute: typeof ApiWebhooksZapzapRoute
 }
 
@@ -762,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GrowthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/follow-up': {
+      id: '/follow-up'
+      path: '/follow-up'
+      fullPath: '/follow-up'
+      preLoaderRoute: typeof FollowUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/financeiro': {
       id: '/financeiro'
       path: '/financeiro'
@@ -795,6 +841,13 @@ declare module '@tanstack/react-router' {
       path: '/configuracoes'
       fullPath: '/configuracoes'
       preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadencias': {
+      id: '/cadencias'
+      path: '/cadencias'
+      fullPath: '/cadencias'
+      preLoaderRoute: typeof CadenciasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/base-conhecimento': {
@@ -1035,6 +1088,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksZapzapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/prospeccao/zapzap-flow': {
+      id: '/api/prospeccao/zapzap-flow'
+      path: '/api/prospeccao/zapzap-flow'
+      fullPath: '/api/prospeccao/zapzap-flow'
+      preLoaderRoute: typeof ApiProspeccaoZapzapFlowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/prospeccao/google-places': {
       id: '/api/prospeccao/google-places'
       path: '/api/prospeccao/google-places'
@@ -1197,11 +1257,13 @@ const rootRouteChildren: RootRouteChildren = {
   AgenteRoute: AgenteRoute,
   AuthRoute: AuthRoute,
   BaseConhecimentoRoute: BaseConhecimentoRoute,
+  CadenciasRoute: CadenciasRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   ConteudoRoute: ConteudoRoute,
   CrmRoute: CrmRouteWithChildren,
   EmpresasRoute: EmpresasRouteWithChildren,
   FinanceiroRoute: FinanceiroRoute,
+  FollowUpRoute: FollowUpRoute,
   GrowthRoute: GrowthRouteWithChildren,
   IaRoute: IaRoute,
   InboxRoute: InboxRoute,
@@ -1216,6 +1278,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAgentChatRoute: ApiAgentChatRoute,
   ApiProspeccaoEnrichWebsiteRoute: ApiProspeccaoEnrichWebsiteRoute,
   ApiProspeccaoGooglePlacesRoute: ApiProspeccaoGooglePlacesRoute,
+  ApiProspeccaoZapzapFlowRoute: ApiProspeccaoZapzapFlowRoute,
   ApiWebhooksZapzapRoute: ApiWebhooksZapzapRoute,
 }
 export const routeTree = rootRouteImport
