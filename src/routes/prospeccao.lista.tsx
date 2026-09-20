@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
+import { Globe, LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/common/empty-state";
@@ -26,6 +26,7 @@ import {
   LeadFormDrawer,
   LeadImportDialog,
   LeadsTable,
+  OpenPlacesDialog,
   UFS,
   useLeads,
   type Lead,
