@@ -249,6 +249,47 @@ export class WebhookService {
   }
 
   /**
+   * Stop-on-reply: quando o lead responde no WhatsApp, pausa a cadência ativa
+   * para que ele não continue recebendo follow-ups automáticos.
+   */
+  private static async pauseCadenceOnReply(workspaceId: string, leadId: string) {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      const { data: active } = await supabaseAdmin
+        .from('lead_cadences')
+        .select('id, etapa_atual')
+        .eq('workspace_id', workspaceId)
+        .eq('lead_id', leadId)
+        .eq('status', 'ativa')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!active) return;
+
+      await supabaseAdmin
+        .from('lead_cadences')
+        .update({ status: 'pausada' })
+        .eq('id', active.id);
+
+      await supabaseAdmin.from('lead_events').insert({
+        workspace_id: workspaceId,
+        lead_id: leadId,
+        data: {
+          tipo: 'updated',
+          modulo: 'prospeccao',
+          descricao: 'Cadência pausada automaticamente: lead respondeu no WhatsApp',
+        },
+      });
+
+      console.log(`[Webhook] Cadência pausada (stop-on-reply) para o lead ${leadId}`);
+    } catch (err) {
+      console.error('[Webhook] Falha ao pausar cadência por resposta:', err);
+    }
+  }
+
+  /**
    * Mapeia o evento do webhook para uma interação de lead e persiste no banco.
    */
   private static async createInteractionFromEvent(event: WebhookLog) {
