@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useCurrentWorkspaceId } from "@/lib/workspace";
-import { supabase } from "@/integrations/supabase/client";
 import { getLead } from "@/modules/prospeccao/services/leads.service";
 
 import {
