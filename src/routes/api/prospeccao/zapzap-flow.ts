@@ -74,6 +74,8 @@ export const Route = createFileRoute('/api/prospeccao/zapzap-flow')({
             cadence_id,
             lead_cadence_id,
             etapa,
+            etapa_nome,
+            mensagem,
           } = body as Record<string, unknown>;
 
           if (
