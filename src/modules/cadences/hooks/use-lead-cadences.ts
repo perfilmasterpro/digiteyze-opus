@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useCurrentWorkspaceId } from "@/lib/workspace";
-import { supabase } from "@/integrations/supabase/client";
 import { getLead } from "@/modules/prospeccao/services/leads.service";
 
 import {
@@ -13,6 +12,12 @@ import {
   resumeLeadCadence,
   startCadenceForLead,
 } from "../services/lead-cadences.service";
+import {
+  executeCadenceStep,
+  recordCadenceStepFailure,
+  recordCadenceStepSuccess,
+} from "../services/cadence-step-runner";
+import type { LeadCadence } from "../types/cadences.types";
 
 export const leadCadencesKeys = {
   byLead: (ws: string, leadId: string) => ["lead-cadences", ws, leadId] as const,
@@ -48,6 +53,35 @@ function useInvalidateLead(leadId: string) {
   };
 }
 
+/**
+ * Executa a etapa atual do vínculo e dispara ao ZapZap.
+ * Em caso de falha, pausa a cadência, registra o erro e propaga a mensagem.
+ */
+async function runStepOrPause(
+  ws: string,
+  leadId: string,
+  cadence: LeadCadence,
+): Promise<void> {
+  try {
+    const result = await executeCadenceStep(ws, leadId, cadence);
+    if (!result.skipped && result.step) {
+      await recordCadenceStepSuccess(ws, leadId, result.etapa, result.step.nome);
+    }
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Falha ao executar a etapa da cadência.";
+    await recordCadenceStepFailure(ws, leadId, cadence.etapa_atual, message);
+    try {
+      await pauseLeadCadence(ws, leadId, cadence.id);
+    } catch {
+      // mantém o erro original como causa exibida ao usuário
+    }
+    throw new Error(message);
+  }
+}
+
 export function useStartLeadCadence(leadId: string) {
   const ws = useCurrentWorkspaceId();
   const invalidate = useInvalidateLead(leadId);
@@ -61,47 +95,7 @@ export function useStartLeadCadence(leadId: string) {
       }
 
       const cadence = await startCadenceForLead(ws, leadId, cadenceId);
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        await pauseLeadCadence(ws, leadId, cadence.id);
-        throw new Error("Sua sessão expirou. Faça login novamente.");
-      }
-
-      const response = await fetch("/api/prospeccao/zapzap-flow", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          workspace_id: ws,
-          lead_id: leadId,
-          empresa: (lead as any).empresa ?? (lead as any).nome_empresa,
-          nome: (lead as any).nome,
-          telefone: (lead as any).telefone,
-          whatsapp: (lead as any).whatsapp,
-          cadence_id: cadence.cadence_id,
-          lead_cadence_id: cadence.id,
-          etapa: cadence.etapa_atual,
-        }),
-      });
-
-      if (!response.ok) {
-        let message = "Não foi possível iniciar o Flow do ZapZap.";
-        try {
-          const payload = await response.json();
-          if (typeof payload?.error === "string") message = payload.error;
-        } catch {
-          // mantém a mensagem padrão
-        }
-
-        await pauseLeadCadence(ws, leadId, cadence.id);
-        throw new Error(message);
-      }
+      await runStepOrPause(ws, leadId, cadence);
 
       return cadence;
     },
@@ -113,7 +107,15 @@ export function useAdvanceLeadCadence(leadId: string) {
   const ws = useCurrentWorkspaceId();
   const invalidate = useInvalidateLead(leadId);
   return useMutation({
-    mutationFn: (leadCadenceId: string) => advanceLeadCadence(ws, leadId, leadCadenceId),
+    mutationFn: async (leadCadenceId: string) => {
+      const cadence = await advanceLeadCadence(ws, leadId, leadCadenceId);
+
+      // Cadência concluída (não há próxima etapa) → nada a enviar
+      if (cadence.status === "concluida") return cadence;
+
+      await runStepOrPause(ws, leadId, cadence);
+      return cadence;
+    },
     onSuccess: invalidate,
   });
 }

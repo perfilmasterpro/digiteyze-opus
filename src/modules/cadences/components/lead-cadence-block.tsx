@@ -133,7 +133,10 @@ export function LeadCadenceBlock({ leadId }: { leadId: string }) {
                 <Button
                   size="sm"
                   onClick={() =>
-                    run(() => advance.mutateAsync(active.id), "Etapa avançada")
+                    run(
+                      () => advance.mutateAsync(active.id),
+                      "Etapa avançada e mensagem enviada",
+                    )
                   }
                   disabled={advance.isPending}
                 >

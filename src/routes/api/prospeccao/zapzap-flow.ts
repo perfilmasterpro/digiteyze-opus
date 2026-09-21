@@ -74,6 +74,8 @@ export const Route = createFileRoute('/api/prospeccao/zapzap-flow')({
             cadence_id,
             lead_cadence_id,
             etapa,
+            etapa_nome,
+            mensagem,
           } = body as Record<string, unknown>;
 
           if (
@@ -120,6 +122,18 @@ export const Route = createFileRoute('/api/prospeccao/zapzap-flow')({
             );
           }
 
+          const messageText =
+            typeof mensagem === 'string' ? mensagem.trim() : '';
+
+          if (mensagem !== undefined && !messageText) {
+            return new Response(
+              JSON.stringify({
+                error: 'Etapa sem mensagem configurada. Nada foi enviado.',
+              }),
+              { status: 400, headers: { 'Content-Type': 'application/json' } },
+            );
+          }
+
           const payload = {
             source: 'growth_os',
             event: 'prospecting.cadence.started',
@@ -136,6 +150,12 @@ export const Route = createFileRoute('/api/prospeccao/zapzap-flow')({
                 name: typeof nome === 'string' ? nome : null,
                 company: typeof empresa === 'string' ? empresa : null,
               },
+              step: {
+                ordem: typeof etapa === 'number' ? etapa : 1,
+                nome: typeof etapa_nome === 'string' ? etapa_nome : null,
+              },
+              message: messageText || null,
+              mensagem: messageText || null,
             },
           };
 
