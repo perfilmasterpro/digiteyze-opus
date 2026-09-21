@@ -67,6 +67,7 @@ import { Route as ApiProspeccaoOpenPlacesRouteImport } from './routes/api/prospe
 import { Route as ApiProspeccaoGooglePlacesRouteImport } from './routes/api/prospeccao/google-places'
 import { Route as ApiProspeccaoEnrichWebsiteRouteImport } from './routes/api/prospeccao/enrich-website'
 import { Route as ApiAgentChatRouteImport } from './routes/api/agent/chat'
+import { Route as ApiPublicCronCadencesRunnerRouteImport } from './routes/api/public/cron/cadences-runner'
 
 const TarefasRoute = TarefasRouteImport.update({
   id: '/tarefas',
@@ -362,6 +363,12 @@ const ApiAgentChatRoute = ApiAgentChatRouteImport.update({
   path: '/api/agent/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronCadencesRunnerRoute =
+  ApiPublicCronCadencesRunnerRouteImport.update({
+    id: '/api/public/cron/cadences-runner',
+    path: '/api/public/cron/cadences-runner',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -422,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/crm/$id/': typeof CrmIdIndexRoute
   '/empresas/$id/': typeof EmpresasIdIndexRoute
   '/prospeccao/$id/': typeof ProspeccaoIdIndexRoute
+  '/api/public/cron/cadences-runner': typeof ApiPublicCronCadencesRunnerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -477,6 +485,7 @@ export interface FileRoutesByTo {
   '/crm/$id': typeof CrmIdIndexRoute
   '/empresas/$id': typeof EmpresasIdIndexRoute
   '/prospeccao/$id': typeof ProspeccaoIdIndexRoute
+  '/api/public/cron/cadences-runner': typeof ApiPublicCronCadencesRunnerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -538,6 +547,7 @@ export interface FileRoutesById {
   '/crm/$id/': typeof CrmIdIndexRoute
   '/empresas/$id/': typeof EmpresasIdIndexRoute
   '/prospeccao/$id/': typeof ProspeccaoIdIndexRoute
+  '/api/public/cron/cadences-runner': typeof ApiPublicCronCadencesRunnerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -600,6 +610,7 @@ export interface FileRouteTypes {
     | '/crm/$id/'
     | '/empresas/$id/'
     | '/prospeccao/$id/'
+    | '/api/public/cron/cadences-runner'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/crm/$id'
     | '/empresas/$id'
     | '/prospeccao/$id'
+    | '/api/public/cron/cadences-runner'
   id:
     | '__root__'
     | '/'
@@ -715,6 +727,7 @@ export interface FileRouteTypes {
     | '/crm/$id/'
     | '/empresas/$id/'
     | '/prospeccao/$id/'
+    | '/api/public/cron/cadences-runner'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -747,6 +760,7 @@ export interface RootRouteChildren {
   ApiProspeccaoReceitaCnpjRoute: typeof ApiProspeccaoReceitaCnpjRoute
   ApiProspeccaoZapzapFlowRoute: typeof ApiProspeccaoZapzapFlowRoute
   ApiWebhooksZapzapRoute: typeof ApiWebhooksZapzapRoute
+  ApiPublicCronCadencesRunnerRoute: typeof ApiPublicCronCadencesRunnerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1157,6 +1171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAgentChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/cadences-runner': {
+      id: '/api/public/cron/cadences-runner'
+      path: '/api/public/cron/cadences-runner'
+      fullPath: '/api/public/cron/cadences-runner'
+      preLoaderRoute: typeof ApiPublicCronCadencesRunnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1323,6 +1344,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProspeccaoReceitaCnpjRoute: ApiProspeccaoReceitaCnpjRoute,
   ApiProspeccaoZapzapFlowRoute: ApiProspeccaoZapzapFlowRoute,
   ApiWebhooksZapzapRoute: ApiWebhooksZapzapRoute,
+  ApiPublicCronCadencesRunnerRoute: ApiPublicCronCadencesRunnerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
