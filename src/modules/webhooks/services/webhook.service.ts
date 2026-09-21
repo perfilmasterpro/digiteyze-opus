@@ -236,6 +236,11 @@ export class WebhookService {
           lead_id: matchResult.leadId,
           lead_match_status: tableStatus
         });
+
+        // Stop-on-reply: lead respondeu → pausa a cadência ativa
+        if (extracted.isInbound) {
+          await this.pauseCadenceOnReply(event.workspace_id, matchResult.leadId);
+        }
       }
 
     } catch (err) {
