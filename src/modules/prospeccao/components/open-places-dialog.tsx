@@ -488,7 +488,7 @@ export function OpenPlacesDialog({
               <DialogFooter>
                 <Button onClick={() => void addSelected()} disabled={!selected.length || adding}>
                   {adding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                  {adding ? "Adicionando..." : `Adicionar ${selected.length} empresa${selected.length === 1 ? "" : "s"}`}
+                  {adding ? "Adicionando..." : "Adicionar à prospecção"}
                 </Button>
               </DialogFooter>
             ) : null}
@@ -564,7 +564,7 @@ export function OpenPlacesDialog({
                 </dl>
                 <Button onClick={() => void addCompany()} disabled={savingCompany} className="gap-2">
                   {savingCompany ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  Adicionar aos leads
+                  Adicionar à prospecção
                 </Button>
               </div>
             ) : (
