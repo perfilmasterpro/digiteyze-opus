@@ -5,6 +5,7 @@ import { QuickCaptureFab } from "@/modules/inbox-ai/components/quick-capture-fab
 
 import { AppHeader } from "./app-header";
 import { AppSidebar } from "./app-sidebar";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -13,13 +14,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <AppSidebar />
         <SidebarInset className="flex min-w-0 flex-1 flex-col">
           <AppHeader />
-          <main className="flex-1 px-4 py-6 md:px-6 md:py-8">
+          <main className="flex-1 px-4 pb-24 pt-6 md:px-6 md:py-8">
             <div className="mx-auto w-full max-w-7xl">{children}</div>
           </main>
         </SidebarInset>
         <QuickCaptureFab />
+        <MobileBottomNav />
       </div>
     </SidebarProvider>
   );
 }
-
