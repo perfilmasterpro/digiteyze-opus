@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Globe, LayoutGrid, List, Map, Plus, Target, Upload } from "lucide-react";
+import { Globe, LayoutGrid, List, Map, Plus, Target, Upload, Play } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -34,6 +34,7 @@ import {
   type LeadOrigem,
   type LeadStatus,
 } from "@/modules/prospeccao";
+import { useCadences, useStartLeadCadenceBulk } from "@/modules/cadences";
 
 export const Route = createFileRoute("/prospeccao/")({
   head: () => ({
@@ -57,6 +58,8 @@ function ProspeccaoPage() {
   const { data, isLoading, isError, refetch } = useLeads();
   const updateStatus = useUpdateLeadStatus();
   const updateProspeccao = useUpdateLeadsProspeccaoStatus();
+  const startCadence = useStartLeadCadenceBulk();
+  const { data: cadences = [] } = useCadences();
 
   const [search, setSearch] = useState("");
   const [origemFilter, setOrigemFilter] = useState<LeadOrigem | "todos">("todos");
@@ -66,6 +69,7 @@ function ProspeccaoPage() {
   const [googlePlacesOpen, setGooglePlacesOpen] = useState(false);
   const [view, setView] = useState<"prospeccao" | "banco">("prospeccao");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedCadenceId, setSelectedCadenceId] = useState("");
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -106,6 +110,7 @@ function ProspeccaoPage() {
   function changeView(next: "prospeccao" | "banco") {
     setView(next);
     setSelectedIds([]);
+    setSelectedCadenceId("");
   }
 
   async function addSelectedToProspeccao() {
@@ -116,6 +121,7 @@ function ProspeccaoPage() {
         emProspeccao: true,
       });
       setSelectedIds([]);
+      setSelectedCadenceId("");
       setView("prospeccao");
       toast.success(
         `${selectedVisibleIds.length} ${selectedVisibleIds.length === 1 ? "lead adicionado" : "leads adicionados"} à prospecção`,
@@ -125,6 +131,56 @@ function ProspeccaoPage() {
         err instanceof Error
           ? err.message
           : "Não foi possível adicionar os leads à prospecção.",
+      );
+    }
+  }
+
+  async function addAndStartCadence() {
+    if (selectedVisibleIds.length === 0) return;
+    if (!selectedCadenceId) {
+      toast.error("Selecione uma cadência antes de iniciar.");
+      return;
+    }
+
+    const ids = [...selectedVisibleIds];
+
+    try {
+      await updateProspeccao.mutateAsync({
+        leadIds: ids,
+        emProspeccao: true,
+      });
+
+      const result = await startCadence.mutateAsync({
+        leadIds: ids,
+        cadenceId: selectedCadenceId,
+      });
+
+      if (result.started.length > 0) {
+        await Promise.all(
+          result.started.map((id) =>
+            updateStatus.mutateAsync({ id, status: "primeiro_contato" }),
+          ),
+        );
+      }
+
+      setSelectedIds([]);
+      setSelectedCadenceId("");
+      setView("prospeccao");
+
+      if (result.failed.length === 0) {
+        toast.success(
+          `Cadência iniciada para ${result.started.length} ${result.started.length === 1 ? "lead" : "leads"}.`,
+        );
+      } else {
+        toast.warning(
+          `${result.started.length} iniciados e ${result.failed.length} com falha. Os que falharam ficaram pausados.`,
+        );
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível iniciar a cadência.",
       );
     }
   }
@@ -157,12 +213,7 @@ function ProspeccaoPage() {
         icon={<Target className="h-5 w-5" />}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="gap-2"
-              disabled
-            >
+            <Button variant="secondary" size="sm" className="gap-2" disabled>
               <LayoutGrid className="h-4 w-4" />
               Kanban
             </Button>
@@ -176,34 +227,19 @@ function ProspeccaoPage() {
               Lista
             </Button>
             {canCreate ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setGooglePlacesOpen(true)}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setGooglePlacesOpen(true)}>
                 <Map className="h-4 w-4" />
                 Buscar no Google Maps
               </Button>
             ) : null}
             {canCreate ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setOpenDataOpen(true)}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setOpenDataOpen(true)}>
                 <Globe className="h-4 w-4" />
                 Buscar empresas (grátis)
               </Button>
             ) : null}
             {canImport ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setImportOpen(true)}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
                 <Upload className="h-4 w-4" />
                 Importar
               </Button>
@@ -244,10 +280,7 @@ function ProspeccaoPage() {
           placeholder="Buscar por empresa, responsável, cidade ou WhatsApp…"
           containerClassName="w-full sm:w-96"
         />
-        <Select
-          value={origemFilter}
-          onValueChange={(v) => setOrigemFilter(v as typeof origemFilter)}
-        >
+        <Select value={origemFilter} onValueChange={(v) => setOrigemFilter(v as typeof origemFilter)}>
           <SelectTrigger className="h-9 w-full sm:w-48">
             <SelectValue placeholder="Origem" />
           </SelectTrigger>
@@ -273,20 +306,11 @@ function ProspeccaoPage() {
           action={
             canCreate ? (
               <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setGooglePlacesOpen(true)}
-                >
+                <Button size="sm" className="gap-2" onClick={() => setGooglePlacesOpen(true)}>
                   <Map className="h-4 w-4" />
                   Buscar no Google Maps
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={openCreate}
-                >
+                <Button variant="outline" size="sm" className="gap-2" onClick={openCreate}>
                   <Plus className="h-4 w-4" />
                   Novo lead
                 </Button>
@@ -310,28 +334,51 @@ function ProspeccaoPage() {
               selectionEnabled
             />
             {selectedVisibleIds.length > 0 ? (
-              <div className="sticky bottom-20 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur md:bottom-4">
-                <span className="text-sm font-medium">
-                  {selectedVisibleIds.length}{" "}
-                  {selectedVisibleIds.length === 1
-                    ? "lead selecionado"
-                    : "leads selecionados"}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedIds([])}
-                  >
-                    Limpar seleção
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={addSelectedToProspeccao}
-                    disabled={updateProspeccao.isPending}
-                  >
-                    Adicionar à prospecção
-                  </Button>
+              <div className="sticky bottom-20 z-20 mt-4 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur md:bottom-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-sm font-medium">
+                    {selectedVisibleIds.length}{" "}
+                    {selectedVisibleIds.length === 1 ? "lead selecionado" : "leads selecionados"}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Select value={selectedCadenceId} onValueChange={setSelectedCadenceId}>
+                      <SelectTrigger className="w-full sm:w-64">
+                        <SelectValue placeholder="Escolha a cadência" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cadences.filter((c) => c.status === "ativa").map((cadence) => (
+                          <SelectItem key={cadence.id} value={cadence.id}>
+                            {cadence.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={addSelectedToProspeccao}
+                      disabled={updateProspeccao.isPending || startCadence.isPending}
+                    >
+                      Adicionar à prospecção
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="gap-1"
+                      onClick={addAndStartCadence}
+                      disabled={
+                        updateProspeccao.isPending ||
+                        startCadence.isPending ||
+                        updateStatus.isPending ||
+                        !selectedCadenceId
+                      }
+                    >
+                      <Play className="h-4 w-4" />
+                      Adicionar e iniciar cadência
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+                      Limpar
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -347,16 +394,9 @@ function ProspeccaoPage() {
         />
       )}
 
-      <LeadFormDrawer
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        lead={null}
-      />
+      <LeadFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} lead={null} />
       <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
-      <GooglePlacesDialog
-        open={googlePlacesOpen}
-        onOpenChange={setGooglePlacesOpen}
-      />
+      <GooglePlacesDialog open={googlePlacesOpen} onOpenChange={setGooglePlacesOpen} />
       <OpenPlacesDialog open={openDataOpen} onOpenChange={setOpenDataOpen} />
     </div>
   );
