@@ -11,6 +11,7 @@ import {
   pauseLeadCadence,
   resumeLeadCadence,
   startCadenceForLead,
+  startCadenceForLeads,
 } from "../services/lead-cadences.service";
 import {
   executeCadenceStep,
@@ -53,10 +54,6 @@ function useInvalidateLead(leadId: string) {
   };
 }
 
-/**
- * Executa a etapa atual do vínculo e dispara ao ZapZap.
- * Em caso de falha, pausa a cadência, registra o erro e propaga a mensagem.
- */
 async function runStepOrPause(
   ws: string,
   leadId: string,
@@ -89,17 +86,29 @@ export function useStartLeadCadence(leadId: string) {
   return useMutation({
     mutationFn: async (cadenceId: string) => {
       const lead = await getLead(ws, leadId);
-
-      if (!lead) {
-        throw new Error("Lead não encontrado.");
-      }
+      if (!lead) throw new Error("Lead não encontrado.");
 
       const cadence = await startCadenceForLead(ws, leadId, cadenceId);
       await runStepOrPause(ws, leadId, cadence);
-
       return cadence;
     },
     onSuccess: invalidate,
+  });
+}
+
+export function useStartLeadCadenceBulk() {
+  const ws = useCurrentWorkspaceId();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ leadIds, cadenceId }: { leadIds: string[]; cadenceId: string }) =>
+      startCadenceForLeads(ws, leadIds, cadenceId),
+    onSuccess: (_result, variables) => {
+      for (const leadId of variables.leadIds) {
+        qc.invalidateQueries({ queryKey: leadCadencesKeys.byLead(ws, leadId) });
+        qc.invalidateQueries({ queryKey: leadCadencesKeys.active(ws, leadId) });
+      }
+    },
   });
 }
 
@@ -109,10 +118,7 @@ export function useAdvanceLeadCadence(leadId: string) {
   return useMutation({
     mutationFn: async (leadCadenceId: string) => {
       const cadence = await advanceLeadCadence(ws, leadId, leadCadenceId);
-
-      // Cadência concluída (não há próxima etapa) → nada a enviar
       if (cadence.status === "concluida") return cadence;
-
       await runStepOrPause(ws, leadId, cadence);
       return cadence;
     },
