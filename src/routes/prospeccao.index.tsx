@@ -61,6 +61,7 @@ function ProspeccaoPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [openDataOpen, setOpenDataOpen] = useState(false);
   const [googlePlacesOpen, setGooglePlacesOpen] = useState(false);
+  const [pipelineView, setPipelineView] = useState<"prospeccao" | "todos">("prospeccao");
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -75,6 +76,11 @@ function ProspeccaoPage() {
       );
     });
   }, [data, search, origemFilter]);
+
+  const pipelineLeads = useMemo(() => {
+    const base = filtered.filter((lead) => pipelineView === "todos" || lead.em_prospeccao || lead.status !== "novo_lead");
+    return base;
+  }, [filtered, pipelineView]);
 
   function openCreate() {
     setDrawerOpen(true);
@@ -192,6 +198,13 @@ function ProspeccaoPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={pipelineView} onValueChange={(v) => setPipelineView(v as typeof pipelineView)}>
+          <SelectTrigger className="h-9 w-full sm:w-52"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="prospeccao">Apenas em prospecção</SelectItem>
+            <SelectItem value="todos">Todos os leads</SelectItem>
+          </SelectContent>
+        </Select>
       </FilterBar>
 
       {isLoading ? (
@@ -219,7 +232,7 @@ function ProspeccaoPage() {
         />
       ) : (
         <LeadsKanban
-          leads={filtered}
+          leads={pipelineLeads}
           onSelect={openLead}
           canMove={canMove}
           canUpdate={canUpdate}
