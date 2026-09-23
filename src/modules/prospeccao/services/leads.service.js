@@ -159,3 +159,37 @@ export async function updateLeadStatus(workspaceId, id, status) {
     }
     return rowToLead(data);
 }
+
+
+export async function updateLeadsProspeccaoStatus(workspaceId, leadIds, emProspeccao) {
+    if (leadIds.length === 0)
+        return [];
+    const uniqueIds = [...new Set(leadIds)];
+    const currentLeads = await Promise.all(uniqueIds.map((id) => getLead(workspaceId, id)));
+    const leads = currentLeads.filter(Boolean);
+    const now = new Date().toISOString();
+    return await Promise.all(leads.map(async (lead) => {
+        const nextData = {
+            ...lead,
+            em_prospeccao: emProspeccao,
+            data_inicio_prospeccao: emProspeccao
+                ? (lead.data_inicio_prospeccao ?? now)
+                : undefined,
+        };
+        delete nextData.id;
+        delete nextData.workspace_id;
+        delete nextData.empresa_id;
+        delete nextData.created_at;
+        delete nextData.updated_at;
+        const { data, error } = await supabase
+            .from("leads")
+            .update({ data: nextData, updated_at: now })
+            .eq("workspace_id", workspaceId)
+            .eq("id", lead.id)
+            .select("id, workspace_id, empresa_id, data, created_at, updated_at")
+            .single();
+        if (error || !data)
+            throw new Error(error?.message ?? "Não foi possível atualizar o lead.");
+        return rowToLead(data);
+    }));
+}
