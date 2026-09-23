@@ -201,3 +201,47 @@ export async function updateLeadStatus(
   }
   return rowToLead(data as LeadRow);
 }
+
+
+export async function updateLeadsProspeccaoStatus(
+  workspaceId: string,
+  leadIds: string[],
+  emProspeccao: boolean,
+): Promise<Lead[]> {
+  if (leadIds.length === 0) return [];
+
+  const uniqueIds = [...new Set(leadIds)];
+  const currentLeads = await Promise.all(uniqueIds.map((id) => getLead(workspaceId, id)));
+  const leads = currentLeads.filter((lead): lead is Lead => Boolean(lead));
+  const now = new Date().toISOString();
+
+  const updated = await Promise.all(
+    leads.map(async (lead) => {
+      const nextData = {
+        ...(lead as unknown as Record<string, unknown>),
+        em_prospeccao: emProspeccao,
+        data_inicio_prospeccao: emProspeccao
+          ? (lead.data_inicio_prospeccao ?? now)
+          : undefined,
+      };
+      delete nextData.id;
+      delete nextData.workspace_id;
+      delete nextData.empresa_id;
+      delete nextData.created_at;
+      delete nextData.updated_at;
+
+      const { data, error } = await supabase
+        .from("leads")
+        .update({ data: nextData as Json, updated_at: now })
+        .eq("workspace_id", workspaceId)
+        .eq("id", lead.id)
+        .select("id, workspace_id, empresa_id, data, created_at, updated_at")
+        .single();
+
+      if (error || !data) throw new Error(error?.message ?? "Não foi possível atualizar o lead.");
+      return rowToLead(data as LeadRow);
+    }),
+  );
+
+  return updated;
+}
