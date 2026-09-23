@@ -182,6 +182,10 @@ export interface Lead {
   motivo_perda?: LeadMotivoPerda;
   // Campos personalizados (extensível — sem novas colunas)
   custom_fields?: Record<string, string>;
+  /** Indica que o lead foi escolhido para entrar no pipeline de prospecção ativa. */
+  em_prospeccao?: boolean;
+  /** Data/hora em que o lead foi ativado para prospecção. */
+  data_inicio_prospeccao?: string;
   // Rastreabilidade de conversão para CRM
   empresa_id?: string;
   data_conversao?: string; // ISO datetime
