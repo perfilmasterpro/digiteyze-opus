@@ -10,6 +10,7 @@ import {
   listLeads,
   updateLead,
   updateLeadStatus,
+  updateLeadsProspeccaoStatus,
 } from "../services/leads.service";
 import {
   LEAD_STATUS_LABEL,
@@ -173,6 +174,34 @@ export function useUpdateLeadStatus() {
         });
       }
       invalidate(updated.id, updated.empresa_id);
+    },
+  });
+}
+
+
+export function useUpdateLeadsProspeccaoStatus() {
+  const workspaceId = useCurrentWorkspaceId();
+  const userId = useCurrentUserId();
+  const invalidate = useInvalidateLeads();
+  return useMutation({
+    mutationFn: ({ leadIds, emProspeccao }: { leadIds: string[]; emProspeccao: boolean }) =>
+      updateLeadsProspeccaoStatus(workspaceId, leadIds, emProspeccao),
+    onSuccess: async (updated) => {
+      await Promise.all(
+        updated.map((lead) =>
+          recordLeadEvent({
+            workspaceId,
+            leadId: lead.id,
+            tipo: "updated",
+            descricao: lead.em_prospeccao
+              ? "Lead adicionado à prospecção ativa"
+              : "Lead removido da prospecção ativa",
+            created_by: userId,
+            created_by_name: getCurrentUserName(),
+          }),
+        ),
+      );
+      invalidate();
     },
   });
 }
