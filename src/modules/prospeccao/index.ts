@@ -20,6 +20,7 @@ export {
   useCreateLead,
   useUpdateLead,
   useUpdateLeadStatus,
+  useUpdateLeadsProspeccaoStatus,
 } from "./hooks/use-leads";
 export { leadEventsKeys, leadEventsQueryOptions, useLeadEvents } from "./hooks/use-lead-events";
 export {
