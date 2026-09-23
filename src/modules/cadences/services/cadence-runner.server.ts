@@ -1,14 +1,14 @@
 /**
  * Executor automático de etapas vencidas de cadências (server-only).
  *
- * Roda a partir do endpoint de cron (`/api/public/cron/cadences-runner`).
- * Para cada vínculo lead × cadência com status "ativa" e data_proxima_acao
- * já vencida: avança a etapa, monta a mensagem do template e dispara no mesmo
- * webhook do ZapZap Flow já usado pelo disparo manual.
+ * O Growth controla a cadência/estado e envia as mensagens de saída
+ * diretamente pela API REST do ZapZap. Webhooks são usados apenas para
+ * receber eventos do WhatsApp, não para iniciar disparos.
  */
 
 import { applyVariables } from "@/modules/message-templates/services/apply-variables";
 import type { Lead } from "@/modules/prospeccao/types/leads.types";
+import { sendZapZapText } from "./zapzap-api.server";
 
 type RunnerResult = {
   processadas: number;
@@ -51,13 +51,6 @@ function addDaysIso(baseIso: string, days: number): string {
   return d.toISOString();
 }
 
-function normalizeBrPhone(raw: string): string {
-  const digits = (raw ?? "").replace(/\D/g, "");
-  if (!digits) return "";
-  return digits.startsWith("55") ? digits : `55${digits}`;
-}
-
-/** Máximo de vínculos processados por execução (protege o worker). */
 const BATCH_LIMIT = 50;
 
 export async function runDueCadenceSteps(): Promise<RunnerResult> {
@@ -87,12 +80,10 @@ export async function runDueCadenceSteps(): Promise<RunnerResult> {
 
   if (error) throw new Error(error.message);
 
-  const webhookUrl = process.env["ZAPZAP_GROWTH_FLOW_WEBHOOK_URL"]?.trim();
-
   for (const row of (due ?? []) as LeadCadenceRow[]) {
     result.processadas += 1;
     try {
-      const outcome = await processOne(supabaseAdmin, row, webhookUrl);
+      const outcome = await processOne(supabaseAdmin, row);
       result.detalhes.push({
         lead_cadence_id: row.id,
         lead_id: row.lead_id,
@@ -127,11 +118,7 @@ type Outcome = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function processOne(
-  admin: any,
-  row: LeadCadenceRow,
-  webhookUrl: string | undefined,
-): Promise<Outcome> {
+async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
   const { data: stepsData, error: stepsError } = await admin
     .from("cadence_steps")
     .select("id, ordem, nome, tipo_acao, template_id, tempo_espera_dias, descricao")
@@ -147,7 +134,6 @@ async function processOne(
   const nextStep = steps.find((s) => s.ordem === nextOrdem) ?? null;
   const nowIso = new Date().toISOString();
 
-  // Sem próxima etapa → cadência concluída
   if (!nextStep) {
     await admin
       .from("lead_cadences")
@@ -166,7 +152,6 @@ async function processOne(
     return { etapa: row.etapa_atual, resultado: "concluida" };
   }
 
-  // Avança a etapa
   const proxima = addDaysIso(nowIso, nextStep.tempo_espera_dias);
   const { error: updError } = await admin
     .from("lead_cadences")
@@ -185,16 +170,10 @@ async function processOne(
     `Etapa avançada automaticamente — ${currentStep?.nome ?? "—"} → ${nextStep.nome}`,
   );
 
-  // Etapas de espera não geram disparo
   if (nextStep.tipo_acao === "espera") {
     return { etapa: nextOrdem, resultado: "pulada", motivo: "etapa de espera" };
   }
 
-  if (!webhookUrl) {
-    throw new Error("Webhook do ZapZap Flow não configurado.");
-  }
-
-  // Lead
   const { data: leadRow, error: leadError } = await admin
     .from("leads")
     .select("id, workspace_id, empresa_id, data")
@@ -210,14 +189,15 @@ async function processOne(
     workspace_id: leadRow.workspace_id,
   } as unknown as Lead;
 
-  const phone = normalizeBrPhone(
-    (lead.whatsapp as string | undefined) ?? (lead.telefone as string | undefined) ?? "",
-  );
-  if (!phone || phone.length < 12) {
+  const phone =
+    (lead.whatsapp as string | undefined) ??
+    (lead.telefone as string | undefined) ??
+    "";
+
+  if (!phone || phone.replace(/\D/g, "").length < 10) {
     throw new Error("Lead sem telefone/WhatsApp válido.");
   }
 
-  // Mensagem da etapa
   if (!nextStep.template_id) {
     throw new Error(
       `A etapa "${nextStep.nome}" não possui mensagem configurada.`,
@@ -245,41 +225,12 @@ async function processOne(
     throw new Error(`A etapa "${nextStep.nome}" gerou uma mensagem vazia.`);
   }
 
-  const payload = {
-    source: "growth_os",
-    event: "prospecting.cadence.started",
-    workspace_id: row.workspace_id,
-    lead_id: row.lead_id,
-    cadence_id: row.cadence_id,
-    lead_cadence_id: row.id,
-    etapa: nextOrdem,
-    user_id: null,
-    data: {
-      customer: {
-        phone,
-        name: (lead.contato_nome as string | undefined) ?? lead.nome_empresa ?? null,
-        company: lead.nome_empresa ?? null,
-      },
-      step: { ordem: nextOrdem, nome: nextStep.nome },
-      message: mensagem,
-      mensagem,
-    },
-  };
-
-  const response = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`ZapZap Flow recusou o disparo (HTTP ${response.status}).`);
-  }
+  await sendZapZapText({ phone, text: mensagem });
 
   await recordEvent(
     admin,
     row,
-    `Etapa ${nextOrdem} (${nextStep.nome}) enviada automaticamente ao ZapZap`,
+    `Etapa ${nextOrdem} (${nextStep.nome}) enviada automaticamente pela API do ZapZap`,
   );
 
   return { etapa: nextOrdem, resultado: "enviada" };
