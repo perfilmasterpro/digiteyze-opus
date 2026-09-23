@@ -101,6 +101,49 @@ export async function startCadenceForLead(
   return data as LeadCadence;
 }
 
+/**
+ * Inicia a mesma cadência para vários leads. O primeiro passo de cada lead é
+ * executado imediatamente, usando o mesmo runner do fluxo individual, para
+ * que o disparo chegue ao ZapZap pela API já existente.
+ */
+export async function startCadenceForLeads(
+  workspaceId: string,
+  leadIds: string[],
+  cadenceId: string,
+): Promise<{ started: string[]; failed: Array<{ leadId: string; error: string }> }> {
+  const started: string[] = [];
+  const failed: Array<{ leadId: string; error: string }> = [];
+
+  // Import dinâmico evita ciclo entre os serviços de cadência.
+  const { executeCadenceStep, recordCadenceStepFailure, recordCadenceStepSuccess } =
+    await import("./cadence-step-runner");
+
+  for (const leadId of [...new Set(leadIds)]) {
+    try {
+      const cadence = await startCadenceForLead(workspaceId, leadId, cadenceId);
+      const result = await executeCadenceStep(workspaceId, leadId, cadence);
+      if (!result.skipped && result.step) {
+        await recordCadenceStepSuccess(workspaceId, leadId, result.etapa, result.step.nome);
+      }
+      started.push(leadId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao iniciar a cadência.";
+      failed.push({ leadId, error: message });
+      try {
+        const active = await getActiveLeadCadence(workspaceId, leadId);
+        if (active) {
+          await recordCadenceStepFailure(workspaceId, leadId, active.etapa_atual, message);
+          await pauseLeadCadence(workspaceId, leadId, active.id);
+        }
+      } catch {
+        // mantém o erro original para o resumo da operação
+      }
+    }
+  }
+
+  return { started, failed };
+}
+
 export async function advanceLeadCadence(
   workspaceId: string,
   leadId: string,
@@ -123,7 +166,6 @@ export async function advanceLeadCadence(
   const nowIso = new Date().toISOString();
 
   if (!nextStep) {
-    // finaliza
     const { data, error } = await supabase
       .from("lead_cadences")
       .update({
@@ -161,7 +203,6 @@ export async function advanceLeadCadence(
     .single();
   if (error) throw error;
 
-  // Timeline: etapa avançada
   await recordLeadEvent({
     workspaceId,
     leadId,
@@ -169,7 +210,6 @@ export async function advanceLeadCadence(
     descricao: `Etapa concluída — ${currentStep?.nome ?? "—"} → próxima: ${nextStep.nome}`,
   });
 
-  // Cria tarefa para a próxima etapa (mensagem/tarefa)
   if (nextStep.tipo_acao !== "espera") {
     try {
       await createLeadTask(workspaceId, leadId, {
