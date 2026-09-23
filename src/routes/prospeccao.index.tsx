@@ -25,9 +25,11 @@ import {
   LeadFormDrawer,
   LeadImportDialog,
   LeadsKanban,
+  LeadsTable,
   OpenPlacesDialog,
   useLeads,
   useUpdateLeadStatus,
+  useUpdateLeadsProspeccaoStatus,
   type Lead,
   type LeadOrigem,
   type LeadStatus,
@@ -54,6 +56,7 @@ function ProspeccaoPage() {
 
   const { data, isLoading, isError, refetch } = useLeads();
   const updateStatus = useUpdateLeadStatus();
+  const updateProspeccao = useUpdateLeadsProspeccaoStatus();
 
   const [search, setSearch] = useState("");
   const [origemFilter, setOrigemFilter] = useState<LeadOrigem | "todos">("todos");
@@ -61,7 +64,8 @@ function ProspeccaoPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [openDataOpen, setOpenDataOpen] = useState(false);
   const [googlePlacesOpen, setGooglePlacesOpen] = useState(false);
-  const [pipelineView, setPipelineView] = useState<"prospeccao" | "todos">("prospeccao");
+  const [view, setView] = useState<"prospeccao" | "banco">("prospeccao");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -77,10 +81,19 @@ function ProspeccaoPage() {
     });
   }, [data, search, origemFilter]);
 
-  const pipelineLeads = useMemo(() => {
-    const base = filtered.filter((lead) => pipelineView === "todos" || lead.em_prospeccao || lead.status !== "novo_lead");
-    return base;
-  }, [filtered, pipelineView]);
+  const pipelineLeads = useMemo(
+    () => filtered.filter((lead) => lead.em_prospeccao || lead.status !== "novo_lead"),
+    [filtered],
+  );
+
+  const bancoLeads = useMemo(
+    () => filtered.filter((lead) => !lead.em_prospeccao && lead.status === "novo_lead"),
+    [filtered],
+  );
+
+  const selectedVisibleIds = selectedIds.filter((id) =>
+    bancoLeads.some((lead) => lead.id === id),
+  );
 
   function openCreate() {
     setDrawerOpen(true);
@@ -88,6 +101,32 @@ function ProspeccaoPage() {
 
   function openLead(lead: Lead) {
     navigate({ to: "/prospeccao/$id", params: { id: lead.id } });
+  }
+
+  function changeView(next: "prospeccao" | "banco") {
+    setView(next);
+    setSelectedIds([]);
+  }
+
+  async function addSelectedToProspeccao() {
+    if (selectedVisibleIds.length === 0) return;
+    try {
+      await updateProspeccao.mutateAsync({
+        leadIds: selectedVisibleIds,
+        emProspeccao: true,
+      });
+      setSelectedIds([]);
+      setView("prospeccao");
+      toast.success(
+        `${selectedVisibleIds.length} ${selectedVisibleIds.length === 1 ? "lead adicionado" : "leads adicionados"} à prospecção`,
+      );
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível adicionar os leads à prospecção.",
+      );
+    }
   }
 
   async function handleChangeStatus(lead: Lead, status: LeadStatus) {
@@ -118,7 +157,12 @@ function ProspeccaoPage() {
         icon={<Target className="h-5 w-5" />}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="secondary" size="sm" className="gap-2" disabled>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="gap-2"
+              disabled
+            >
               <LayoutGrid className="h-4 w-4" />
               Kanban
             </Button>
@@ -174,6 +218,24 @@ function ProspeccaoPage() {
         }
       />
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Button
+          variant={view === "prospeccao" ? "secondary" : "outline"}
+          size="sm"
+          onClick={() => changeView("prospeccao")}
+        >
+          Em Prospecção
+        </Button>
+        <Button
+          variant={view === "banco" ? "secondary" : "outline"}
+          size="sm"
+          onClick={() => changeView("banco")}
+        >
+          Banco de Leads
+          {bancoLeads.length > 0 ? ` (${bancoLeads.length})` : ""}
+        </Button>
+      </div>
+
       <FilterBar>
         <SearchInput
           value={search}
@@ -198,13 +260,6 @@ function ProspeccaoPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={pipelineView} onValueChange={(v) => setPipelineView(v as typeof pipelineView)}>
-          <SelectTrigger className="h-9 w-full sm:w-52"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="prospeccao">Apenas em prospecção</SelectItem>
-            <SelectItem value="todos">Todos os leads</SelectItem>
-          </SelectContent>
-        </Select>
       </FilterBar>
 
       {isLoading ? (
@@ -218,11 +273,20 @@ function ProspeccaoPage() {
           action={
             canCreate ? (
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" className="gap-2" onClick={() => setGooglePlacesOpen(true)}>
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setGooglePlacesOpen(true)}
+                >
                   <Map className="h-4 w-4" />
                   Buscar no Google Maps
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2" onClick={openCreate}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={openCreate}
+                >
                   <Plus className="h-4 w-4" />
                   Novo lead
                 </Button>
@@ -230,6 +294,49 @@ function ProspeccaoPage() {
             ) : undefined
           }
         />
+      ) : view === "banco" ? (
+        bancoLeads.length === 0 ? (
+          <EmptyState
+            title="Banco de Leads vazio"
+            description="Novos leads encontrados ou importados aparecerão aqui antes de entrarem na prospecção."
+          />
+        ) : (
+          <>
+            <LeadsTable
+              leads={bancoLeads}
+              onSelect={openLead}
+              selectedIds={selectedVisibleIds}
+              onSelectionChange={setSelectedIds}
+              selectionEnabled
+            />
+            {selectedVisibleIds.length > 0 ? (
+              <div className="sticky bottom-20 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur md:bottom-4">
+                <span className="text-sm font-medium">
+                  {selectedVisibleIds.length}{" "}
+                  {selectedVisibleIds.length === 1
+                    ? "lead selecionado"
+                    : "leads selecionados"}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedIds([])}
+                  >
+                    Limpar seleção
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={addSelectedToProspeccao}
+                    disabled={updateProspeccao.isPending}
+                  >
+                    Adicionar à prospecção
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </>
+        )
       ) : (
         <LeadsKanban
           leads={pipelineLeads}
@@ -246,7 +353,10 @@ function ProspeccaoPage() {
         lead={null}
       />
       <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} />
-      <GooglePlacesDialog open={googlePlacesOpen} onOpenChange={setGooglePlacesOpen} />
+      <GooglePlacesDialog
+        open={googlePlacesOpen}
+        onOpenChange={setGooglePlacesOpen}
+      />
       <OpenPlacesDialog open={openDataOpen} onOpenChange={setOpenDataOpen} />
     </div>
   );
