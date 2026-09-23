@@ -33,21 +33,38 @@ export async function sendZapZapText(input: {
     throw new Error("Lead sem telefone/WhatsApp válido.");
   }
 
-  const response = await fetch(
-    `${baseUrl}/v1/${encodeURIComponent(instanceId)}/send/text`,
-    {
+  const headers = {
+    "Content-Type": "application/json",
+    "x-api-key": apiKey,
+    "x-api-secret": apiSecret,
+  };
+
+  const payload = JSON.stringify({
+    number: phone,
+    text: input.text,
+  });
+
+  // A documentação pública atual usa /v1, mas algumas páginas de integração
+  // da própria ZapZap ainda exibem /api/v1. Se o primeiro endpoint responder
+  // 404, tentamos a variante compatível sem duplicar envios aceitos.
+  const paths = [
+    `/v1/${encodeURIComponent(instanceId)}/send/text`,
+    `/api/v1/${encodeURIComponent(instanceId)}/send/text`,
+  ];
+
+  let response = await fetch(`${baseUrl}${paths[0]}`, {
+    method: "POST",
+    headers,
+    body: payload,
+  });
+
+  if (response.status === 404) {
+    response = await fetch(`${baseUrl}${paths[1]}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "x-api-secret": apiSecret,
-      },
-      body: JSON.stringify({
-        number: phone,
-        text: input.text,
-      }),
-    },
-  );
+      headers,
+      body: payload,
+    });
+  }
 
   const responseText = await response.text();
   let body: unknown = null;
@@ -58,8 +75,14 @@ export async function sendZapZapText(input: {
   }
 
   if (!response.ok) {
+    const detail =
+      typeof body === "string"
+        ? body
+        : body && typeof body === "object"
+          ? JSON.stringify(body)
+          : "";
     throw new Error(
-      `ZapZap API recusou o disparo (HTTP ${response.status}).`,
+      `ZapZap API recusou o disparo (HTTP ${response.status})${detail ? `: ${detail.slice(0, 500)}` : "."}`,
     );
   }
 
