@@ -69,6 +69,7 @@ function ProspeccaoPage() {
   const [googlePlacesOpen, setGooglePlacesOpen] = useState(false);
   const [view, setView] = useState<"prospeccao" | "banco">("prospeccao");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedProspectingIds, setSelectedProspectingIds] = useState<string[]>([]);
   const [selectedCadenceId, setSelectedCadenceId] = useState("");
 
   const filtered = useMemo(() => {
@@ -98,6 +99,11 @@ function ProspeccaoPage() {
   const selectedVisibleIds = selectedIds.filter((id) =>
     bancoLeads.some((lead) => lead.id === id),
   );
+  const novoLeadIds = useMemo(
+    () => pipelineLeads.filter((lead) => lead.status === "novo_lead" && lead.em_prospeccao).map((lead) => lead.id),
+    [pipelineLeads],
+  );
+  const selectedNovoLeadIds = selectedProspectingIds.filter((id) => novoLeadIds.includes(id));
 
   function openCreate() {
     setDrawerOpen(true);
@@ -110,6 +116,7 @@ function ProspeccaoPage() {
   function changeView(next: "prospeccao" | "banco") {
     setView(next);
     setSelectedIds([]);
+    setSelectedProspectingIds([]);
     setSelectedCadenceId("");
   }
 
@@ -135,21 +142,16 @@ function ProspeccaoPage() {
     }
   }
 
-  async function addAndStartCadence() {
-    if (selectedVisibleIds.length === 0) return;
+  async function startSelectedCadence() {
+    if (selectedNovoLeadIds.length === 0) return;
     if (!selectedCadenceId) {
       toast.error("Selecione uma cadência antes de iniciar.");
       return;
     }
 
-    const ids = [...selectedVisibleIds];
+    const ids = [...selectedNovoLeadIds];
 
     try {
-      await updateProspeccao.mutateAsync({
-        leadIds: ids,
-        emProspeccao: true,
-      });
-
       const result = await startCadence.mutateAsync({
         leadIds: ids,
         cadenceId: selectedCadenceId,
@@ -163,9 +165,8 @@ function ProspeccaoPage() {
         );
       }
 
-      setSelectedIds([]);
+      setSelectedProspectingIds([]);
       setSelectedCadenceId("");
-      setView("prospeccao");
 
       if (result.failed.length === 0) {
         toast.success(
@@ -173,7 +174,7 @@ function ProspeccaoPage() {
         );
       } else {
         toast.warning(
-          `${result.started.length} iniciados e ${result.failed.length} com falha. Os que falharam ficaram pausados.`,
+          `${result.started.length} iniciados e ${result.failed.length} com falha. Os que falharam continuam em Novo Lead para nova tentativa.`,
         );
       }
     } catch (err) {
@@ -341,39 +342,13 @@ function ProspeccaoPage() {
                     {selectedVisibleIds.length === 1 ? "lead selecionado" : "leads selecionados"}
                   </span>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Select value={selectedCadenceId} onValueChange={setSelectedCadenceId}>
-                      <SelectTrigger className="w-full sm:w-64">
-                        <SelectValue placeholder="Escolha a cadência" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cadences.filter((c) => c.status === "ativa").map((cadence) => (
-                          <SelectItem key={cadence.id} value={cadence.id}>
-                            {cadence.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={addSelectedToProspeccao}
-                      disabled={updateProspeccao.isPending || startCadence.isPending}
+                      disabled={updateProspeccao.isPending}
                     >
                       Adicionar à prospecção
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="gap-1"
-                      onClick={addAndStartCadence}
-                      disabled={
-                        updateProspeccao.isPending ||
-                        startCadence.isPending ||
-                        updateStatus.isPending ||
-                        !selectedCadenceId
-                      }
-                    >
-                      <Play className="h-4 w-4" />
-                      Adicionar e iniciar cadência
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
                       Limpar
@@ -385,13 +360,54 @@ function ProspeccaoPage() {
           </>
         )
       ) : (
-        <LeadsKanban
-          leads={pipelineLeads}
-          onSelect={openLead}
-          canMove={canMove}
-          canUpdate={canUpdate}
-          onChangeStatus={handleChangeStatus}
-        />
+        <>
+          <LeadsKanban
+            leads={pipelineLeads}
+            onSelect={openLead}
+            canMove={canMove}
+            canUpdate={canUpdate}
+            onChangeStatus={handleChangeStatus}
+            selectedIds={selectedNovoLeadIds}
+            onSelectionChange={setSelectedProspectingIds}
+            selectionEnabled
+          />
+          {selectedNovoLeadIds.length > 0 ? (
+            <div className="sticky bottom-20 z-20 mt-4 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur md:bottom-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-sm font-medium">
+                  {selectedNovoLeadIds.length}{" "}
+                  {selectedNovoLeadIds.length === 1 ? "lead selecionado" : "leads selecionados"}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select value={selectedCadenceId} onValueChange={setSelectedCadenceId}>
+                    <SelectTrigger className="w-full sm:w-64">
+                      <SelectValue placeholder="Escolha a cadência" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cadences.filter((c) => c.status === "ativa").map((cadence) => (
+                        <SelectItem key={cadence.id} value={cadence.id}>
+                          {cadence.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    className="gap-1"
+                    onClick={startSelectedCadence}
+                    disabled={startCadence.isPending || updateStatus.isPending || !selectedCadenceId}
+                  >
+                    <Play className="h-4 w-4" />
+                    Iniciar cadência
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedProspectingIds([])}>
+                    Limpar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </>
       )}
 
       <LeadFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} lead={null} />
