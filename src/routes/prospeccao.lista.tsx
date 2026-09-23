@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Globe, LayoutGrid, List, Plus, Target, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";
@@ -107,8 +108,9 @@ function ProspeccaoListaPage() {
       await updateProspeccao.mutateAsync({ leadIds: selectedVisibleIds, emProspeccao: true });
       setSelectedIds([]);
       setView("prospeccao");
+      toast.success(`${selectedVisibleIds.length} ${selectedVisibleIds.length === 1 ? "lead adicionado" : "leads adicionados"} à prospecção`);
     } catch (err) {
-      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Não foi possível adicionar os leads à prospecção.");
     }
   }
 
