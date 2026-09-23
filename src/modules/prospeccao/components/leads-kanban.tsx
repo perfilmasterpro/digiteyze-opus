@@ -49,9 +49,12 @@ type Props = {
   onChangeStatus?: (lead: Lead, status: LeadStatus) => void;
   canMove?: boolean;
   canUpdate?: boolean;
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
+  selectionEnabled?: boolean;
 };
 
-export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdate }: Props) {
+export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdate, selectedIds = [], onSelectionChange, selectionEnabled = false }: Props) {
   const navigate = useNavigate();
   const openEdit = (leadId: string) => {
     toast.message("Abrindo edição do lead…");
@@ -104,6 +107,20 @@ export function LeadsKanban({ leads, onSelect, onChangeStatus, canMove, canUpdat
             />
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 flex-1 items-start gap-2">
+                {selectionEnabled && lead.status === "novo_lead" ? (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(lead.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      const next = e.target.checked ? [...selectedIds, lead.id] : selectedIds.filter((id) => id !== lead.id);
+                      onSelectionChange?.(next);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-input"
+                    aria-label={`Selecionar ${lead.nome_empresa}`}
+                  />
+                ) : null}
                 {lead.temperatura ? (
                   <span
                     className="mt-0.5 shrink-0 text-sm leading-none"
