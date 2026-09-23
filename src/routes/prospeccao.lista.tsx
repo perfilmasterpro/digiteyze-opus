@@ -29,6 +29,7 @@ import {
   OpenPlacesDialog,
   UFS,
   useLeads,
+  useUpdateLeadsProspeccaoStatus,
   type Lead,
   type LeadOrigem,
   type LeadStatus,
@@ -54,6 +55,9 @@ function ProspeccaoListaPage() {
   const navigate = useNavigate();
 
   const { data, isLoading, isError, refetch } = useLeads();
+  const updateProspeccao = useUpdateLeadsProspeccaoStatus();
+  const [view, setView] = useState<"todos" | "banco" | "prospeccao">("banco");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [search, setSearch] = useState("");
   const [origem, setOrigem] = useState<LeadOrigem | "todos">("todos");
@@ -88,6 +92,25 @@ function ProspeccaoListaPage() {
       );
     });
   }, [data, search, origem, status, uf, cidade, responsavel, temperatura]);
+
+  const visibleLeads = useMemo(() => {
+    if (view === "banco") return filtered.filter((lead) => !lead.em_prospeccao && lead.status === "novo_lead");
+    if (view === "prospeccao") return filtered.filter((lead) => lead.em_prospeccao || lead.status !== "novo_lead");
+    return filtered;
+  }, [filtered, view]);
+
+  const selectedVisibleIds = selectedIds.filter((id) => visibleLeads.some((lead) => lead.id === id && !lead.em_prospeccao));
+
+  async function addSelectedToProspeccao() {
+    if (selectedVisibleIds.length === 0) return;
+    try {
+      await updateProspeccao.mutateAsync({ leadIds: selectedVisibleIds, emProspeccao: true });
+      setSelectedIds([]);
+      setView("prospeccao");
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   if (!canView) {
     return (
@@ -149,6 +172,12 @@ function ProspeccaoListaPage() {
           </div>
         }
       />
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Button variant={view === "todos" ? "secondary" : "outline"} size="sm" onClick={() => { setView("todos"); setSelectedIds([]); }}>Todos</Button>
+        <Button variant={view === "banco" ? "secondary" : "outline"} size="sm" onClick={() => { setView("banco"); setSelectedIds([]); }}>Banco de Leads</Button>
+        <Button variant={view === "prospeccao" ? "secondary" : "outline"} size="sm" onClick={() => { setView("prospeccao"); setSelectedIds([]); }}>Em Prospecção</Button>
+      </div>
 
       <FilterBar>
         <SearchInput
@@ -228,10 +257,23 @@ function ProspeccaoListaPage() {
         />
       ) : (
         <LeadsTable
-          leads={filtered}
+          leads={visibleLeads}
+          selectionEnabled={view !== "prospeccao"}
+          selectedIds={selectedVisibleIds}
+          onSelectionChange={setSelectedIds}
           onSelect={(l) => navigate({ to: "/prospeccao/$id", params: { id: l.id } })}
         />
       )}
+
+      {selectedVisibleIds.length > 0 ? (
+        <div className="sticky bottom-20 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur md:bottom-4">
+          <span className="text-sm font-medium">{selectedVisibleIds.length} {selectedVisibleIds.length === 1 ? "lead selecionado" : "leads selecionados"}</span>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>Limpar seleção</Button>
+            <Button size="sm" onClick={addSelectedToProspeccao} disabled={updateProspeccao.isPending}>Adicionar à prospecção</Button>
+          </div>
+        </div>
+      ) : null}
 
       <LeadFormDrawer
         open={drawerOpen}
