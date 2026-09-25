@@ -48,7 +48,7 @@ CREATE POLICY "Super Admins can view all zapzap events"
 ON public.zapzap_webhook_events
 FOR SELECT
 TO authenticated
-USING (public.has_role(auth.uid(), 'admin'));
+USING (public.is_super_admin(auth.uid()));
 
 CREATE POLICY "Users can view their own workspace zapzap events"
 ON public.zapzap_webhook_events
