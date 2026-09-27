@@ -166,9 +166,6 @@ export async function advanceLeadCadence(
   const nowIso = new Date().toISOString();
 
   if (!nextStep) {
-    // Guarda otimista: só conclui se a linha ainda estiver na MESMA etapa e
-    // ativa. Se outra ação (outra aba / cron) já avançou, casa 0 linhas → aborta
-    // em vez de reenviar/reprocessar.
     const { data, error } = await supabase
       .from("lead_cadences")
       .update({
@@ -178,28 +175,23 @@ export async function advanceLeadCadence(
       })
       .eq("workspace_id", workspaceId)
       .eq("id", leadCadenceId)
-      .eq("etapa_atual", lc.etapa_atual)
-      .eq("status", "ativa")
-      .select("*");
+      .select("*")
+      .single();
     if (error) throw error;
-    if (!data || data.length === 0) {
-      throw new Error(
-        "A cadência já foi avançada por outra ação. Recarregue a página.",
-      );
-    }
     await recordLeadEvent({
       workspaceId,
       leadId,
       tipo: "updated",
       descricao: `Cadência concluída — última etapa: ${currentStep?.nome ?? "—"}`,
     });
-    return data[0] as LeadCadence;
+    return data as LeadCadence;
   }
 
   const proxima = addDaysIso(nowIso, nextStep.tempo_espera_dias);
 
-  // Guarda otimista: o UPDATE só casa se a linha continuar na etapa lida e ativa.
-  // 0 linhas = alguém já avançou → aborta para não disparar a mesma etapa 2x.
+  // Guarda otimista: só avança se a etapa ainda for a mesma E estiver ativa.
+  // Impede que dois "Avançar" concorrentes (duplo clique) reenviem a etapa —
+  // o segundo não casa a condição, não atualiza nada e falha de forma clara.
   const { data, error } = await supabase
     .from("lead_cadences")
     .update({
@@ -212,14 +204,12 @@ export async function advanceLeadCadence(
     .eq("id", leadCadenceId)
     .eq("etapa_atual", lc.etapa_atual)
     .eq("status", "ativa")
-    .select("*");
+    .select("*")
+    .maybeSingle();
   if (error) throw error;
-  if (!data || data.length === 0) {
-    throw new Error(
-      "A cadência já foi avançada por outra ação. Recarregue a página.",
-    );
+  if (!data) {
+    throw new Error("Esta etapa já foi avançada. Atualize a página para ver o estado atual.");
   }
-  const advanced = data[0] as LeadCadence;
 
   await recordLeadEvent({
     workspaceId,
@@ -246,7 +236,7 @@ export async function advanceLeadCadence(
     }
   }
 
-  return advanced;
+  return data as LeadCadence;
 }
 
 export async function pauseLeadCadence(

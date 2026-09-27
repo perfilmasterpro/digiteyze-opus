@@ -119,28 +119,6 @@ type Outcome = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
-  // CLAIM ATÔMICO: "pega" a linha antes de qualquer envio, empurrando
-  // data_proxima_acao 10 min à frente. Como o UPDATE só casa quando a linha
-  // ainda está vencida (data_proxima_acao <= agora) e ativa, uma segunda
-  // execução concorrente (retry/overlap do cron) não casa e não reenvia.
-  const claimNowIso = new Date().toISOString();
-  const claimUntilIso = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  const { data: claimed, error: claimError } = await admin
-    .from("lead_cadences")
-    .update({ data_proxima_acao: claimUntilIso })
-    .eq("id", row.id)
-    .eq("status", "ativa")
-    .lte("data_proxima_acao", claimNowIso)
-    .select("id");
-  if (claimError) throw new Error(claimError.message);
-  if (!claimed || claimed.length === 0) {
-    return {
-      etapa: row.etapa_atual,
-      resultado: "pulada",
-      motivo: "linha já processada por outra execução",
-    };
-  }
-
   const { data: stepsData, error: stepsError } = await admin
     .from("cadence_steps")
     .select("id, ordem, nome, tipo_acao, template_id, tempo_espera_dias, descricao")
@@ -175,27 +153,43 @@ async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
   }
 
   const proxima = addDaysIso(nowIso, nextStep.tempo_espera_dias);
-  const { error: updError } = await admin
-    .from("lead_cadences")
-    .update({
-      etapa_atual: nextOrdem,
-      status: "ativa",
-      proxima_acao: nextStep.nome,
-      data_proxima_acao: proxima,
-    })
-    .eq("id", row.id);
-  if (updError) throw new Error(updError.message);
 
-  await recordEvent(
-    admin,
-    row,
-    `Etapa avançada automaticamente — ${currentStep?.nome ?? "—"} → ${nextStep.nome}`,
-  );
+  // Retorna true se ESTA execução conseguiu avançar a etapa. A guarda otimista
+  // (etapa_atual/status na condição) faz o UPDATE não casar se outra execução do
+  // cron já avançou → evita processar/enviar a mesma etapa duas vezes em paralelo.
+  const advance = async (): Promise<boolean> => {
+    const { data: updated, error: updError } = await admin
+      .from("lead_cadences")
+      .update({
+        etapa_atual: nextOrdem,
+        status: "ativa",
+        proxima_acao: nextStep.nome,
+        data_proxima_acao: proxima,
+      })
+      .eq("id", row.id)
+      .eq("etapa_atual", row.etapa_atual)
+      .eq("status", "ativa")
+      .select("id");
+    if (updError) throw new Error(updError.message);
+    return Array.isArray(updated) && updated.length > 0;
+  };
 
+  // Etapa de ESPERA: é só um marcador de atraso, não envia nada → pode avançar direto.
   if (nextStep.tipo_acao === "espera") {
+    const ok = await advance();
+    if (!ok) {
+      return { etapa: nextOrdem, resultado: "pulada", motivo: "já processada por outra execução" };
+    }
+    await recordEvent(
+      admin,
+      row,
+      `Etapa avançada automaticamente — ${currentStep?.nome ?? "—"} → ${nextStep.nome}`,
+    );
     return { etapa: nextOrdem, resultado: "pulada", motivo: "etapa de espera" };
   }
 
+  // Etapa de MENSAGEM: resolve tudo e ENVIA ANTES de avançar. Se o envio falhar, NÃO
+  // avança (o catch externo pausa) → ao retomar, reprocessa a MESMA etapa, sem pular.
   const { data: leadRow, error: leadError } = await admin
     .from("leads")
     .select("id, workspace_id, empresa_id, data")
@@ -221,9 +215,7 @@ async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
   }
 
   if (!nextStep.template_id) {
-    throw new Error(
-      `A etapa "${nextStep.nome}" não possui mensagem configurada.`,
-    );
+    throw new Error(`A etapa "${nextStep.nome}" não possui mensagem configurada.`);
   }
 
   const { data: template, error: templateError } = await admin
@@ -236,9 +228,7 @@ async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
 
   const corpo = (template?.corpo ?? "").trim();
   if (!corpo) {
-    throw new Error(
-      `A etapa "${nextStep.nome}" não possui mensagem configurada.`,
-    );
+    throw new Error(`A etapa "${nextStep.nome}" não possui mensagem configurada.`);
   }
 
   const { text } = applyVariables(corpo, { lead });
@@ -247,7 +237,19 @@ async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
     throw new Error(`A etapa "${nextStep.nome}" gerou uma mensagem vazia.`);
   }
 
-  await sendZapZapText({ phone, text: mensagem });
+  // CLAIM atômico ANTES de enviar: se outra execução do cron já avançou esta
+  // etapa (pg_cron concorrente), a guarda não casa e não reenviamos → nunca sai
+  // WhatsApp duplicado por concorrência. Todas as validações acima já rodaram, então
+  // o claim só acontece quando o envio tem tudo pronto.
+  const claimed = await advance();
+  if (!claimed) {
+    return { etapa: nextOrdem, resultado: "pulada", motivo: "já processada por outra execução" };
+  }
+
+  // Etapa reivindicada só por esta execução. Envia agora. Se o envio falhar (após o
+  // retry interno de sendZapZapText), a etapa NÃO é reenviada — preferimos pular a
+  // arriscar disparo duplicado; o catch externo pausa a cadência e registra o motivo.
+  await sendZapZapText({ phone, text: mensagem, workspaceId: row.workspace_id });
 
   await recordEvent(
     admin,

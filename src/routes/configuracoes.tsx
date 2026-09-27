@@ -19,9 +19,9 @@ import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ZapZapIntegrationCard } from "@/modules/integrations/components/zapzap-integration-card";
 import { ROLE_LABELS, ROLES } from "@/config/rbac";
 import { CadenceList } from "@/modules/cadences";
-import { ZapZapIntegrationCard } from "@/modules/integrations";
 import { CategoryManager } from "@/modules/message-templates";
 
 export const Route = createFileRoute("/configuracoes")({
@@ -138,7 +138,7 @@ function ConfiguracoesPage() {
       content: (
         <SectionShell
           title="Integrações"
-          description="Conecte o WhatsApp via ZapZap. Outras integrações (OpenAI, Meta, Google, Mercado Pago, N8N, Make) entram nas próximas fases."
+          description="Conecte o ZapZap (WhatsApp) para disparar as cadências. Outras integrações em breve."
         >
           <ZapZapIntegrationCard />
         </SectionShell>

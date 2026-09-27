@@ -83,18 +83,16 @@ export const Route = createFileRoute('/api/prospeccao/zapzap-flow')({
             );
           }
 
-          // Membership: garante que o usuário autenticado pertence ao workspace
-          // alvo antes de disparar. Sem isto, qualquer usuário logado poderia
-          // POSTar um workspace_id alheio e enviar WhatsApp usando a instância de
-          // outro tenant. A consulta usa o token do usuário (RLS aplicada).
-          const { data: membership, error: membershipError } = await authClient
+          // Segurança (A4): confirma que o usuário é MEMBRO do workspace antes de
+          // disparar. Sem isso, um usuário de outro workspace poderia enviar usando
+          // as credenciais ZapZap deste. RLS garante 0/1 linha por (workspace,user).
+          const { data: member } = await authClient
             .from('workspace_members')
             .select('workspace_id')
             .eq('workspace_id', workspace_id)
             .eq('user_id', userData.user.id)
             .maybeSingle();
-
-          if (membershipError || !membership) {
+          if (!member) {
             return new Response(
               JSON.stringify({ error: 'Sem acesso a este workspace.' }),
               { status: 403, headers: { 'Content-Type': 'application/json' } },
@@ -123,6 +121,7 @@ export const Route = createFileRoute('/api/prospeccao/zapzap-flow')({
           const result = await sendZapZapText({
             phone: rawPhone,
             text: messageText,
+            workspaceId: workspace_id,
           });
 
           console.info('[ZapZap API] Disparo enviado', {

@@ -68,18 +68,14 @@ export function applyVariables(corpo: string, ctx: TemplateContext): ApplyVariab
   const replaced = corpo.replace(TOKEN_RE, (_full, token: string) => {
     const value = map[token];
     if (value === undefined || value === "") {
-      // Token ausente NUNCA vai literal (`{{token}}`) para o prospect:
-      // vira string vazia e a limpeza abaixo remove a sobra de espaços.
+      // Variável ausente NUNCA vai literal ({{token}}) pro prospect — vira vazio.
+      // (missing continua registrado pra a UI poder avisar antes de disparar.)
       missing.add(token);
       return "";
     }
     return value;
   });
-  const text = replaced
-    .replace(/[ \t]{2,}/g, " ") // espaços/tabs duplicados
-    .replace(/ +([,.;:!?])/g, "$1") // espaço antes de pontuação
-    .replace(/[ \t]+\n/g, "\n") // espaço solto no fim da linha
-    .replace(/\n[ \t]+/g, "\n") // espaço solto no início da linha
-    .trim();
+  // Limpa artefatos de variável vazia: espaços duplos e espaço antes de pontuação.
+  const text = replaced.replace(/ {2,}/g, " ").replace(/ +([,.!?;:])/g, "$1").trim();
   return { text, missing: [...missing] };
 }

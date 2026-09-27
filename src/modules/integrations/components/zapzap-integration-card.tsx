@@ -1,90 +1,78 @@
-import { CheckCircle2, Loader2, QrCode, RefreshCw, Save, XCircle } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Loader2, QrCode, CheckCircle2, XCircle } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useCurrentWorkspaceId } from "@/lib/workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { useCurrentWorkspaceId } from "@/lib/workspace";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 
-type MaskedConfig = {
-  apiKey: string;
-  apiSecret: string;
-  instanceId: string;
-  baseUrl: string;
-  hasWebhookSecret: boolean;
+const DEFAULT_BASE = "https://api.zapzapapi.com";
+
+type MaskedStatus = {
   configured: boolean;
-  source: "db" | "env";
+  source: "workspace" | "env" | null;
+  instance_id: string | null;
+  base_url: string | null;
+  api_key_masked: string | null;
+  api_secret_masked: string | null;
 };
 
 async function authHeaders(): Promise<Record<string, string>> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error("Sua sessão expirou. Faça login novamente.");
-  }
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${session.access_token}`,
-  };
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error("Sessão expirada. Faça login novamente.");
+  return { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` };
 }
 
-/**
- * Card de configuração da integração ZapZap (aba Configurações → Integrações).
- *
- * Credenciais key/secret são exibidas mascaradas (só os últimos dígitos). Ao
- * salvar, campos deixados EM BRANCO preservam o valor atual (merge parcial no
- * servidor) — a cliente não precisa redigitar o secret para trocar só o
- * instance ID ou a base URL.
- */
 export function ZapZapIntegrationCard() {
   const workspaceId = useCurrentWorkspaceId();
 
+  const [status, setStatus] = useState<MaskedStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [config, setConfig] = useState<MaskedConfig | null>(null);
 
-  // Campos do formulário. Ficam vazios: em branco = "manter o atual".
+  const [instanceId, setInstanceId] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
-  const [instanceId, setInstanceId] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
+  const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE);
 
-  // Estado do QR
+  const [qrOpen, setQrOpen] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
   const [qrImage, setQrImage] = useState<string | null>(null);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState<boolean | null>(null);
 
-  const loadConfig = useCallback(async () => {
-    if (!workspaceId) return;
+  const loadStatus = async () => {
     setLoading(true);
     try {
       const headers = await authHeaders();
-      const res = await fetch(
-        `/api/integracoes/zapzap-config?workspace_id=${encodeURIComponent(workspaceId)}`,
-        { method: "GET", headers },
-      );
-      const payload = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(payload?.error ?? "Falha ao carregar a configuração.");
-      }
-      setConfig(payload.config as MaskedConfig);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao carregar a configuração.");
+      const res = await fetch(`/api/integracoes/zapzap-config?workspace_id=${encodeURIComponent(workspaceId)}`, { headers });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Falha ao carregar.");
+      setStatus(data as MaskedStatus);
+      if (data.instance_id) setInstanceId(data.instance_id);
+      if (data.base_url) setBaseUrl(data.base_url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao carregar a configuração.");
     } finally {
       setLoading(false);
     }
-  }, [workspaceId]);
+  };
 
   useEffect(() => {
-    void loadConfig();
-  }, [loadConfig]);
+    if (workspaceId) void loadStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId]);
 
-  async function handleSave() {
-    if (!workspaceId) return;
+  const save = async () => {
+    if (!instanceId.trim() || !apiKey.trim() || !apiSecret.trim()) {
+      toast.error("Preencha Instance ID, API Key e API Secret.");
+      return;
+    }
     setSaving(true);
     try {
       const headers = await authHeaders();
@@ -93,197 +81,149 @@ export function ZapZapIntegrationCard() {
         headers,
         body: JSON.stringify({
           workspace_id: workspaceId,
-          api_key: apiKey.trim() || undefined,
-          api_secret: apiSecret.trim() || undefined,
-          instance_id: instanceId.trim() || undefined,
-          base_url: baseUrl.trim() || undefined,
+          instance_id: instanceId.trim(),
+          api_key: apiKey.trim(),
+          api_secret: apiSecret.trim(),
+          base_url: baseUrl.trim() || DEFAULT_BASE,
         }),
       });
-      const payload = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(payload?.error ?? "Falha ao salvar a configuração.");
-      }
-      setConfig(payload.config as MaskedConfig);
-      // Limpa os inputs: o que foi salvo agora aparece mascarado no resumo.
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Falha ao salvar.");
+      toast.success("Credenciais do ZapZap salvas.");
       setApiKey("");
       setApiSecret("");
-      setInstanceId("");
-      setBaseUrl("");
-      toast.success("Configuração do ZapZap salva.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar a configuração.");
+      setStatus(data as MaskedStatus);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar.");
     } finally {
       setSaving(false);
     }
-  }
+  };
 
-  async function handleGenerateQr() {
-    if (!workspaceId) return;
+  const openQr = async () => {
+    setQrOpen(true);
     setQrLoading(true);
     setQrImage(null);
-    setConnected(false);
+    setConnected(null);
     try {
       const headers = await authHeaders();
-      const res = await fetch("/api/integracoes/zapzap-qr", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ workspace_id: workspaceId }),
-      });
-      const payload = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(payload?.error ?? "Falha ao gerar o QR.");
+      const res = await fetch(`/api/integracoes/zapzap-qr?workspace_id=${encodeURIComponent(workspaceId)}`, { headers });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Falha ao gerar QR.");
+      const isConnected = Boolean(data?.connected) || data?.status === "connected";
+      setConnected(isConnected);
+      // A UazAPI/ZapZap devolve o QR em campos variados: qrcode / qr / base64 / image.
+      const raw = data?.qrcode ?? data?.qr ?? data?.base64 ?? data?.image ?? data?.instance?.qrcode ?? null;
+      if (!isConnected && typeof raw === "string" && raw.length > 0) {
+        setQrImage(raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`);
       }
-      if (payload.connected) {
-        setConnected(true);
-        toast.success("Instância já conectada ao WhatsApp.");
-        return;
-      }
-      const raw = String(payload.qrcode ?? "");
-      const src = raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`;
-      setQrImage(src);
-      toast.success("QR gerado. Escaneie no WhatsApp em até 60s.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao gerar o QR.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao gerar QR.");
+      setQrOpen(false);
     } finally {
       setQrLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Resumo do estado atual */}
-      <div className="flex flex-wrap items-center gap-3">
-        {loading ? (
-          <span className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Carregando configuração...
-          </span>
-        ) : config?.configured ? (
-          <>
-            <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-600">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Configurado
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              Fonte: {config.source === "db" ? "este workspace" : "variáveis de ambiente"}
-            </span>
-          </>
-        ) : (
-          <Badge variant="outline" className="gap-1 text-muted-foreground">
-            <XCircle className="h-3.5 w-3.5" /> Não configurado
-          </Badge>
-        )}
-      </div>
-
-      {/* Formulário de credenciais */}
-      <div className="rounded-md border p-4">
-        <h4 className="text-sm font-medium">Credenciais da API</h4>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Deixe um campo em branco para manter o valor atual. Só o que for
-          preenchido é atualizado.
-        </p>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="zz-key">API Key</Label>
-            <Input
-              id="zz-key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={config?.apiKey || "Cole a x-api-key do ZapZap"}
-              autoComplete="off"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="zz-secret">API Secret</Label>
-            <Input
-              id="zz-secret"
-              type="password"
-              value={apiSecret}
-              onChange={(e) => setApiSecret(e.target.value)}
-              placeholder={config?.apiSecret || "Cole a x-api-secret do ZapZap"}
-              autoComplete="off"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="zz-instance">Instance ID</Label>
-            <Input
-              id="zz-instance"
-              value={instanceId}
-              onChange={(e) => setInstanceId(e.target.value)}
-              placeholder={config?.instanceId || "ID da instância no painel ZapZap"}
-              autoComplete="off"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="zz-base">Base URL (opcional)</Label>
-            <Input
-              id="zz-base"
-              value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder={config?.baseUrl || "https://api.zapzapapi.com"}
-              autoComplete="off"
-            />
-          </div>
-        </div>
-
-        <div className="mt-4 flex justify-end">
-          <Button onClick={handleSave} disabled={saving || loading} className="gap-2">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Salvar
-          </Button>
-        </div>
-      </div>
-
-      {/* Conexão via QR */}
-      <div className="rounded-md border p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h4 className="text-sm font-medium">Conexão do WhatsApp</h4>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Gere o QR e escaneie no aparelho para conectar a instância.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={handleGenerateQr}
-            disabled={qrLoading || loading || !config?.configured}
-            className="gap-2"
-          >
-            {qrLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : qrImage ? (
-              <RefreshCw className="h-4 w-4" />
-            ) : (
-              <QrCode className="h-4 w-4" />
-            )}
-            {qrImage ? "Gerar novo QR" : "Gerar QR"}
-          </Button>
-        </div>
-
-        {!config?.configured && (
-          <p className="mt-3 text-xs text-muted-foreground">
-            Configure e salve as credenciais acima para habilitar a conexão.
+    <div className="rounded-lg border bg-card p-5 space-y-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold">ZapZap — Envio de WhatsApp</h3>
+          <p className="text-sm text-muted-foreground">
+            Conecte sua instância do ZapZap para disparar as cadências pelo WhatsApp.
           </p>
-        )}
-
-        {connected && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-emerald-600">
-            <CheckCircle2 className="h-4 w-4" /> Instância já conectada — nenhum QR necessário.
-          </div>
-        )}
-
-        {qrImage && !connected && (
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <img
-              src={qrImage}
-              alt="QR code de conexão do WhatsApp"
-              className="h-56 w-56 rounded-md border bg-white p-2"
-            />
-            <p className="text-xs text-muted-foreground">
-              Abra o WhatsApp → Aparelhos conectados → Conectar aparelho.
-            </p>
-          </div>
+        </div>
+        {status?.configured ? (
+          <Badge variant="secondary" className="shrink-0">
+            {status.source === "workspace" ? "Configurado" : "Config. via ambiente"}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="shrink-0">Não configurado</Badge>
         )}
       </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
+        </div>
+      ) : (
+        <>
+          {status?.configured && (
+            <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+              <div>Instância: <span className="font-mono">{status.instance_id}</span></div>
+              <div>API Key: <span className="font-mono">{status.api_key_masked}</span></div>
+              <div>Secret: <span className="font-mono">{status.api_secret_masked}</span></div>
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="zz-inst">Instance ID</Label>
+              <Input id="zz-inst" value={instanceId} onChange={(e) => setInstanceId(e.target.value)}
+                placeholder="ex: a5893f4d-2e20-…" className="font-mono" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="zz-key">API Key</Label>
+              <Input id="zz-key" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
+                placeholder={status?.configured ? "•••• (deixe em branco p/ manter)" : "cole a API Key"} className="font-mono" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="zz-sec">API Secret</Label>
+              <Input id="zz-sec" type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)}
+                placeholder={status?.configured ? "•••• (deixe em branco p/ manter)" : "cole o API Secret"} className="font-mono" />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="zz-base">Base URL</Label>
+              <Input id="zz-base" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} className="font-mono" />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={save} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar credenciais
+            </Button>
+            <Button variant="outline" onClick={openQr} disabled={!status?.configured}>
+              <QrCode className="mr-2 h-4 w-4" /> Conectar / Gerar QR
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            As credenciais ficam no seu workspace e são usadas pelo sistema para enviar as mensagens.
+            Pra editar, cole novos valores e salve; em branco mantém os atuais.
+          </p>
+        </>
+      )}
+
+      <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Conectar WhatsApp</DialogTitle>
+            <DialogDescription>Escaneie o QR com o WhatsApp do número da instância.</DialogDescription>
+          </DialogHeader>
+          <div className="flex min-h-[240px] items-center justify-center">
+            {qrLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            ) : connected ? (
+              <div className="flex flex-col items-center gap-2 text-center">
+                <CheckCircle2 className="h-10 w-10 text-green-500" />
+                <p className="text-sm">WhatsApp já está <strong>conectado</strong>.</p>
+              </div>
+            ) : qrImage ? (
+              <img src={qrImage} alt="QR Code" className="h-56 w-56 rounded bg-white p-2" />
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-center text-muted-foreground">
+                <XCircle className="h-8 w-8" />
+                <p className="text-sm">Não foi possível obter o QR agora. Tente de novo em instantes.</p>
+              </div>
+            )}
+          </div>
+          {!connected && (
+            <Button variant="outline" onClick={openQr} disabled={qrLoading}>
+              {qrLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Atualizar
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

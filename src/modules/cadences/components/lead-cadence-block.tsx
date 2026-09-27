@@ -129,9 +129,6 @@ export function LeadCadenceBlock({ leadId }: { leadId: string }) {
             </dl>
 
             <div className="flex flex-wrap gap-2 pt-1">
-              {/* "Avançar" só com a cadência ATIVA: avançar reativa e envia, e
-                  com a cadência pausada (ex.: stop-on-reply) isso sobreporia o
-                  pause sem querer. */}
               {status === "ativa" ? (
                 <Button
                   size="sm"

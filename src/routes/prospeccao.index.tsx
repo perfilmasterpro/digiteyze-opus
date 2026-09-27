@@ -78,8 +78,8 @@ function ProspeccaoPage() {
       if (origemFilter !== "todos" && l.origem !== origemFilter) return false;
       if (!term) return true;
       return (
-        (l.nome_empresa ?? "").toLowerCase().includes(term) ||
-        (l.responsavel ?? "").toLowerCase().includes(term) ||
+        (l.nome_empresa?.toLowerCase().includes(term) ?? false) ||
+        (l.responsavel?.toLowerCase().includes(term) ?? false) ||
         (l.cidade?.toLowerCase().includes(term) ?? false) ||
         (l.whatsapp?.toLowerCase().includes(term) ?? false)
       );

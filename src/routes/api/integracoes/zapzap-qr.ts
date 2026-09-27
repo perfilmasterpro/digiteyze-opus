@@ -1,138 +1,62 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
+
+import { getZapZapConfig } from "@/modules/integrations/zapzap-config.server";
 
 /**
- * QR code de conexão da instância ZapZap do workspace.
- *
- * POST { workspace_id } → chama a API de GESTÃO do ZapZap
- *   GET {base}/api/v1/instances/{instanceId}/qrcode
- * com as credenciais do workspace (x-api-key / x-api-secret) e devolve:
- *   - { connected: true } quando a instância já está logada (não há QR a exibir);
- *   - { connected: false, qrcode, status } com o QR (base64/string) para escanear.
- *
- * Auth: Bearer do usuário + membership (mesmo padrão de zapzap-config/zapzap-flow).
- *
- * Obs.: o path é o de GESTÃO (`/api/v1/instances/:id/qrcode`), confirmado no
- * backend real do ZapZap (apiv1.routes.ts) — NÃO é o coringa `/api/v1/:id/*`.
+ * QR / status de conexão da instância ZapZap do workspace.
+ *   GET ?workspace_id=... → { connected, status, qrcode? }
+ * Se desconectada, retorna o QR (base64) pra escanear no WhatsApp.
  */
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+}
+
 export const Route = createFileRoute("/api/integracoes/zapzap-qr")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      GET: async ({ request }) => {
+        const url = new URL(request.url);
+        const workspaceId = url.searchParams.get("workspace_id");
+        const authorization = request.headers.get("authorization");
+        const token = authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+        if (!token) return json({ error: "Não autenticado." }, 401);
+        if (!workspaceId) return json({ error: "workspace_id é obrigatório." }, 400);
+
+        const sbUrl = process.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+        const sbKey = process.env.SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        if (!sbUrl || !sbKey) return json({ error: "Config do servidor indisponível." }, 500);
+
+        const authClient = createClient(sbUrl, sbKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          global: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+        if (userErr || !userData.user) return json({ error: "Sessão inválida." }, 401);
+        const { data: member } = await authClient
+          .from("workspace_members").select("workspace_id")
+          .eq("workspace_id", workspaceId).eq("user_id", userData.user.id).maybeSingle();
+        if (!member) return json({ error: "Sem acesso a este workspace." }, 403);
+
+        const cfg = await getZapZapConfig(workspaceId);
+        if (!cfg) return json({ error: "ZapZap não configurado. Salve as credenciais primeiro." }, 400);
+
         try {
-          const body = (await request.json().catch(() => null)) as Record<
-            string,
-            unknown
-          > | null;
-          const workspaceId = body?.workspace_id;
-
-          const { authAndWorkspace } = await import(
-            "@/modules/integrations/services/api-auth.server"
+          const resp = await fetch(
+            `${cfg.base_url.replace(/\/$/, "")}/api/v1/instances/${encodeURIComponent(cfg.instance_id)}/qrcode`,
+            { headers: { "x-api-key": cfg.api_key, "x-api-secret": cfg.api_secret } },
           );
-          const auth = await authAndWorkspace(request, workspaceId);
-          if (!auth.ok) return auth.response;
-
-          const { getZapZapConfig } = await import(
-            "@/modules/integrations/services/zapzap-config.server"
-          );
-          const cfg = await getZapZapConfig(workspaceId as string);
-
-          if (!cfg.apiKey || !cfg.apiSecret || !cfg.instanceId) {
-            return new Response(
-              JSON.stringify({
-                error:
-                  "Configure a API Key, o Secret e o Instance ID antes de gerar o QR.",
-              }),
-              { status: 400, headers: { "Content-Type": "application/json" } },
-            );
+          const text = await resp.text();
+          let body: unknown = null;
+          try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+          if (!resp.ok) {
+            const detail = typeof body === "string" ? body : JSON.stringify(body);
+            return json({ error: `ZapZap recusou (HTTP ${resp.status}): ${String(detail).slice(0, 300)}` }, 502);
           }
-
-          const qrUrl = `${cfg.baseUrl}/api/v1/instances/${encodeURIComponent(
-            cfg.instanceId,
-          )}/qrcode`;
-
-          const response = await fetch(qrUrl, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": cfg.apiKey,
-              "x-api-secret": cfg.apiSecret,
-            },
-          });
-
-          const responseText = await response.text();
-          let providerBody: unknown = null;
-          try {
-            providerBody = responseText ? JSON.parse(responseText) : null;
-          } catch {
-            providerBody = responseText;
-          }
-
-          if (!response.ok) {
-            const detail =
-              typeof providerBody === "string"
-                ? providerBody
-                : providerBody && typeof providerBody === "object"
-                  ? JSON.stringify(providerBody)
-                  : "";
-            return new Response(
-              JSON.stringify({
-                error: `Não foi possível obter o QR (HTTP ${response.status})${
-                  detail ? `: ${detail.slice(0, 300)}` : "."
-                }`,
-              }),
-              { status: 502, headers: { "Content-Type": "application/json" } },
-            );
-          }
-
-          const provider = (providerBody ?? {}) as Record<string, unknown>;
-          const instance = (provider.instance ?? {}) as Record<string, unknown>;
-          const statusStr =
-            typeof instance.status === "string" ? instance.status : undefined;
-
-          // Já conectado: o ZapZap devolve { connected:true, loggedIn:true, ... }
-          // (ou a instância com status 'connected'). Nesse caso não há QR.
-          const alreadyConnected =
-            provider.connected === true ||
-            provider.loggedIn === true ||
-            statusStr === "connected";
-
-          if (alreadyConnected) {
-            return new Response(
-              JSON.stringify({ connected: true, status: statusStr ?? "connected" }),
-              { status: 200, headers: { "Content-Type": "application/json" } },
-            );
-          }
-
-          const qrcode =
-            (typeof instance.qrcode === "string" && instance.qrcode) ||
-            (typeof provider.qrcode === "string" && provider.qrcode) ||
-            null;
-
-          if (!qrcode) {
-            return new Response(
-              JSON.stringify({
-                error:
-                  "O ZapZap não retornou o QR. Tente novamente em alguns segundos.",
-              }),
-              { status: 502, headers: { "Content-Type": "application/json" } },
-            );
-          }
-
-          return new Response(
-            JSON.stringify({ connected: false, qrcode, status: statusStr ?? null }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          );
-        } catch (error) {
-          console.error("[ZapZap QR] error:", error);
-          return new Response(
-            JSON.stringify({
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Erro ao gerar o QR do ZapZap.",
-            }),
-            { status: 502, headers: { "Content-Type": "application/json" } },
-          );
+          return json(body);
+        } catch (e) {
+          return json({ error: e instanceof Error ? e.message : "Falha ao consultar o ZapZap." }, 502);
         }
       },
     },
