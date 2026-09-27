@@ -1758,6 +1758,47 @@ export type Database = {
         }
         Relationships: []
       }
+      zapzap_config: {
+        Row: {
+          api_key: string
+          api_secret: string
+          base_url: string
+          created_at: string
+          instance_id: string
+          updated_at: string
+          webhook_secret: string
+          workspace_id: string
+        }
+        Insert: {
+          api_key?: string
+          api_secret?: string
+          base_url?: string
+          created_at?: string
+          instance_id?: string
+          updated_at?: string
+          webhook_secret?: string
+          workspace_id: string
+        }
+        Update: {
+          api_key?: string
+          api_secret?: string
+          base_url?: string
+          created_at?: string
+          instance_id?: string
+          updated_at?: string
+          webhook_secret?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapzap_config_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zapzap_webhook_events: {
         Row: {
           chat_id: string | null

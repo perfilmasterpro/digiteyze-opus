@@ -66,6 +66,8 @@ import { Route as ApiProspeccaoReceitaCnpjRouteImport } from './routes/api/prosp
 import { Route as ApiProspeccaoOpenPlacesRouteImport } from './routes/api/prospeccao/open-places'
 import { Route as ApiProspeccaoGooglePlacesRouteImport } from './routes/api/prospeccao/google-places'
 import { Route as ApiProspeccaoEnrichWebsiteRouteImport } from './routes/api/prospeccao/enrich-website'
+import { Route as ApiIntegracoesZapzapQrRouteImport } from './routes/api/integracoes/zapzap-qr'
+import { Route as ApiIntegracoesZapzapConfigRouteImport } from './routes/api/integracoes/zapzap-config'
 import { Route as ApiAgentChatRouteImport } from './routes/api/agent/chat'
 import { Route as ApiPublicCronCadencesRunnerRouteImport } from './routes/api/public/cron/cadences-runner'
 
@@ -358,6 +360,17 @@ const ApiProspeccaoEnrichWebsiteRoute =
     path: '/api/prospeccao/enrich-website',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiIntegracoesZapzapQrRoute = ApiIntegracoesZapzapQrRouteImport.update({
+  id: '/api/integracoes/zapzap-qr',
+  path: '/api/integracoes/zapzap-qr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiIntegracoesZapzapConfigRoute =
+  ApiIntegracoesZapzapConfigRouteImport.update({
+    id: '/api/integracoes/zapzap-config',
+    path: '/api/integracoes/zapzap-config',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAgentChatRoute = ApiAgentChatRouteImport.update({
   id: '/api/agent/chat',
   path: '/api/agent/chat',
@@ -407,6 +420,8 @@ export interface FileRoutesByFullPath {
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/api/agent/chat': typeof ApiAgentChatRoute
+  '/api/integracoes/zapzap-config': typeof ApiIntegracoesZapzapConfigRoute
+  '/api/integracoes/zapzap-qr': typeof ApiIntegracoesZapzapQrRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
   '/api/prospeccao/open-places': typeof ApiProspeccaoOpenPlacesRoute
@@ -463,6 +478,8 @@ export interface FileRoutesByTo {
   '/prospeccao': typeof ProspeccaoIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
   '/api/agent/chat': typeof ApiAgentChatRoute
+  '/api/integracoes/zapzap-config': typeof ApiIntegracoesZapzapConfigRoute
+  '/api/integracoes/zapzap-qr': typeof ApiIntegracoesZapzapQrRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
   '/api/prospeccao/open-places': typeof ApiProspeccaoOpenPlacesRoute
@@ -525,6 +542,8 @@ export interface FileRoutesById {
   '/prospeccao/': typeof ProspeccaoIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/api/agent/chat': typeof ApiAgentChatRoute
+  '/api/integracoes/zapzap-config': typeof ApiIntegracoesZapzapConfigRoute
+  '/api/integracoes/zapzap-qr': typeof ApiIntegracoesZapzapQrRoute
   '/api/prospeccao/enrich-website': typeof ApiProspeccaoEnrichWebsiteRoute
   '/api/prospeccao/google-places': typeof ApiProspeccaoGooglePlacesRoute
   '/api/prospeccao/open-places': typeof ApiProspeccaoOpenPlacesRoute
@@ -588,6 +607,8 @@ export interface FileRouteTypes {
     | '/prospeccao/'
     | '/super-admin/'
     | '/api/agent/chat'
+    | '/api/integracoes/zapzap-config'
+    | '/api/integracoes/zapzap-qr'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
     | '/api/prospeccao/open-places'
@@ -644,6 +665,8 @@ export interface FileRouteTypes {
     | '/prospeccao'
     | '/super-admin'
     | '/api/agent/chat'
+    | '/api/integracoes/zapzap-config'
+    | '/api/integracoes/zapzap-qr'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
     | '/api/prospeccao/open-places'
@@ -705,6 +728,8 @@ export interface FileRouteTypes {
     | '/prospeccao/'
     | '/super-admin/'
     | '/api/agent/chat'
+    | '/api/integracoes/zapzap-config'
+    | '/api/integracoes/zapzap-qr'
     | '/api/prospeccao/enrich-website'
     | '/api/prospeccao/google-places'
     | '/api/prospeccao/open-places'
@@ -754,6 +779,8 @@ export interface RootRouteChildren {
   SuporteRoute: typeof SuporteRoute
   TarefasRoute: typeof TarefasRoute
   ApiAgentChatRoute: typeof ApiAgentChatRoute
+  ApiIntegracoesZapzapConfigRoute: typeof ApiIntegracoesZapzapConfigRoute
+  ApiIntegracoesZapzapQrRoute: typeof ApiIntegracoesZapzapQrRoute
   ApiProspeccaoEnrichWebsiteRoute: typeof ApiProspeccaoEnrichWebsiteRoute
   ApiProspeccaoGooglePlacesRoute: typeof ApiProspeccaoGooglePlacesRoute
   ApiProspeccaoOpenPlacesRoute: typeof ApiProspeccaoOpenPlacesRoute
@@ -1164,6 +1191,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProspeccaoEnrichWebsiteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integracoes/zapzap-qr': {
+      id: '/api/integracoes/zapzap-qr'
+      path: '/api/integracoes/zapzap-qr'
+      fullPath: '/api/integracoes/zapzap-qr'
+      preLoaderRoute: typeof ApiIntegracoesZapzapQrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integracoes/zapzap-config': {
+      id: '/api/integracoes/zapzap-config'
+      path: '/api/integracoes/zapzap-config'
+      fullPath: '/api/integracoes/zapzap-config'
+      preLoaderRoute: typeof ApiIntegracoesZapzapConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/agent/chat': {
       id: '/api/agent/chat'
       path: '/api/agent/chat'
@@ -1338,6 +1379,8 @@ const rootRouteChildren: RootRouteChildren = {
   SuporteRoute: SuporteRoute,
   TarefasRoute: TarefasRoute,
   ApiAgentChatRoute: ApiAgentChatRoute,
+  ApiIntegracoesZapzapConfigRoute: ApiIntegracoesZapzapConfigRoute,
+  ApiIntegracoesZapzapQrRoute: ApiIntegracoesZapzapQrRoute,
   ApiProspeccaoEnrichWebsiteRoute: ApiProspeccaoEnrichWebsiteRoute,
   ApiProspeccaoGooglePlacesRoute: ApiProspeccaoGooglePlacesRoute,
   ApiProspeccaoOpenPlacesRoute: ApiProspeccaoOpenPlacesRoute,

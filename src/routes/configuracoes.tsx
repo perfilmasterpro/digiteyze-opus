@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROLE_LABELS, ROLES } from "@/config/rbac";
 import { CadenceList } from "@/modules/cadences";
+import { ZapZapIntegrationCard } from "@/modules/integrations";
 import { CategoryManager } from "@/modules/message-templates";
 
 export const Route = createFileRoute("/configuracoes")({
@@ -137,8 +138,10 @@ function ConfiguracoesPage() {
       content: (
         <SectionShell
           title="Integrações"
-          description="WhatsApp, OpenAI, Meta, Google, Mercado Pago, N8N, Make e APIs próprias."
-        />
+          description="Conecte o WhatsApp via ZapZap. Outras integrações (OpenAI, Meta, Google, Mercado Pago, N8N, Make) entram nas próximas fases."
+        >
+          <ZapZapIntegrationCard />
+        </SectionShell>
       ),
     },
     {
