@@ -3,6 +3,21 @@ import { ZapZapPayloadSchema } from '@/modules/webhooks/types/webhook.types';
 import { WebhookService } from '@/modules/webhooks/services/webhook.service';
 
 /**
+ * Comparação de tempo constante entre duas strings, para não vazar o segredo
+ * via timing de comparação. Independe do comprimento por usar OR acumulado.
+ */
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  let diff = aBytes.length ^ bBytes.length;
+  const len = Math.max(aBytes.length, bBytes.length);
+  for (let i = 0; i < len; i += 1) {
+    diff |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0);
+  }
+  return diff === 0;
+}
+
+/**
  * Endpoint de Webhook para ZapZap API.
  * EXCLUSIVAMENTE para a Fase 3: Recebimento e Persistência Segura.
  * 
@@ -20,12 +35,36 @@ export const Route = createFileRoute('/api/webhooks/zapzap')({
 
           if (!workspaceId) {
             console.error('[Webhook] Missing workspace_id');
-            return new Response(JSON.stringify({ 
-              error: 'O parâmetro workspace_id é obrigatório.' 
-            }), { 
+            return new Response(JSON.stringify({
+              error: 'O parâmetro workspace_id é obrigatório.'
+            }), {
               status: 400,
               headers: { 'Content-Type': 'application/json' }
             });
+          }
+
+          // 1b. Autenticidade: se ZAPZAP_WEBHOOK_SECRET estiver setado, exigir o
+          // token (query ?token= ou header x-webhook-secret / authorization Bearer)
+          // com comparação de tempo constante. Sem a env, segue aberto (compat).
+          const expectedSecret = process.env.ZAPZAP_WEBHOOK_SECRET?.trim();
+          if (expectedSecret) {
+            const headerAuth = request.headers.get('authorization') ?? '';
+            const bearer = headerAuth.startsWith('Bearer ')
+              ? headerAuth.slice('Bearer '.length).trim()
+              : '';
+            const providedSecret =
+              url.searchParams.get('token') ??
+              request.headers.get('x-webhook-secret') ??
+              bearer ??
+              '';
+
+            if (!timingSafeEqualStr(providedSecret, expectedSecret)) {
+              console.error('[Webhook] Invalid or missing webhook secret');
+              return new Response(JSON.stringify({ error: 'Não autorizado.' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' },
+              });
+            }
           }
 
           // 2. Parse e Validação do JSON via Zod

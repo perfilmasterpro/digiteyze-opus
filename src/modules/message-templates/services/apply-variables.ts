@@ -65,13 +65,21 @@ export type ApplyVariablesResult = {
 export function applyVariables(corpo: string, ctx: TemplateContext): ApplyVariablesResult {
   const map = buildVariableMap(ctx) as Record<string, string | undefined>;
   const missing = new Set<string>();
-  const text = corpo.replace(TOKEN_RE, (_full, token: string) => {
+  const replaced = corpo.replace(TOKEN_RE, (_full, token: string) => {
     const value = map[token];
     if (value === undefined || value === "") {
+      // Token ausente NUNCA vai literal (`{{token}}`) para o prospect:
+      // vira string vazia e a limpeza abaixo remove a sobra de espaços.
       missing.add(token);
-      return `{{${token}}}`;
+      return "";
     }
     return value;
   });
+  const text = replaced
+    .replace(/[ \t]{2,}/g, " ") // espaços/tabs duplicados
+    .replace(/ +([,.;:!?])/g, "$1") // espaço antes de pontuação
+    .replace(/[ \t]+\n/g, "\n") // espaço solto no fim da linha
+    .replace(/\n[ \t]+/g, "\n") // espaço solto no início da linha
+    .trim();
   return { text, missing: [...missing] };
 }

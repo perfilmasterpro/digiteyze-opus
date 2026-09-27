@@ -119,6 +119,28 @@ type Outcome = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
+  // CLAIM ATÔMICO: "pega" a linha antes de qualquer envio, empurrando
+  // data_proxima_acao 10 min à frente. Como o UPDATE só casa quando a linha
+  // ainda está vencida (data_proxima_acao <= agora) e ativa, uma segunda
+  // execução concorrente (retry/overlap do cron) não casa e não reenvia.
+  const claimNowIso = new Date().toISOString();
+  const claimUntilIso = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  const { data: claimed, error: claimError } = await admin
+    .from("lead_cadences")
+    .update({ data_proxima_acao: claimUntilIso })
+    .eq("id", row.id)
+    .eq("status", "ativa")
+    .lte("data_proxima_acao", claimNowIso)
+    .select("id");
+  if (claimError) throw new Error(claimError.message);
+  if (!claimed || claimed.length === 0) {
+    return {
+      etapa: row.etapa_atual,
+      resultado: "pulada",
+      motivo: "linha já processada por outra execução",
+    };
+  }
+
   const { data: stepsData, error: stepsError } = await admin
     .from("cadence_steps")
     .select("id, ordem, nome, tipo_acao, template_id, tempo_espera_dias, descricao")

@@ -166,6 +166,9 @@ export async function advanceLeadCadence(
   const nowIso = new Date().toISOString();
 
   if (!nextStep) {
+    // Guarda otimista: só conclui se a linha ainda estiver na MESMA etapa e
+    // ativa. Se outra ação (outra aba / cron) já avançou, casa 0 linhas → aborta
+    // em vez de reenviar/reprocessar.
     const { data, error } = await supabase
       .from("lead_cadences")
       .update({
@@ -175,20 +178,28 @@ export async function advanceLeadCadence(
       })
       .eq("workspace_id", workspaceId)
       .eq("id", leadCadenceId)
-      .select("*")
-      .single();
+      .eq("etapa_atual", lc.etapa_atual)
+      .eq("status", "ativa")
+      .select("*");
     if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error(
+        "A cadência já foi avançada por outra ação. Recarregue a página.",
+      );
+    }
     await recordLeadEvent({
       workspaceId,
       leadId,
       tipo: "updated",
       descricao: `Cadência concluída — última etapa: ${currentStep?.nome ?? "—"}`,
     });
-    return data as LeadCadence;
+    return data[0] as LeadCadence;
   }
 
   const proxima = addDaysIso(nowIso, nextStep.tempo_espera_dias);
 
+  // Guarda otimista: o UPDATE só casa se a linha continuar na etapa lida e ativa.
+  // 0 linhas = alguém já avançou → aborta para não disparar a mesma etapa 2x.
   const { data, error } = await supabase
     .from("lead_cadences")
     .update({
@@ -199,9 +210,16 @@ export async function advanceLeadCadence(
     })
     .eq("workspace_id", workspaceId)
     .eq("id", leadCadenceId)
-    .select("*")
-    .single();
+    .eq("etapa_atual", lc.etapa_atual)
+    .eq("status", "ativa")
+    .select("*");
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "A cadência já foi avançada por outra ação. Recarregue a página.",
+    );
+  }
+  const advanced = data[0] as LeadCadence;
 
   await recordLeadEvent({
     workspaceId,
@@ -228,7 +246,7 @@ export async function advanceLeadCadence(
     }
   }
 
-  return data as LeadCadence;
+  return advanced;
 }
 
 export async function pauseLeadCadence(

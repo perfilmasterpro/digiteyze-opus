@@ -82,10 +82,10 @@ function ProspeccaoListaPage() {
       if (uf !== "todos" && l.estado !== uf) return false;
       if (temperatura !== "todos" && l.temperatura !== temperatura) return false;
       if (cid && !(l.cidade?.toLowerCase().includes(cid) ?? false)) return false;
-      if (resp && !l.responsavel.toLowerCase().includes(resp)) return false;
+      if (resp && !(l.responsavel ?? "").toLowerCase().includes(resp)) return false;
       if (!term) return true;
       return (
-        l.nome_empresa.toLowerCase().includes(term) ||
+        (l.nome_empresa ?? "").toLowerCase().includes(term) ||
         (l.contato_nome?.toLowerCase().includes(term) ?? false) ||
         (l.contato_email?.toLowerCase().includes(term) ?? false) ||
         (l.telefone?.toLowerCase().includes(term) ?? false) ||

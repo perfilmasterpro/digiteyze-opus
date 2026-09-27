@@ -8,7 +8,13 @@
 function normalizeBrPhone(raw: string): string {
   const digits = (raw ?? "").replace(/\D/g, "");
   if (!digits) return "";
-  return digits.startsWith("55") ? digits : `55${digits}`;
+  // Decide o DDI por COMPRIMENTO, não por prefixo: um celular de DDD 55 (RS)
+  // sem DDI começa com "55" e não pode ser confundido com país já presente.
+  // 10 (fixo DDD+8) ou 11 (celular DDD+9) dígitos = nacional → prepend "55".
+  // 12 ou 13 dígitos = já tem DDI → retorna como está.
+  if (digits.length === 10 || digits.length === 11) return `55${digits}`;
+  if (digits.length === 12 || digits.length === 13) return digits;
+  return digits;
 }
 
 export async function sendZapZapText(input: {

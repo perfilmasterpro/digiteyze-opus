@@ -217,7 +217,7 @@ export async function updateLeadsProspeccaoStatus(
 
   const updated = await Promise.all(
     leads.map(async (lead) => {
-      const nextData = {
+      const nextData: Record<string, unknown> = {
         ...(lead as unknown as Record<string, unknown>),
         em_prospeccao: emProspeccao,
         data_inicio_prospeccao: emProspeccao
