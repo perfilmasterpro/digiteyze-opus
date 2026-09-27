@@ -38,3 +38,29 @@ supabase/types.ts, routeTree.gen.ts.
    Setar o webhook da instância no ZapZap ao salvar (M4) segue manual.
 4. Formato do QR: assumido `instance.qrcode` (base64/data:) — validar gerando um QR real.
 5. Path do QR `/api/v1/instances/{id}/qrcode` — confirmado no backend real; checar se vier 404.
+
+## Agendamento de follow-ups (LIGADO no código — só faltam 2 envs)
+O agendador de cadências não disparava (não havia gatilho). Agora está wired:
+- Rota `src/routes/api/public/cron/cadences-runner.ts` ganhou handler **GET** (além do POST).
+- `vercel.json` com Vercel Cron chamando essa rota **1x/dia às 12:00 UTC (9h BRT)**.
+  (Plano Hobby permite cron diário; cadências são por DIA, então funciona. Para follow-ups
+  mais frequentes, subir para Pro e trocar o schedule, ou usar pg_cron no Supabase.)
+
+### Pra ligar (Denize), setar 2 envs na Vercel e redeployar:
+1. `CRON_SECRET` = um segredo forte qualquer (o Vercel injeta ele no Bearer do cron).
+2. `SUPABASE_SERVICE_ROLE_KEY` = a service_role do Supabase dela (o runner precisa dela).
+   (Também: `ZAPZAP_API_KEY/SECRET/INSTANCE_ID` OU configurar pela tela de Integrações.)
+Sem CRON_SECRET a rota responde 503 (não roda). Com as 2 setadas, o follow-up passa a rodar sozinho.
+
+### Alternativa mais frequente (pg_cron no Supabase, opcional):
+```sql
+select cron.schedule('cadences-runner','*/15 * * * *', $$
+  select net.http_post(
+    url:='https://<DOMINIO-VERCEL>/api/public/cron/cadences-runner',
+    headers:=jsonb_build_object('Authorization','Bearer <CRON_SECRET>')
+  );
+$$);
+```
+
+### Ajuste de robustez (M2 do audit): o runner processa até 50 envios por execução.
+Se estourar o timeout da função Vercel, reduzir o batch ou setar maxDuration em vercel.json.
