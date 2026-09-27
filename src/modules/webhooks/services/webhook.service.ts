@@ -18,6 +18,35 @@ function firstString(...values: Array<unknown>): string | null {
   return null;
 }
 
+/** Hash estável (FNV-1a 32-bit → hex). Sem dependências (seguro no bundle client). */
+function stableHash(input: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+/**
+ * external_id sintético e estável (M1). Quando o payload não traz nenhum id
+ * (event_id/message.id/messageid/data.id/delivery_id todos nulos), o UNIQUE
+ * (provider, external_id, workspace_id) não deduplica — no Postgres NULLs são
+ * distintos. Derivamos um id determinístico de chat+timestamp+conteúdo (+ remetente/
+ * messageId por entropia) para que reentregas do MESMO evento colidam no UNIQUE e
+ * não gerem interação/stop-on-reply duplicados.
+ */
+function syntheticExternalId(e: ZapZapExtracted): string {
+  const basis = [
+    e.chatId ?? '',
+    e.timestamp ?? '',
+    e.content ?? '',
+    e.senderPhone ?? '',
+    e.messageId ?? '',
+  ].join('|');
+  return `syn:${stableHash(basis)}${stableHash('salt:' + basis)}`;
+}
+
 export class WebhookService {
   /**
    * Normaliza o payload do ZapZap para um formato canônico.
@@ -131,6 +160,9 @@ export class WebhookService {
       }
 
       const extracted = this.extractEvent(payload);
+      // M1: garante um external_id sempre presente para a dedupe funcionar mesmo
+      // quando o payload não traz id (NULLs não deduplicam no UNIQUE do Postgres).
+      const externalId = extracted.externalId ?? syntheticExternalId(extracted);
 
       // Persistência Idempotente via Postgres Unique Constraint
       const { data, error } = await supabaseAdmin
@@ -138,7 +170,7 @@ export class WebhookService {
         .insert({
           workspace_id: workspaceId,
           provider,
-          external_id: extracted.externalId,
+          external_id: externalId,
           event: extracted.event,
           instance_id: extracted.instanceId,
           sender_phone: extracted.senderPhone,
@@ -153,7 +185,7 @@ export class WebhookService {
 
       // Se for erro de duplicidade (23505), retornamos sucesso (idempotência)
       if (error && (error as any).code === '23505') {
-        console.log(`[Webhook] Evento duplicado ignorado: ${extracted.externalId}`);
+        console.log(`[Webhook] Evento duplicado ignorado: ${externalId}`);
         return { data: { status: 'duplicate' }, error: null };
       }
 

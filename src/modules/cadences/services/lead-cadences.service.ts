@@ -266,9 +266,31 @@ export async function resumeLeadCadence(
   leadId: string,
   leadCadenceId: string,
 ): Promise<LeadCadence> {
+  // Reprograma a próxima ação para now + tempo_espera da etapa atual (§1.7). Sem isso,
+  // uma cadência pausada por stop-on-reply mantém data_proxima_acao no passado e o cron
+  // dispararia o próximo follow-up IMEDIATAMENTE ao retomar — logo depois de o lead
+  // responder. Se a etapa atual não for encontrada, preserva a data existente.
+  const { data: current, error: e1 } = await supabase
+    .from("lead_cadences")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .eq("id", leadCadenceId)
+    .single();
+  if (e1) throw e1;
+  const lc = current as LeadCadence;
+
+  const steps = await listCadenceSteps(workspaceId, lc.cadence_id);
+  const currentStep = stepAt(steps, lc.etapa_atual);
+  const proxima = currentStep
+    ? addDaysIso(new Date().toISOString(), currentStep.tempo_espera_dias)
+    : lc.data_proxima_acao;
+
   const { data, error } = await supabase
     .from("lead_cadences")
-    .update({ status: "ativa" as LeadCadenceStatus })
+    .update({
+      status: "ativa" as LeadCadenceStatus,
+      data_proxima_acao: proxima,
+    })
     .eq("workspace_id", workspaceId)
     .eq("id", leadCadenceId)
     .select("*")

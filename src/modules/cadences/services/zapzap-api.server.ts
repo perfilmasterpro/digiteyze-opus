@@ -18,6 +18,20 @@ function normalizeBrPhone(raw: string): string {
   return digits;
 }
 
+/**
+ * Só é seguro retentar o POST quando a conexão NÃO chegou a ser estabelecida
+ * (recusa/DNS): aí a mensagem comprovadamente não saiu. Timeout (AbortError) e
+ * ECONNRESET podem ter entregue a mensagem antes de falhar → retentar duplicaria
+ * o WhatsApp, e /send/text não tem chave de idempotência (§1.4).
+ */
+function isPreSendConnectionError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const e = err as { name?: string; code?: string; cause?: { code?: string } };
+  if (e.name === "AbortError") return false; // timeout: pode ter entregue → não retenta
+  const code = e.code ?? e.cause?.code;
+  return code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "EAI_AGAIN";
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit, ms = 20000): Promise<Response> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), ms);
@@ -70,16 +84,23 @@ export async function sendZapZapText(input: {
   let response: Response;
   try {
     response = await doPost(paths[0]);
+    // Fallback só em 404 (compat de path). NUNCA retentar em 5xx/timeout: o POST pode
+    // ter entregue a mensagem e /send/text não é idempotente → retry duplicaria (§1.4).
     if (response.status === 404) response = await doPost(paths[1]);
-    // 1 retry em erro transitório de rede/servidor (não em 4xx, que é erro do request)
-    if (response.status >= 500) response = await doPost(paths[0]);
   } catch (err) {
-    // erro de rede/timeout → 1 retry
-    response = await doPost(paths[0]).catch(() => {
+    // Retry APENAS em erro de conexão pré-envio (recusa/DNS): a mensagem não saiu.
+    // Timeout/reset da conexão podem ter entregue → não retenta.
+    if (isPreSendConnectionError(err)) {
+      response = await doPost(paths[0]).catch(() => {
+        throw new Error(
+          `Falha de rede ao falar com o ZapZap: ${err instanceof Error ? err.message : "erro de conexão"}`,
+        );
+      });
+    } else {
       throw new Error(
         `Falha de rede ao falar com o ZapZap: ${err instanceof Error ? err.message : "timeout"}`,
       );
-    });
+    }
   }
 
   const responseText = await response.text();

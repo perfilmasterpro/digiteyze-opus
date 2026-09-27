@@ -51,7 +51,15 @@ function addDaysIso(baseIso: string, days: number): string {
   return d.toISOString();
 }
 
-const BATCH_LIMIT = 50;
+// Lote pequeno para não estourar o limite de duração da função na Vercel (M2):
+// cada envio pode levar até ~20s no pior caso, então 20 leads dão folga sob o teto
+// de 60s do plano Pro. Tuning manual: ajuste conforme o plano/latência observada.
+const BATCH_LIMIT = 20;
+
+// Lease do runner (§1.1/A1): adia a próxima ação por esta janela ao "pegar" a linha,
+// sem avançar a etapa. Serializa execuções concorrentes do cron sem perder a etapa
+// em caso de falha de envio.
+const LEASE_MS = 10 * 60 * 1000;
 
 export async function runDueCadenceSteps(): Promise<RunnerResult> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -174,6 +182,26 @@ async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
     return Array.isArray(updated) && updated.length > 0;
   };
 
+  // Retorna true se ESTA execução "pegou" a linha. Adia data_proxima_acao (lease)
+  // SEM avançar a etapa. Como o SELECT trouxe só linhas com data_proxima_acao <= agora,
+  // duas execuções concorrentes competem no mesmo UPDATE: a primeira empurra a data pro
+  // futuro e as demais não casam mais o `.lte(agora)` → não reenviam. Diferente de avançar
+  // a etapa: se o envio falhar depois, a etapa continua a MESMA e é reprocessada na
+  // retomada, nunca pulada (A1/§1.2).
+  const lease = async (): Promise<boolean> => {
+    const leaseIso = new Date(Date.now() + LEASE_MS).toISOString();
+    const { data: leased, error: leaseError } = await admin
+      .from("lead_cadences")
+      .update({ data_proxima_acao: leaseIso })
+      .eq("id", row.id)
+      .eq("etapa_atual", row.etapa_atual)
+      .eq("status", "ativa")
+      .lte("data_proxima_acao", nowIso)
+      .select("id");
+    if (leaseError) throw new Error(leaseError.message);
+    return Array.isArray(leased) && leased.length > 0;
+  };
+
   // Etapa de ESPERA: é só um marcador de atraso, não envia nada → pode avançar direto.
   if (nextStep.tipo_acao === "espera") {
     const ok = await advance();
@@ -237,19 +265,22 @@ async function processOne(admin: any, row: LeadCadenceRow): Promise<Outcome> {
     throw new Error(`A etapa "${nextStep.nome}" gerou uma mensagem vazia.`);
   }
 
-  // CLAIM atômico ANTES de enviar: se outra execução do cron já avançou esta
-  // etapa (pg_cron concorrente), a guarda não casa e não reenviamos → nunca sai
-  // WhatsApp duplicado por concorrência. Todas as validações acima já rodaram, então
-  // o claim só acontece quando o envio tem tudo pronto.
-  const claimed = await advance();
-  if (!claimed) {
+  // LEASE atômico ANTES de enviar (não avança a etapa): serializa execuções
+  // concorrentes do cron sem "queimar" a etapa. Todas as validações acima já rodaram,
+  // então só pegamos a linha quando o envio está pronto para sair.
+  const leased = await lease();
+  if (!leased) {
     return { etapa: nextOrdem, resultado: "pulada", motivo: "já processada por outra execução" };
   }
 
-  // Etapa reivindicada só por esta execução. Envia agora. Se o envio falhar (após o
-  // retry interno de sendZapZapText), a etapa NÃO é reenviada — preferimos pular a
-  // arriscar disparo duplicado; o catch externo pausa a cadência e registra o motivo.
+  // Envia PRIMEIRO. Se o envio falhar (após o retry de conexão de sendZapZapText), o
+  // throw sobe para o catch externo, que pausa a cadência SEM ter avançado a etapa →
+  // ao retomar, o cron reprocessa ESTA MESMA etapa, nunca a seguinte (A1/§1.2).
   await sendZapZapText({ phone, text: mensagem, workspaceId: row.workspace_id });
+
+  // Só APÓS o envio dar certo é que a etapa avança e a próxima ação é agendada.
+  // A guarda otimista continua evitando corrida com o avanço manual.
+  await advance();
 
   await recordEvent(
     admin,
